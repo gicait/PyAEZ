@@ -58,4 +58,4 @@ Food and Agriculture Organization of the United Nations (FAO).
 * FAO. (1998). Crop evapotranspiration. FAO Irrigation and Drainage Paper no.56 Rome, Italy.
 * Fischer, G., van Velthuizen, H., Shah, M., & Nachtergaele, F. (2002a). Global agroecological assessment for agriculture in the 21st century: Methodology and results. IIASA RR-02-02, IIASA, Laxenburg, Austria.
 * Monteith, J. L. (1965). Evapotranspiration and the environment. In The State and Movement of Water in Living Organisms, 205-234.
-* Monteith, J. L. (1981). Evapotranspiration and surface temperature. Quarterly Journal Royal Meteorological Society, 107 , 1{27.
+* Monteith, J. L. (1981). Evapotranspiration and surface temperature. Quarterly Journal Royal Meteorological Society, 107 , 1-27.

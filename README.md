@@ -19,7 +19,7 @@ Other than 5 main modules and utility module, following 3 major algorithms relat
 * CropWat Calculations
 
 ### Dependencies
-* Numpy
+* numpy
 * scipy
 * gdal
 
@@ -40,4 +40,9 @@ Add later !
 Add later !
 
 ### Main References
-Add later ! include sample data References too
+* de Wit, C. T. (1965). Photosynthesis of leaf canopies. Agricultural Research Report No. 663. PUDOC, Wageningen, 57 .
+* FAO. (1992). Cropwat: A computer program for irrigation planning and management. Land and Water Development Division, Rome, Italy, FAO Irrigation and Drainage Paper no 46 .
+* FAO. (1998). Crop evapotranspiration. FAO Irrigation and Drainage Paper no.56 Rome, Italy.
+* Fischer, G., van Velthuizen, H., Shah, M., & Nachtergaele, F. (2002a). Global agroecological assessment for agriculture in the 21st century: Methodology and results. IIASA RR-02-02, IIASA, Laxenburg, Austria.
+* Monteith, J. L. (1965). Evapotranspiration and the environment. In The State and Movement of Water in Living Organisms, 205-234.
+* Monteith, J. L. (1981). Evapotranspiration and surface temperature. Quarterly Journal Royal Meteorological Society, 107 , 1{27.

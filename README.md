@@ -38,7 +38,7 @@ Use this bibtex to cite us.
 ```
 @misc{PyAEZ_2020,
   title={PyAEZ Python Package for Agro-ecalogical zoning (AEZ)},
-  author={N. Lakmal Deshapriya, Thaileng Thol, Kavinda Gunasekara, Rajendra P. Shrestha, Gianluca Franceschini, Freddy Nachtergaele, Monica Petri, Beau Damen},
+  author={Lakmal Deshapriya, Thaileng Thol, Kavinda Gunasekara, Rajendra Shrestha, Gianluca Franceschini, Freddy Nachtergaele, Monica Petri, Beau Damen},
   year={2020},
   publisher={Github},
   journal={GitHub repository},

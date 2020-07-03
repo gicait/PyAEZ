@@ -23,12 +23,16 @@ Other than 5 main modules and utility module, following 3 major algorithms relat
 * scipy
 * gdal
 
-
 ### Step-by-step Process
-Add later !
+Following 5 Jupyter notebooks 
+* NB1_ClimateRegime.ipynb
+* NB2_CropSimulation.ipynb
+* NB3_ClimaticConstraints.ipynb
+* NB4_SoilConstraints.ipynb
+* NB5_TerrainConstraints.ipynb
 
 ### Documentation
-API Documentation is located in "Docs" folder.
+API Documentation is located in "docs" folder.
 
 ### Citation
 Add later !

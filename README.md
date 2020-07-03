@@ -19,13 +19,16 @@ Other than 5 main modules and utility module, following 3 major algorithms relat
 * CropWat Calculations
 
 ### Dependencies
-Add later !
+* Numpy
+* scipy
+* gdal
+
 
 ### Step-by-step Process
 Add later !
 
 ### Documentation
-Add later !
+API Documentation is located in "Docs" folder.
 
 ### Citation
 Add later !

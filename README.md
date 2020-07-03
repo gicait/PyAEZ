@@ -47,7 +47,7 @@ Use this bibtex to cite us.
 ```
 
 ### Funding
-Add later !
+Food and Agriculture Organization of the United Nations (FAO).
 
 ### Main References
 * de Wit, C. T. (1965). Photosynthesis of leaf canopies. Agricultural Research Report No. 663. PUDOC, Wageningen, 57 .

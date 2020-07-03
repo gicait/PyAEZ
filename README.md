@@ -1,9 +1,8 @@
 # PyAEZ
-PyAEZ is a python package consisted of many algorithms related to Agro-ecalogical zoning (AEZ) framework.
+PyAEZ is a python package consisted of many algorithms related to Agro-ecalogical zoning (AEZ) framework. PyAEZ tries to encapsulate all complex calculations in AEZ and try to provide user friendly, and intuitive ways to input data and output results after calculations.
 
 ### Introduction
-PyAEZ tries to encapsulate all complex calculations in AEZ and try to provide user friendly, and intuitive ways to input data and output results after calculations. PyAEZ
-includes 5 main modules as below. Additionally to that, UtilityCalculations module is also included in PyAEZ to perform additional related utility calculations.
+PyAEZ includes 5 main modules as below. Additionally to that, UtilityCalculations module is also included in PyAEZ to perform additional related utility calculations.
 
 * Module I: Climate Regime
 * Module II: Crop Simulations
@@ -35,15 +34,15 @@ Following 5 Jupyter notebooks can be used as worked full example for PyAEZ. Each
 API Documentation is located in "docs" folder.
 
 ### Citation
-Use this bibtex to cite this repository:
+Use this bibtex to cite us.
 ```
-@misc{matterport_maskrcnn_2017,
-  title={Mask R-CNN for object detection and instance segmentation on Keras and TensorFlow},
-  author={Waleed Abdulla},
-  year={2017},
+@misc{PyAEZ_2020,
+  title={PyAEZ Python Package for Agro-ecalogical zoning (AEZ)},
+  author={N. Lakmal Deshapriya, Thaileng Thol, Kavinda Gunasekara, Rajendra P. Shrestha, Gianluca Franceschini, Freddy Nachtergaele, Monica Petri, Beau     Damen},
+  year={2020},
   publisher={Github},
   journal={GitHub repository},
-  howpublished={\url{https://github.com/matterport/Mask_RCNN}},
+  howpublished={\url{https://github.com/gicait/PyAEZ}},
 }
 ```
 

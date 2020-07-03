@@ -37,7 +37,7 @@ API Documentation is located in "docs" folder.
 Use this bibtex to cite us.
 ```
 @misc{PyAEZ_2020,
-  title={PyAEZ Python Package for Agro-ecalogical zoning (AEZ)},
+  title={PyAEZ Python Package for Agro-ecological zoning (AEZ)},
   author={N. Lakmal Deshapriya, Thaileng Thol, Kavinda Gunasekara, Rajendra Shrestha, Gianluca Franceschini, Freddy Nachtergaele, Monica Petri, Beau Damen},
   year={2020},
   publisher={Github},

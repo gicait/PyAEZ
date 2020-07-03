@@ -24,7 +24,7 @@ Other than 5 main modules and utility module, following 3 major algorithms relat
 * gdal
 
 ### Step-by-step Process
-Following 5 Jupyter notebooks 
+Following 5 Jupyter notebooks can be used as worked full example for PyAEZ. Each Jupyter notebooks is corresponding to each major 5 modules (mentioned above) in PyAEZ.
 * NB1_ClimateRegime.ipynb
 * NB2_CropSimulation.ipynb
 * NB3_ClimaticConstraints.ipynb
@@ -35,7 +35,17 @@ Following 5 Jupyter notebooks
 API Documentation is located in "docs" folder.
 
 ### Citation
-Add later !
+Use this bibtex to cite this repository:
+```
+@misc{matterport_maskrcnn_2017,
+  title={Mask R-CNN for object detection and instance segmentation on Keras and TensorFlow},
+  author={Waleed Abdulla},
+  year={2017},
+  publisher={Github},
+  journal={GitHub repository},
+  howpublished={\url{https://github.com/matterport/Mask_RCNN}},
+}
+```
 
 ### Funding
 Add later !

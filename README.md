@@ -33,9 +33,6 @@ API Documentation is located in "Docs" folder.
 ### Citation
 Add later !
 
-### Acknowledgements
-Add later !
-
 ### Funding
 Add later !
 

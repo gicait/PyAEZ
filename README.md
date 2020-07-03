@@ -23,7 +23,7 @@ Other than 5 main modules and utility module, following 3 major algorithms relat
 * gdal
 
 ### Step-by-step Process
-Following 5 Jupyter notebooks can be used as worked full example for PyAEZ. Each Jupyter notebooks is corresponding to each major 5 modules (mentioned above) in PyAEZ.
+Following 5 Jupyter notebooks can be used as worked full example for PyAEZ 5 major modules.
 * NB1_ClimateRegime.ipynb
 * NB2_CropSimulation.ipynb
 * NB3_ClimaticConstraints.ipynb

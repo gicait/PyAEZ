@@ -46,6 +46,9 @@ Use this bibtex to cite us.
 }
 ```
 
+### Developed by
+Geoinformatics Center (www.geoinfo.ait.ac.th) of Asian Institute of Technology (www.ait.ac.th)
+
 ### Funding
 Food and Agriculture Organization of the United Nations (FAO).
 

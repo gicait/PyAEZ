@@ -54,7 +54,7 @@ Principal Investigators (PIs) of the project:
 * Prof. Rajendra Shrestha (rajendra@ait.ac.th)
 
 ### Funding
-Food and Agriculture Organization of the United Nations ([FAO](http://www.fao.org/home/en/)) and [FAO-SAMIS](http://www.fao.org/in-action/samis/en/) (Strengthening Agro-climatic Monitoring and Information System) Project.
+Food and Agriculture Organization of the United Nations ([FAO](http://www.fao.org/home/en/)) and [FAO SAMIS](http://www.fao.org/in-action/samis/en/) (Strengthening Agro-climatic Monitoring and Information System) Project in Lao PDR.
 
 ### Sample Data Source
 * Abatzoglou, J.T., S.Z. Dobrowski, S.A. Parks, K.C. Hegewisch, 2018, Terraclimate, a high-resolution global dataset of monthly climate and climatic water balance from 1958-2015, Scientific Data,

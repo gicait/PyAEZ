@@ -49,8 +49,8 @@ Use this bibtex to cite us.
 ### Developed by
 Geoinformatics Center (www.geoinfo.ait.ac.th) of Asian Institute of Technology (www.ait.ac.th).
 Principal Investigators (PIs) of the project:
-* Dr.Kavinda Gunasekara
-* Prof.Kavinda Gunasekara
+* Dr. Kavinda Gunasekara
+* Prof. Rajendra Shrestha
 
 ### Funding
 Food and Agriculture Organization of the United Nations ([FAO](http://www.fao.org/home/en/)) and [FAO-SAMIS](http://www.fao.org/in-action/samis/en/) (Strengthening Agro-climatic Monitoring and Information System) Project.

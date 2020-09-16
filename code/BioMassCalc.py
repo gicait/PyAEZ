@@ -114,7 +114,7 @@ class BioMassCalc(object):
         self.LAi = LAI # leaf area index
         self.HI = HI # harvest index
         self.legume = legume # binary value
-        self.adaptability = adaptability  #one of [1,2,3,4] classes
+        self.adaptability = adaptability-1  #one of [1,2,3,4] classes
 
     def calculateBioMass(self):
         ''' Calculate average values of Ac, bc, bo, meanT, dT  in the season '''

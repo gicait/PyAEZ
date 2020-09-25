@@ -19,7 +19,7 @@ class BioMassCalc(object):
           [0,  0, 28,162,334,424,393,248, 81,  3,  0,  0],
           [0,  0,  0,154,339,428,397,252, 40,  0,  0,  0]]);
 
-    '''Biomass in cloudy day'''
+    '''Biomass in open day'''
     bc = np.array([[413,424,429,426,417,410,413,422,429,427,418,410],
         [376,401,422,437,440,440,440,439,431,411,385,370],
         [334,371,407,439,460,468,465,451,425,387,348,325],
@@ -31,7 +31,7 @@ class BioMassCalc(object):
           [0,  0, 94,333,571,663,632,474,195, 11,  0,  0],
           [0,  0,  0,371,588, 67,646,497,167,  0,  0,  0]]);
 
-    ''' Biomass in open day '''
+    ''' Biomass in cloudy day '''
     bo = np.array([[219,226,230,228,221,216,218,225,230,228,222,216],
         [197,212,225,234,236,235,236,235,230,218,203,193],
         [170,193,215,235,246,250,249,242,226,203,178,164],
@@ -55,7 +55,7 @@ class BioMassCalc(object):
         self.cycle_end = cycle_end
         self.cycle_len = cycle_end - cycle_begin + 1
 
-        self.lat = latitude
+        self.lat = np.abs(latitude)
         self.lat_index1 = np.floor(np.abs(latitude)/10);
         self.lat_index2 = np.ceil(np.abs(latitude)/10);
 
@@ -64,10 +64,6 @@ class BioMassCalc(object):
         self.minT_daily = min_temp
         self.maxT_daily = max_temp
         self.shortRad_daily = short_rad
-
-        ## convert temperature values from Kelvin to Celsius
-        self.minT_daily = self.minT_daily-273.15;
-        self.maxT_daily = self.maxT_daily-273.15;
 
         ## convert radiation values from W/m^2 to cal/cm2/day1
         self.shortRad_daily = ((self.shortRad_daily / 4.19) * (60*60*24)) / (100*100);
@@ -184,7 +180,7 @@ class BioMassCalc(object):
 
         '''net biomass production '''
 
-        self.Bn = (0.36 * bgm * l) / (1 / (self.cycle_len + 0.25 * Ct));
+        self.Bn = (0.36 * bgm * l) / ( (1/self.cycle_len) + 0.25*Ct );
 
         return self.Bn
 

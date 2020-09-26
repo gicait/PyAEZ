@@ -57,7 +57,7 @@ class ETOCalc(object):
 
         # Net incoming Short-wave radiation
         alpha = 0.23
-        Rns = self.shortRad_daily * (1-alpha) #sol_rad give is in KJ m-2 day-1
+        Rns = self.shortRad_daily * (1-alpha)
 
         # Net outgoing long wave-radiation
         sub_cst = 0.000000004903  # Stefan-Boltzmann constant [MJ K-4 m-2 day-1]

@@ -102,5 +102,5 @@ class UtilitiesCalc(object):
         return np.sum(raster_3d, axis=2)/raster_3d.shape[-1]
 
     def windSpeedAt2m(self, wind_speed, altitude):
-        # input should be a 3D raster and averaging will be done through last dimension (usually corresponding to years)
+        # this function converts wind speed from a particular altitude to wind speed at 2m altitude. wind_speed can be a numpy array (can be 1D, 2D or 3D)
         return wind_speed * (4.87/np.log(67.8*altitude-5.42))

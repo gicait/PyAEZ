@@ -46,7 +46,7 @@ class UtilitiesCalc(object):
     def generateLatitudeMap(self, lat_min, lat_max, im_height, im_width):
 
         lat_lim = np.linspace(lat_min, lat_max, im_height);
-        lon_lim = np.linspace(lat_min, lat_max, im_width);
+        lon_lim = np.linspace(1, 1, im_width); # just temporary lon values, will not affect output of this function.
         [X_map,Y_map] = np.meshgrid(lon_lim,lat_lim);
         lat_map = np.flipud(Y_map);
 

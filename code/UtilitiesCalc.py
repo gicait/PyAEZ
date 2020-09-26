@@ -12,7 +12,7 @@ class UtilitiesCalc(object):
     def interpMonthlyToDaily(self, monthly_vector, cycle_begin, cycle_end, no_minus_values=False):
         # if 'no_minus_values' is true, negative values will be forced to be zero.
 
-        doy_middle_of_month = np.arange(0,monthly_vector.size)*30 + 15 # Calculate doy of middle of month
+        doy_middle_of_month = np.arange(0,12)*30 + 15 # Calculate doy of middle of month
 
         #daily_vector = np.interp(np.arange(cycle_begin,cycle_end+1), doy_middle_of_month, monthly_vector)
 

@@ -61,7 +61,7 @@ class ETOCalc(object):
 
         # Net outgoing long wave-radiation
         sub_cst = 0.000000004903  # Stefan-Boltzmann constant [MJ K-4 m-2 day-1]
-        Rnl = (((273.16+self.maxT_daily**4)+((273.16 +self.minT_daily)**4)))*(0.34 - (0.14*(ea**0.5)))*((1.35*(self.shortRad_daily/Rso))-0.35)*sub_cst/2
+        Rnl = (((273.16+self.maxT_daily)**4)+((273.16 +self.minT_daily)**4))*(0.34 - (0.14*(ea**0.5)))*((1.35*(self.shortRad_daily/Rso))-0.35)*sub_cst/2
 
         # Net Radiation flux at crop surface
         Rn = Rns - Rnl
@@ -70,7 +70,7 @@ class ETOCalc(object):
         D = 4098 * (0.6108*np.exp((17.27*ta) /(237.3+ta)))/(ta+237.3)**2
 
         # Atmospheric Pressure
-        P = 101*np.power(((293-(0.0065*self.alt))/293),5.26)
+        P = 101.3*np.power(((293-(0.0065*self.alt))/293),5.26)
 
         # Psychrometric Constant
         psy = 0.000665*P

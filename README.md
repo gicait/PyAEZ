@@ -2,16 +2,17 @@
 PyAEZ is a python package consisted of many algorithms related to Agro-ecalogical zoning (AEZ) framework. PyAEZ tries to encapsulate all complex calculations in AEZ and try to provide user friendly, and intuitive ways to input data and output results after calculations.
 
 ### Introduction
-PyAEZ includes 5 main modules as below. Additionally to that, UtilityCalculations module is also included in PyAEZ to perform additional related utility calculations.
+PyAEZ includes 6 main modules as below. Additionally to that, UtilityCalculations module is also included in PyAEZ to perform additional related utility calculations.
 
 * Module I: Climate Regime
 * Module II: Crop Simulations
 * Module III: Climate Constraints
 * Module IV: Soil Constraints
 * Module V: Terrain Constraints
+* Module VI: Economic Suitability Analysis
 * UtilityCalculations Module
 
-Other than 5 main modules and utility module, following 3 major algorithms related to AEZ also are included in PyAEZ. Those 3 major algorithms can be utilized individually without running whole PyAEZ.
+Other than 6 main modules and utility module, following 3 major algorithms related to AEZ also are included in PyAEZ. Those 3 major algorithms can be utilized individually without running whole PyAEZ.
 
 * Biomass Calculations
 * Evapotranspiration Calculations
@@ -23,12 +24,13 @@ Other than 5 main modules and utility module, following 3 major algorithms relat
 * gdal
 
 ### Step-by-step Process
-Following 5 Jupyter notebooks in the repository can be used as worked full example for PyAEZ 5 major modules.
+Following 6 Jupyter notebooks in the repository can be used as worked full example for PyAEZ 6 major modules.
 * NB1_ClimateRegime.ipynb
 * NB2_CropSimulation.ipynb
 * NB3_ClimaticConstraints.ipynb
 * NB4_SoilConstraints.ipynb
 * NB5_TerrainConstraints.ipynb
+* NB6_EconomicSuitability.ipynb
 
 ### Documentation
 API Documentation is located in "docs" folder.
@@ -66,3 +68,4 @@ Food and Agriculture Organization of the United Nations ([FAO](http://www.fao.or
 * Fischer, G., van Velthuizen, H., Shah, M., & Nachtergaele, F. (2002a). Global agroecological assessment for agriculture in the 21st century: Methodology and results. IIASA RR-02-02, IIASA, Laxenburg, Austria.
 * Monteith, J. L. (1965). Evapotranspiration and the environment. In The State and Movement of Water in Living Organisms, 205-234.
 * Monteith, J. L. (1981). Evapotranspiration and surface temperature. Quarterly Journal Royal Meteorological Society, 107 , 1-27.
+* FAO, Rome (2017). Final Report: National Agro-Economic Zoning for Major Crops in Thailand (NAEZ).

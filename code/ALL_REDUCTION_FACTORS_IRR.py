@@ -16,9 +16,17 @@ lgp_eq_red_fr = [[25,25,25,25,25,25,25,50,50,50,75,75],
 # value - values of soil characteristics (mush be ascending order)
 # factor - yield reduction factors corresponding to each value
 
-# soil texture
-TXT_value = ['Fine', 'Medium', 'Coarse'] # LL and HC are hypothetical values
-TXT_factor = [90, 70, 30]
+# soil texture for SQ1
+TXT1_value = ['Fine', 'Medium', 'Coarse']
+TXT1_factor = [90, 70, 30]
+
+# soil texture for SQ2
+TXT2_value = ['Fine', 'Medium', 'Coarse']
+TXT2_factor = [90, 70, 30]
+
+# soil texture for SQ7
+TXT7_value = ['Fine', 'Medium', 'Coarse']
+TXT7_factor = [90, 70, 30]
 
 # soil organic carbon
 OC_value = [0, 0.8, 1.5, 2]

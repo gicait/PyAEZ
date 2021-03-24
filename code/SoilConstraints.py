@@ -15,7 +15,7 @@ class SoilConstraints(object):
 
     def soil_qty_1_top(self, TXT_val, OC_val, pH_val, TEB_val):
 
-        TXT_intp = self.crop_P.TXT_factor[self.crop_P.TXT_value.index(TXT_val)]/100
+        TXT_intp = self.crop_P.TXT1_factor[self.crop_P.TXT1_value.index(TXT_val)]/100
         pH_intp = np.interp(pH_val, self.crop_P.pH_value, self.crop_P.pH_factor)/100
         OC_intp = np.interp(OC_val, self.crop_P.OC_value, self.crop_P.OC_factor)/100
         TEB_intp = np.interp(TEB_val, self.crop_P.TEB_value, self.crop_P.TEB_factor)/100
@@ -27,7 +27,7 @@ class SoilConstraints(object):
 
     def soil_qty_1_sub(self, TXT_val, pH_val, TEB_val):
 
-        TXT_intp = self.crop_P.TXT_factor[self.crop_P.TXT_value.index(TXT_val)]/100
+        TXT_intp = self.crop_P.TXT1_factor[self.crop_P.TXT1_value.index(TXT_val)]/100
         pH_intp = np.interp(pH_val, self.crop_P.pH_value, self.crop_P.pH_factor)/100
         TEB_intp = np.interp(TEB_val, self.crop_P.TEB_value, self.crop_P.TEB_factor)/100
 
@@ -38,7 +38,7 @@ class SoilConstraints(object):
 
     def soil_qty_2_top(self, TXT_val, BS_val, CECsoil_val):
 
-        TXT_intp = self.crop_P.TXT_factor[self.crop_P.TXT_value.index(TXT_val)]/100
+        TXT_intp = self.crop_P.TXT2_factor[self.crop_P.TXT2_value.index(TXT_val)]/100
         BS_intp = np.interp(BS_val, self.crop_P.BS_value, self.crop_P.BS_factor)/100
         CECsoil_intp = np.interp(CECsoil_val, self.crop_P.CECsoil_value, self.crop_P.CECsoil_factor)/100
 
@@ -49,7 +49,7 @@ class SoilConstraints(object):
 
     def soil_qty_2_sub(self, TXT_val, BS_val, CECclay_val, pH_val):
 
-        TXT_intp = self.crop_P.TXT_factor[self.crop_P.TXT_value.index(TXT_val)]/100
+        TXT_intp = self.crop_P.TXT2_factor[self.crop_P.TXT2_value.index(TXT_val)]/100
         BS_intp = np.interp(BS_val, self.crop_P.BS_value, self.crop_P.BS_factor)/100
         CECclay_intp = np.interp(CECclay_val, self.crop_P.CECclay_value, self.crop_P.CECclay_factor)/100
         pH_intp = np.interp(pH_val, self.crop_P.pH_value, self.crop_P.pH_factor)/100
@@ -104,7 +104,7 @@ class SoilConstraints(object):
         RSD_intp = np.interp(RSD_val, self.crop_P.RSD_value, self.crop_P.RSD_factor)/100
         GRC_intp = np.interp(GRC_val, self.crop_P.GRC_value, self.crop_P.GRC_factor)/100
         SPH_intp = self.crop_P.SPH7_factor[self.crop_P.SPH7_value.index(SPH_val)]/100
-        TXT_intp = self.crop_P.TXT_factor[self.crop_P.TXT_value.index(TXT_val)]/100
+        TXT_intp = self.crop_P.TXT7_factor[self.crop_P.TXT7_value.index(TXT_val)]/100
         VSP_intp = np.interp(VSP_val, self.crop_P.VSP_value, self.crop_P.VSP_factor)/100
 
         min_factor = np.min([RSD_intp, GRC_intp, SPH_intp, TXT_intp, VSP_intp])

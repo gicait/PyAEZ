@@ -310,12 +310,12 @@ class ClimateRegime(object):
         return [A9,A8,A7,A6,A5,A4,A3,A2,A1,B1,B2,B3,B4,B5,B6,B7,B8,B9]
 
 
-    def getLGP(self):
+    def getLGP(self, Sa = 100, pc = 0.5, kc = 1, D = 1):
 
-        kc = 1 # crop water requirements for entire growth cycle
-        Sa = 100 # available soil moisture holding capacity (mm/m) , usually assume as 100
-        D = 1 # rooting depth (m)
-        pc = 0.5 # soil water depletion fraction below which ETa < ETo (from literature)
+        # Sa: available soil moisture holding capacity (mm/m) , usually assume as 100
+        # kc: crop water requirements for entire growth cycle
+        # D: rooting depth (m)
+        # pc: soil water depletion fraction below which ETa < ETo (from literature)
 
         petc = np.zeros(self.pet_daily.shape)
         peta = np.zeros(self.pet_daily.shape)
@@ -328,18 +328,23 @@ class ClimateRegime(object):
                     if self.im_mask[i_r, i_c] == self.nodata_val:
                         continue
 
+                if len(np.array(Sa).shape) == 2:
+                    Sa_temp = Sa[i_r, i_c]
+                else:
+                    Sa_temp = Sa
+
                 W = 0
 
                 for ii in range(self.pet_daily.shape[-1]):
                     if self.totalPrec_daily[i_r,i_c,ii] >= petc[i_r,i_c,ii]:
                         peta[i_r,i_c,ii] = petc[i_r,i_c,ii]
-                    elif self.totalPrec_daily[i_r,i_c,ii] + W >= Sa*D*(1-pc):
+                    elif self.totalPrec_daily[i_r,i_c,ii] + W >= Sa_temp*D*(1-pc):
                         peta[i_r,i_c,ii] = petc[i_r,i_c,ii]
                     else:
-                        kk = (W+self.totalPrec_daily[i_r,i_c,ii]) / (Sa*D*(1-pc))
+                        kk = (W+self.totalPrec_daily[i_r,i_c,ii]) / (Sa_temp*D*(1-pc))
                         peta[i_r,i_c,ii] = kk * petc[i_r,i_c,ii]
 
-                    W = np.min([W+self.totalPrec_daily[i_r,i_c,ii]-peta[i_r,i_c,ii], Sa*D])
+                    W = np.min([W+self.totalPrec_daily[i_r,i_c,ii]-peta[i_r,i_c,ii], Sa_temp*D])
                     if W<0: W=0
 
         return np.sum( (peta/self.pet_daily)>0.5, axis=2 )

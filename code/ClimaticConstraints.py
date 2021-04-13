@@ -24,7 +24,9 @@ class ClimaticConstraints(object):
         lgp_eq = np.round(lgp_eq)
         lgp_eq[np.isnan(lgp_eq)] = -99 # This suppresses warning with NaN values
 
-        min_yield_fact = np.min(reduction_fact, axis=0) / 100
+        '''min is replaced by product based on GAEZ doc, still keeping commented min code also just in case'''
+        # min_yield_fact = np.min(reduction_fact, axis=0) / 100
+        min_yield_fact = np.prod(reduction_fact/100, axis=0)
 
         for class_num in range(class_break.shape[0]):
             temp_idx = np.logical_and(class_break[class_num,0]<=lgp_eq, lgp_eq<=class_break[class_num,1])

@@ -112,7 +112,7 @@ class CropSimulation(object):
 
         self.set_Tprofile_screening = True
 
-    def simulateCropCycle(self, start_doy=1, end_doy=366, step_doy=1):
+    def simulateCropCycle(self, start_doy=1, end_doy=365, step_doy=1):
 
         # just a counter to keep track of progress
         count_pixel_completed = 0
@@ -165,7 +165,7 @@ class CropSimulation(object):
                 yield_of_all_crop_cycles_rainfed = []
                 yield_of_all_crop_cycles_irrig = []
 
-                for i_cycle in range(start_doy, end_doy, step_doy):
+                for i_cycle in range(start_doy, end_doy+1, step_doy):
 
                     # just repeat data for year 2 times, to simulate for a entire year. just for computational convenient
                     minT_daily_2year = np.tile(minT_daily_point, 2)

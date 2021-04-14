@@ -112,7 +112,7 @@ class CropSimulation(object):
 
         self.set_Tprofile_screening = True
 
-    def simulateCropCycle(self, start_doy=1, end_doy=365, step_doy=1):
+    def simulateCropCycle(self, start_doy=1, end_doy=365, step_doy=1, leap_year=False):
 
         # just a counter to keep track of progress
         count_pixel_completed = 0
@@ -137,16 +137,23 @@ class CropSimulation(object):
                         continue
                 count_pixel_completed = count_pixel_completed + 1
 
+                # this allows handing leap and non-leap year differently. This is only relevant for monthly data because this value will be used in interpolations.
+                # In case of daily data, length of vector will be taken as number of days in  a year.
+                if leap_year:
+                    days_in_year = 366
+                else:
+                    days_in_year = 365
+
                 # extract climate data for particular location. And if climate data are monthly data, they are interpolated as daily data
                 if self.set_monthly:
                     obj_utilities = UtilitiesCalc.UtilitiesCalc()
 
-                    minT_daily_point = obj_utilities.interpMonthlyToDaily(self.minT_monthly[i_row, i_col,:], 1, 365)
-                    maxT_daily_point = obj_utilities.interpMonthlyToDaily(self.maxT_monthly[i_row, i_col,:], 1, 365)
-                    shortRad_daily_point = obj_utilities.interpMonthlyToDaily(self.shortRad_monthly[i_row, i_col,:],  1, 365, no_minus_values=True)
-                    wind2m_daily_point = obj_utilities.interpMonthlyToDaily(self.wind2m_monthly[i_row, i_col,:],  1, 365, no_minus_values=True)
-                    totalPrec_daily_point = obj_utilities.interpMonthlyToDaily(self.totalPrec_monthly[i_row, i_col,:],  1, 365, no_minus_values=True)
-                    rel_humidity_daily_point = obj_utilities.interpMonthlyToDaily(self.rel_humidity_monthly[i_row, i_col,:],  1, 365, no_minus_values=True)
+                    minT_daily_point = obj_utilities.interpMonthlyToDaily(self.minT_monthly[i_row, i_col,:], 1, days_in_year)
+                    maxT_daily_point = obj_utilities.interpMonthlyToDaily(self.maxT_monthly[i_row, i_col,:], 1, days_in_year)
+                    shortRad_daily_point = obj_utilities.interpMonthlyToDaily(self.shortRad_monthly[i_row, i_col,:],  1, days_in_year, no_minus_values=True)
+                    wind2m_daily_point = obj_utilities.interpMonthlyToDaily(self.wind2m_monthly[i_row, i_col,:],  1, days_in_year, no_minus_values=True)
+                    totalPrec_daily_point = obj_utilities.interpMonthlyToDaily(self.totalPrec_monthly[i_row, i_col,:],  1, days_in_year, no_minus_values=True)
+                    rel_humidity_daily_point = obj_utilities.interpMonthlyToDaily(self.rel_humidity_monthly[i_row, i_col,:],  1, days_in_year, no_minus_values=True)
                 else:
                     minT_daily_point = self.minT_daily[i_row, i_col,:]
                     maxT_daily_point = self.maxT_daily[i_row, i_col,:]
@@ -156,7 +163,7 @@ class CropSimulation(object):
                     rel_humidity_daily_point = self.rel_humidity_daily[i_row, i_col,:]
 
                 # calculate ETO for full year for particular location (pixel)
-                obj_eto = ETOCalc.ETOCalc(1, 365, self.latitude_map[i_row, i_col], self.elevation[i_row, i_col])
+                obj_eto = ETOCalc.ETOCalc(1, minT_daily_point.shape[0], self.latitude_map[i_row, i_col], self.elevation[i_row, i_col])
                 shortRad_dailyy_point_MJm2day = (shortRad_daily_point*3600*24)/1000000 # convert w/m2 to MJ/m2/day
                 obj_eto.setClimateData(minT_daily_point, maxT_daily_point, wind2m_daily_point, shortRad_dailyy_point_MJm2day, rel_humidity_daily_point)
                 pet_daily_point = obj_eto.calculateETO()

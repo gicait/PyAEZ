@@ -32,7 +32,7 @@ Following 6 Jupyter notebooks in the repository can be used as worked full examp
 * NB5_TerrainConstraints.ipynb
 * NB6_EconomicSuitability.ipynb
 
-__Note__: *NB2_CropSimulation.ipynb* takes a huge amount of time due to automatic crop calendar calculations. Hence, we have rewritten core parts of PyAEZ (__*CropWatCalc.py*__, __*BioMassCalc.py*__ and __*ETOCalc.py*__) with [Numba](http://numba.pydata.org/) compatible manner as well. Numba translates Python functions to optimized machine code at runtime, allowing calculation speeds close to C or FORTRAN. If you are using [Numba](http://numba.pydata.org/), you can replace __*CropWatCalc.py*__, __*BioMassCalc.py*__ and __*ETOCalc.py*__ files in __PyAEZ/code/__ with Numba version of those files located in __PyAEZ/code/numba_core/__.
+__Note__: *NB2_CropSimulation.ipynb* takes a huge amount of time due to automatic crop calendar calculations. Hence, we have rewritten core parts of PyAEZ (*CropWatCalc.py*, *BioMassCalc.py* and *ETOCalc.py*) with [Numba](http://numba.pydata.org/) compatible manner as well. Numba translates Python functions to optimized machine code at runtime, allowing calculation speeds close to C or FORTRAN. If you are using [Numba](http://numba.pydata.org/), you can replace *CropWatCalc.py*, *BioMassCalc.py* and *ETOCalc.py* files in __PyAEZ/code/__ with Numba version of those files located in __PyAEZ/code/numba_core/__.
 
 
 

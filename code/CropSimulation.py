@@ -238,7 +238,7 @@ class CropSimulation(object):
                     if len(yield_of_all_crop_cycles_irrig) > 0:
                         self.final_yield_rainfed[i_row, i_col] = np.max(yield_of_all_crop_cycles_rainfed)
                         self.final_yield_irrig[i_row, i_col] = np.max(yield_of_all_crop_cycles_irrig)
-                        self.crop_calender[i_row, i_col] = np.where(yield_of_all_crop_cycles_rainfed==np.max(yield_of_all_crop_cycles_rainfed))[0][0]
+                        self.crop_calender[i_row, i_col] = np.where(yield_of_all_crop_cycles_rainfed==np.max(yield_of_all_crop_cycles_rainfed))[0][0] * step_doy
 
         print('Simulations Completed !')
 

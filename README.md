@@ -22,6 +22,7 @@ Other than 6 main modules and utility module, following 3 major algorithms relat
 * numpy
 * scipy
 * gdal
+* numba (optional)
 
 ### Step-by-step Process
 Following 6 Jupyter notebooks in the repository can be used as worked full example for PyAEZ 6 major modules.

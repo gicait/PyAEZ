@@ -78,6 +78,15 @@ class CropSimulation(object):
         self.setCropParameters(LAI=crop_df['LAI'][0], HI=crop_df['HI'][0], legume=crop_df['legume'][0], adaptability=int(crop_df['adaptability'][0]), cycle_len=int(crop_df['cycle_len'][0]), D1=crop_df['D1'][0], D2=crop_df['D2'][0])
         self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][0], crop_df['stage_per_2'][0], crop_df['stage_per_3'][0], crop_df['stage_per_4'][0]], kc=[crop_df['kc_1'][0], crop_df['kc_2'][0], crop_df['kc_3'][0]], kc_all=crop_df['kc_all'][0], yloss_f=[crop_df['yloss_f1'][0], crop_df['yloss_f2'][0], crop_df['yloss_f3'][0], crop_df['yloss_f4'][0]], yloss_f_all=crop_df['yloss_f_all'][0])
 
+    def setPerennialCropParametersFromCSV(self, file_path, perennial_file_path, crop_name):
+        df = pd.read_csv(file_path)
+        crop_df = df.loc[df['Crop_name'] == crop_name]
+        p_df = pd.read_csv(perennial_file_path)
+        perennial_df = p_df.loc[p_df['Crop_name'] == crop_name]
+        self.setCropParameters(LAI=crop_df['LAI'][0], HI=crop_df['HI'][0], legume=crop_df['legume'][0], adaptability=int(crop_df['adaptability'][0]), cycle_len=int(crop_df['cycle_len'][0]), D1=crop_df['D1'][0], D2=crop_df['D2'][0])
+        self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][0], crop_df['stage_per_2'][0], crop_df['stage_per_3'][0], crop_df['stage_per_4'][0]], kc=[crop_df['kc_1'][0], crop_df['kc_2'][0], crop_df['kc_3'][0]], kc_all=crop_df['kc_all'][0], yloss_f=[crop_df['yloss_f1'][0], crop_df['yloss_f2'][0], crop_df['yloss_f3'][0], crop_df['yloss_f4'][0]], yloss_f_all=crop_df['yloss_f_all'][0])
+        self.adjustForPerennialCrop(aLAI=perennial_df['aLAI'][0], bLAI=perennial_df['bLAI'][0], aHI=perennial_df['aHI'][0], bHI=perennial_df['bHI'][0])
+
     def setSoilWaterParameters(self, Sa, pc):
         self.Sa = Sa  # available soil moisture holding capacity (mm/m) , assumption
         self.pc = pc  # soil water depletion fraction below which ETa < ETo (from literature)

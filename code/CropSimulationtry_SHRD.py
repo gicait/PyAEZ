@@ -108,7 +108,21 @@ class CropSimulationtry(object):
                             self.LGP= climate.getLGP()
                             self.LGPT5= climate.getThermalLGP5() 
                             self.LGPT10= climate.getThermalLGP10()
-                        
+
+                            #  def get_rained_cyc_eff(LGP, cycle_len): array(res) = min(array(LGP), const(cycle_len)) return cyc_eff
+                            # self.rainfed_cycle_eff = (self.LGP, self.cycle_len)  
+                            
+                            # get_temp = self.min_temp
+                            # if get_temp = 5:
+                                # self.LGP_com = self.LGPT5
+                            # else:
+                                # self.LGP_com = self.LGPT10
+                                
+                            # self.irrigated_cycle_eff = (self.LGP_com, self.cycle_len)
+
+
+                            
+
                             with open(path) as csv_file:
                                 csv_read= csv.reader(csv_file, delimiter=',')
                                 lis=[]

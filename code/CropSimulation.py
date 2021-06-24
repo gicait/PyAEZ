@@ -6,7 +6,8 @@ Written by N. Lakmal Deshapriya
 import numpy as np
 import matplotlib.pyplot as plt
 import imageio
-import gdal
+# import gdal
+from osgeo import gdal
 import pandas as pd
 import io
 
@@ -15,6 +16,7 @@ import BioMassCalc
 import ETOCalc
 import CropWatCalc
 import ThermalScreening
+import ClimateRegime 
 
 class CropSimulation(object):
 
@@ -55,7 +57,7 @@ class CropSimulation(object):
         self.im_width = elevation.shape[1]
         self.latitude_map = UtilitiesCalc.UtilitiesCalc().generateLatitudeMap(lat_min, lat_max, self.im_height, self.im_width)
 
-    def setCropParameters(self, LAI, HI, legume, adaptability, cycle_len, D1, D2):
+    def setCropParameters(self, LAI, HI, legume, adaptability, cycle_len, D1, D2, min_temp):
         self.LAi = LAI # leaf area index
         self.HI = HI # harvest index
         self.legume = legume # binary value
@@ -64,6 +66,8 @@ class CropSimulation(object):
 
         self.D1 = D1  # rooting depth 1 (m)
         self.D2 = D2  # rooting depth 2 (m)
+
+        self.min_temp = min_temp
 
     def setCropCycleParameters(self, stage_per, kc, kc_all, yloss_f, yloss_f_all):
         self.d_per = stage_per # Percentage for D1, D2, D3, D4 stages
@@ -74,18 +78,61 @@ class CropSimulation(object):
 
     def setCropParametersFromCSV(self, file_path, crop_name):
         df = pd.read_csv(file_path)
+        print(df)
         crop_df = df.loc[df['Crop_name'] == crop_name]
-        self.setCropParameters(LAI=crop_df['LAI'][0], HI=crop_df['HI'][0], legume=crop_df['legume'][0], adaptability=int(crop_df['adaptability'][0]), cycle_len=int(crop_df['cycle_len'][0]), D1=crop_df['D1'][0], D2=crop_df['D2'][0])
+        self.setCropParameters(LAI=crop_df['LAI'][0], HI=crop_df['HI'][0], legume=crop_df['legume'][0], adaptability=int(crop_df['adaptability'][0]), cycle_len=int(crop_df['cycle_len'][0]), D1=crop_df['D1'][0], D2=crop_df['D2'][0], min_temp=crop_df['min_temp'][0])
         self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][0], crop_df['stage_per_2'][0], crop_df['stage_per_3'][0], crop_df['stage_per_4'][0]], kc=[crop_df['kc_1'][0], crop_df['kc_2'][0], crop_df['kc_3'][0]], kc_all=crop_df['kc_all'][0], yloss_f=[crop_df['yloss_f1'][0], crop_df['yloss_f2'][0], crop_df['yloss_f3'][0], crop_df['yloss_f4'][0]], yloss_f_all=crop_df['yloss_f_all'][0])
 
-    def setPerennialCropParametersFromCSV(self, file_path, perennial_file_path, crop_name):
+    def getRainfedCycEff(self, LGP, cycle_len):
+        self.cyc_eff_rainfed = np.minimum(LGP, cycle_len)
+
+    def getIrrigatedCycEff(self, min_temp, LGP5, LGP10, cycle_len):
+        if min_temp == 5:
+            self.cyc_eff_irrigated = np.minimun(LGP5, cycle_len)
+        else:
+            self.cyc_eff_irrigated = np.minimun(LGP10, cycle_len)
+
+    def setPerennialCropParametersFromCSV(self, file_path, crop_name):
         df = pd.read_csv(file_path)
+        crop_df_index = df.index[df['Crop_name'] == crop_name]
         crop_df = df.loc[df['Crop_name'] == crop_name]
-        p_df = pd.read_csv(perennial_file_path)
-        perennial_df = p_df.loc[p_df['Crop_name'] == crop_name]
-        self.setCropParameters(LAI=crop_df['LAI'][0], HI=crop_df['HI'][0], legume=crop_df['legume'][0], adaptability=int(crop_df['adaptability'][0]), cycle_len=int(crop_df['cycle_len'][0]), D1=crop_df['D1'][0], D2=crop_df['D2'][0])
-        self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][0], crop_df['stage_per_2'][0], crop_df['stage_per_3'][0], crop_df['stage_per_4'][0]], kc=[crop_df['kc_1'][0], crop_df['kc_2'][0], crop_df['kc_3'][0]], kc_all=crop_df['kc_all'][0], yloss_f=[crop_df['yloss_f1'][0], crop_df['yloss_f2'][0], crop_df['yloss_f3'][0], crop_df['yloss_f4'][0]], yloss_f_all=crop_df['yloss_f_all'][0])
-        self.adjustForPerennialCrop(aLAI=perennial_df['aLAI'][0], bLAI=perennial_df['bLAI'][0], aHI=perennial_df['aHI'][0], bHI=perennial_df['bHI'][0])
+        print("index:", crop_df_index)
+        self.setCropParameters(LAI=crop_df['LAI'][crop_df_index], HI=crop_df['HI'][crop_df_index], legume=crop_df['legume'][crop_df_index], adaptability=int(crop_df['adaptability'][crop_df_index]), cycle_len=int(crop_df['cycle_len'][crop_df_index]), D1=crop_df['D1'][crop_df_index], D2=crop_df['D2'][crop_df_index], min_temp=crop_df['min_temp'][crop_df_index])
+        self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][crop_df_index], crop_df['stage_per_2'][crop_df_index], crop_df['stage_per_3'][crop_df_index], crop_df['stage_per_4'][crop_df_index]], kc=[crop_df['kc_1'][crop_df_index], crop_df['kc_2'][crop_df_index], crop_df['kc_3'][crop_df_index]], kc_all=crop_df['kc_all'][crop_df_index], yloss_f=[crop_df['yloss_f1'][crop_df_index], crop_df['yloss_f2'][crop_df_index], crop_df['yloss_f3'][crop_df_index], crop_df['yloss_f4'][crop_df_index]], yloss_f_all=crop_df['yloss_f_all'][crop_df_index])
+
+        self.is_perennial = crop_df['annual/perennial flag'][0]
+        print(self.is_perennial)
+        if self.is_perennial:
+
+            climate = ClimateRegime.ClimateRegime()
+            climate.elevation = self.elevation
+            climate.im_height = self.im_height
+            climate.im_width = self.im_width
+            climate.latitude = self.latitude_map
+
+            # climate.setLocationTerrainData(self.lat_min, self.lat_max, self.elevation)
+            climate.im_mask = self.im_mask
+            climate.nodata_val = self.nodata_val
+            climate.set_mask = True
+            
+            # climate.setStudyAreaMask(self.im_mask, self.nodata_val)
+            if self.set_monthly:
+                climate.setMonthlyClimateData( self.minT_monthly, self.maxT_monthly, self.totalPrec_monthly, self.shortRad_monthly, self.wind2m_monthly, self.rel_humidity_monthly)
+            else:
+                climate.setDailyClimateData( self.minT_daily,  self.maxT_daily, self.totalPrec_daily, self.shortRad_daily, self.wind2m_daily, self.rel_humidity_daily)  
+
+            self.LGP= climate.getLGP()
+            self.LGPT5= climate.getThermalLGP5() 
+            self.LGPT10= climate.getThermalLGP10()
+
+            self.getIrrigatedCycEff(self.min_temp, self.LGPT5, self.LGPT10, self.cycle_len)
+            self.getRainfedCycEff(self, self.LGP, self.cycle_len)
+
+            perennial_file_path = './sample_data/input/Adjustment_factors_for_perennial.csv'
+            p_df = pd.read_csv(perennial_file_path)
+            perennial_df_index = p_df.index[p_df['Crop_name'] == crop_name]
+            perennial_df = p_df.loc[p_df['Crop_name'] == crop_name]
+            self.adjustForPerennialCrop(aLAI=perennial_df['aLAI'][perennial_df_index], bLAI=perennial_df['bLAI'][perennial_df_index], aHI=perennial_df['aHI'][perennial_df_index], bHI=perennial_df['bHI'][perennial_df_index])
 
     def setSoilWaterParameters(self, Sa, pc):
         self.Sa = Sa  # available soil moisture holding capacity (mm/m) , assumption
@@ -101,8 +148,10 @@ class CropSimulation(object):
         self.set_mask = True
 
     def adjustForPerennialCrop(self,  aLAI, bLAI, aHI, bHI):
-        self.LAi = self.LAi * ((self.cycle_len-aLAI)/bLAI) # leaf area index adjustment for perennial crops
-        self.HI = self.HI * ((self.cycle_len-aHI)/bHI) # harvest index adjustment for perennial crops
+        self.LAi_rainfed = self.LAi * ((self.cyc_eff_rainfed-aLAI)/bLAI) # leaf area index adjustment for perennial crops
+        self.HI_rainfed = self.HI * ((self.cyc_eff_rainfed-aHI)/bHI) # harvest index adjustment for perennial crops
+        self.LAi_irrigated = self.LAi * ((self.cyc_eff_irrigated-aLAI)/bLAI) # leaf area index adjustment for perennial crops
+        self.HI_irrigated = self.HI * ((self.cyc_eff_irrigated-aHI)/bHI) # harvest index adjustment for perennial crops
 
     def setThermalClimateScreening(self, t_climate, no_t_climate):
         self.t_climate = t_climate
@@ -229,33 +278,68 @@ class CropSimulation(object):
                     # calculate biomass
                     obj_maxyield = BioMassCalc.BioMassCalc(i_cycle, i_cycle+self.cycle_len-1, self.latitude_map[i_row, i_col])
                     obj_maxyield.setClimateData(minT_daily_season, maxT_daily_season, shortRad_daily_season)
-                    obj_maxyield.setCropParameters(self.LAi, self.HI, self.legume, self.adaptability)
-                    obj_maxyield.calculateBioMass()
-                    est_yield = obj_maxyield.calculateYield()
 
-                    # reduce thermal screening factor
-                    est_yield = est_yield * thermal_screening_f
+                    if self.is_perennial:
+                        # Calculation biomass for rainfed condition 
+                        obj_maxyield.setCropParameters(self.LAi_rainfed, self.HI_rainfed, self.legume, self.adaptability)
+                        obj_maxyield.calculateBioMass()
+                        est_yield_rainfed = obj_maxyield.calculateYield()
 
-                    # apply cropwat
-                    obj_cropwat = CropWatCalc.CropWatCalc(i_cycle, i_cycle+self.cycle_len-1)
-                    obj_cropwat.setClimateData(pet_daily_season, totalPrec_daily_season)
-                    # check Sa is a raster or single value and extract Sa value accordingly
-                    if len(np.array(self.Sa).shape) == 2:
-                        Sa_temp = self.Sa[i_row, i_col]
+                        # reduce thermal screening factor
+                        est_yield_rainfed = est_yield_rainfed * thermal_screening_f
+
+                        # apply cropwat
+                        obj_cropwat = CropWatCalc.CropWatCalc(i_cycle, i_cycle+self.cycle_len-1)
+                        obj_cropwat.setClimateData(pet_daily_season, totalPrec_daily_season)
+                        # check Sa is a raster or single value and extract Sa value accordingly
+                        if len(np.array(self.Sa).shape) == 2:
+                            Sa_temp = self.Sa[i_row, i_col]
+                        else:
+                            Sa_temp = self.Sa
+                        obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f, self.yloss_f_all, est_yield_rainfed, self.D1, self.D2, Sa_temp, self.pc)
+                        est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
+
+                        # append current cycle yield to a list
+                        yield_of_all_crop_cycles_rainfed.append( est_yield_moisture_limited )
+                        
+                        # Calculation biomass for rainfed condition
+                        obj_maxyield.setCropParameters(self.LAi_irrigated, self.HI_irrigated, self.legume, self.adaptability)
+                        obj_maxyield.calculateBioMass()
+                        est_yield_irrigated = obj_maxyield.calculateYield()
+
+                        # reduce thermal screening factor
+                        est_yield_irrigated = est_yield_irrigated * thermal_screening_f
+                        yield_of_all_crop_cycles_irrig.append( est_yield_irrigated )
+                    
                     else:
-                        Sa_temp = self.Sa
-                    obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f, self.yloss_f_all, est_yield, self.D1, self.D2, Sa_temp, self.pc)
-                    est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
+                        obj_maxyield.setCropParameters(self.LAi, self.HI, self.legume, self.adaptability)
+                        obj_maxyield.calculateBioMass()
+                        est_yield = obj_maxyield.calculateYield()
 
-                    # append current cycle yield to a list
-                    yield_of_all_crop_cycles_rainfed.append( est_yield_moisture_limited )
-                    yield_of_all_crop_cycles_irrig.append( est_yield )
+                        # reduce thermal screening factor
+                        est_yield = est_yield * thermal_screening_f
+
+                        # apply cropwat
+                        obj_cropwat = CropWatCalc.CropWatCalc(i_cycle, i_cycle+self.cycle_len-1)
+                        obj_cropwat.setClimateData(pet_daily_season, totalPrec_daily_season)
+                        # check Sa is a raster or single value and extract Sa value accordingly
+                        if len(np.array(self.Sa).shape) == 2:
+                            Sa_temp = self.Sa[i_row, i_col]
+                        else:
+                            Sa_temp = self.Sa
+                        obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f, self.yloss_f_all, est_yield, self.D1, self.D2, Sa_temp, self.pc)
+                        est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
+
+                        # append current cycle yield to a list
+                        yield_of_all_crop_cycles_rainfed.append( est_yield_moisture_limited )
+                        yield_of_all_crop_cycles_irrig.append( est_yield )
 
                     # get maximum yield from all simulation for a particular location (pixel) and assign to final map
                     if len(yield_of_all_crop_cycles_irrig) > 0:
                         self.final_yield_rainfed[i_row, i_col] = np.max(yield_of_all_crop_cycles_rainfed)
                         self.final_yield_irrig[i_row, i_col] = np.max(yield_of_all_crop_cycles_irrig)
                         self.crop_calender[i_row, i_col] = np.where(yield_of_all_crop_cycles_rainfed==np.max(yield_of_all_crop_cycles_rainfed))[0][0] * step_doy
+                        
 
         print('Simulations Completed !')
 

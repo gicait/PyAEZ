@@ -318,9 +318,7 @@ class CropSimulationtry(object):
                         est_yield = obj_maxyield.calculateYield()
                          # reduce thermal screening factor
                         est_yield = est_yield * thermal_screening_f
-                        est_yieldr= est_yield
-
-                   
+                        est_yieldr= est_yield                  
                         
                         
                          

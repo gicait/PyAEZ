@@ -76,32 +76,34 @@ class CropSimulation(object):
         self.yloss_f = yloss_f  # yield loss for D1, D2, D3, D4
         self.yloss_f_all = yloss_f_all  # yield loss for entire growth cycle
 
-    def setCropParametersFromCSV(self, file_path, crop_name):
-        df = pd.read_csv(file_path)
-        print(df)
-        crop_df = df.loc[df['Crop_name'] == crop_name]
-        self.setCropParameters(LAI=crop_df['LAI'][0], HI=crop_df['HI'][0], legume=crop_df['legume'][0], adaptability=int(crop_df['adaptability'][0]), cycle_len=int(crop_df['cycle_len'][0]), D1=crop_df['D1'][0], D2=crop_df['D2'][0], min_temp=crop_df['min_temp'][0])
-        self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][0], crop_df['stage_per_2'][0], crop_df['stage_per_3'][0], crop_df['stage_per_4'][0]], kc=[crop_df['kc_1'][0], crop_df['kc_2'][0], crop_df['kc_3'][0]], kc_all=crop_df['kc_all'][0], yloss_f=[crop_df['yloss_f1'][0], crop_df['yloss_f2'][0], crop_df['yloss_f3'][0], crop_df['yloss_f4'][0]], yloss_f_all=crop_df['yloss_f_all'][0])
+    # def setCropParametersFromCSV(self, file_path, crop_name):
+    #     df = pd.read_csv(file_path)
+    #     print(df)
+    #     crop_df = df.loc[df['Crop_name'] == crop_name]
+    #     self.setCropParameters(LAI=crop_df['LAI'][0], HI=crop_df['HI'][0], legume=crop_df['legume'][0], adaptability=int(crop_df['adaptability'][0]), cycle_len=int(crop_df['cycle_len'][0]), D1=crop_df['D1'][0], D2=crop_df['D2'][0], min_temp=crop_df['min_temp'][0])
+    #     self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][0], crop_df['stage_per_2'][0], crop_df['stage_per_3'][0], crop_df['stage_per_4'][0]], kc=[crop_df['kc_1'][0], crop_df['kc_2'][0], crop_df['kc_3'][0]], kc_all=crop_df['kc_all'][0], yloss_f=[crop_df['yloss_f1'][0], crop_df['yloss_f2'][0], crop_df['yloss_f3'][0], crop_df['yloss_f4'][0]], yloss_f_all=crop_df['yloss_f_all'][0])
 
     def getRainfedCycEff(self, LGP, cycle_len):
         self.cyc_eff_rainfed = np.minimum(LGP, cycle_len)
 
     def getIrrigatedCycEff(self, min_temp, LGP5, LGP10, cycle_len):
+        print(min_temp)
         if min_temp == 5:
-            self.cyc_eff_irrigated = np.minimun(LGP5, cycle_len)
+            self.cyc_eff_irrigated = np.minimum(LGP5, cycle_len)
         else:
-            self.cyc_eff_irrigated = np.minimun(LGP10, cycle_len)
+            self.cyc_eff_irrigated = np.minimum(LGP10, cycle_len)
 
     def setPerennialCropParametersFromCSV(self, file_path, crop_name):
         df = pd.read_csv(file_path)
-        crop_df_index = df.index[df['Crop_name'] == crop_name]
+        crop_df_index = df.index[df['Crop_name'] == crop_name].tolist()[0]
         crop_df = df.loc[df['Crop_name'] == crop_name]
         print("index:", crop_df_index)
+        print(crop_df['D2'][crop_df_index])
         self.setCropParameters(LAI=crop_df['LAI'][crop_df_index], HI=crop_df['HI'][crop_df_index], legume=crop_df['legume'][crop_df_index], adaptability=int(crop_df['adaptability'][crop_df_index]), cycle_len=int(crop_df['cycle_len'][crop_df_index]), D1=crop_df['D1'][crop_df_index], D2=crop_df['D2'][crop_df_index], min_temp=crop_df['min_temp'][crop_df_index])
         self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][crop_df_index], crop_df['stage_per_2'][crop_df_index], crop_df['stage_per_3'][crop_df_index], crop_df['stage_per_4'][crop_df_index]], kc=[crop_df['kc_1'][crop_df_index], crop_df['kc_2'][crop_df_index], crop_df['kc_3'][crop_df_index]], kc_all=crop_df['kc_all'][crop_df_index], yloss_f=[crop_df['yloss_f1'][crop_df_index], crop_df['yloss_f2'][crop_df_index], crop_df['yloss_f3'][crop_df_index], crop_df['yloss_f4'][crop_df_index]], yloss_f_all=crop_df['yloss_f_all'][crop_df_index])
 
         self.is_perennial = crop_df['annual/perennial flag'][0]
-        print(self.is_perennial)
+        # print(self.is_perennial)
         if self.is_perennial:
 
             climate = ClimateRegime.ClimateRegime()
@@ -126,11 +128,11 @@ class CropSimulation(object):
             self.LGPT10= climate.getThermalLGP10()
 
             self.getIrrigatedCycEff(self.min_temp, self.LGPT5, self.LGPT10, self.cycle_len)
-            self.getRainfedCycEff(self, self.LGP, self.cycle_len)
+            self.getRainfedCycEff(self.LGP, self.cycle_len)
 
             perennial_file_path = './sample_data/input/Adjustment_factors_for_perennial.csv'
             p_df = pd.read_csv(perennial_file_path)
-            perennial_df_index = p_df.index[p_df['Crop_name'] == crop_name]
+            perennial_df_index = p_df.index[p_df['Crop_name'] == crop_name].to_list()[0]
             perennial_df = p_df.loc[p_df['Crop_name'] == crop_name]
             self.adjustForPerennialCrop(aLAI=perennial_df['aLAI'][perennial_df_index], bLAI=perennial_df['bLAI'][perennial_df_index], aHI=perennial_df['aHI'][perennial_df_index], bHI=perennial_df['bHI'][perennial_df_index])
 

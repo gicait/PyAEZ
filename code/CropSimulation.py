@@ -283,9 +283,9 @@ class CropSimulation(object):
 
                     if self.is_perennial:
                         # Calculation biomass for rainfed condition
-                        print(self.LAi)
-                        print(self.LAi_rainfed, self.HI_rainfed, self.legume, self.adaptability)
-                        obj_maxyield.setCropParameters(self.LAi_rainfed, self.HI_rainfed, self.legume, self.adaptability)
+                        # print("--------------")
+                        # print(np.mean(self.LAi_rainfed), np.mean(self.HI_rainfed), self.legume, self.adaptability)
+                        obj_maxyield.setCropParameters(self.LAi_rainfed[i_row, i_col]+1, self.HI_rainfed[i_row, i_col]+1, self.legume, self.adaptability)
                         obj_maxyield.calculateBioMass()
                         est_yield_rainfed = obj_maxyield.calculateYield()
 
@@ -307,7 +307,7 @@ class CropSimulation(object):
                         yield_of_all_crop_cycles_rainfed.append( est_yield_moisture_limited )
                         
                         # Calculation biomass for rainfed condition
-                        obj_maxyield.setCropParameters(self.LAi_irrigated, self.HI_irrigated, self.legume, self.adaptability)
+                        obj_maxyield.setCropParameters(self.LAi_irrigated[i_row, i_col]+1, self.HI_irrigated[i_row, i_col]+1, self.legume, self.adaptability)
                         obj_maxyield.calculateBioMass()
                         est_yield_irrigated = obj_maxyield.calculateYield()
 

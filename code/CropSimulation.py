@@ -86,12 +86,12 @@ class CropSimulation(object):
     def getRainfedCycEff(self, LGP, cycle_len):
         self.cyc_eff_rainfed = np.minimum(LGP, cycle_len)
 
-    def getIrrigatedCycEff(self, min_temp, LGP5, LGP10, cycle_len):
+    def getIrrigatedCycEff(self, min_temp, LGPT5, LGPT10, cycle_len):
         print(min_temp)
         if min_temp == 5:
-            self.cyc_eff_irrigated = np.minimum(LGP5, cycle_len)
+            self.cyc_eff_irrigated = np.minimum(LGPT5, cycle_len)
         else:
-            self.cyc_eff_irrigated = np.minimum(LGP10, cycle_len)
+            self.cyc_eff_irrigated = np.minimum(LGPT10, cycle_len)
 
     def setPerennialCropParametersFromCSV(self, file_path, crop_name):
         df = pd.read_csv(file_path)
@@ -102,7 +102,7 @@ class CropSimulation(object):
         self.setCropParameters(LAI=crop_df['LAI'][crop_df_index], HI=crop_df['HI'][crop_df_index], legume=crop_df['legume'][crop_df_index], adaptability=int(crop_df['adaptability'][crop_df_index]), cycle_len=int(crop_df['cycle_len'][crop_df_index]), D1=crop_df['D1'][crop_df_index], D2=crop_df['D2'][crop_df_index], min_temp=crop_df['min_temp'][crop_df_index])
         self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][crop_df_index], crop_df['stage_per_2'][crop_df_index], crop_df['stage_per_3'][crop_df_index], crop_df['stage_per_4'][crop_df_index]], kc=[crop_df['kc_1'][crop_df_index], crop_df['kc_2'][crop_df_index], crop_df['kc_3'][crop_df_index]], kc_all=crop_df['kc_all'][crop_df_index], yloss_f=[crop_df['yloss_f1'][crop_df_index], crop_df['yloss_f2'][crop_df_index], crop_df['yloss_f3'][crop_df_index], crop_df['yloss_f4'][crop_df_index]], yloss_f_all=crop_df['yloss_f_all'][crop_df_index])
 
-        self.is_perennial = crop_df['annual/perennial flag'][0]
+        self.is_perennial = crop_df['annual/perennial flag'][crop_df_index]
         # print(self.is_perennial)
         if self.is_perennial:
 
@@ -282,7 +282,9 @@ class CropSimulation(object):
                     obj_maxyield.setClimateData(minT_daily_season, maxT_daily_season, shortRad_daily_season)
 
                     if self.is_perennial:
-                        # Calculation biomass for rainfed condition 
+                        # Calculation biomass for rainfed condition
+                        print(self.LAi)
+                        print(self.LAi_rainfed, self.HI_rainfed, self.legume, self.adaptability)
                         obj_maxyield.setCropParameters(self.LAi_rainfed, self.HI_rainfed, self.legume, self.adaptability)
                         obj_maxyield.calculateBioMass()
                         est_yield_rainfed = obj_maxyield.calculateYield()

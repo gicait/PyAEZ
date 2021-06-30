@@ -183,7 +183,7 @@ class ThermalScreening(object):
                 thermal_screening_f = np.min([f1,thermal_screening_f])
         
 
-        #Changed code as following:
+        '''the modified reduction factor for T_sum'''
         if self.set_Tsum_screening:
 
             if self.tsum0 > self.LsO[0] and self.tsum < self.LO[0] :
@@ -195,7 +195,7 @@ class ThermalScreening(object):
                 thermal_screening_f = np.min([f1,thermal_screening_f])
             elif self.tsum0>self.HO[0] and self.Tsum0<self.HsO[0]:
                 f1 = ((self.tsum0-self.HO[0])/(self.HsO[0]-self.HO[0])) * 0.25 + 0.75
-            elif self.tsum0> self.HsO[0] and self.tsum0< HnS[0]:
+            elif self.tsum0> self.HsO[0] and self.tsum0< self.HnS[0]:
                 f1=((self.tsum0-self.HsO[0])/(self.HnS[0]-self.HsO[0])) * 0.75
                 
 
@@ -207,7 +207,7 @@ class ThermalScreening(object):
                 thermal_screening_f = np.min([f1,thermal_screening_f])
             elif self.tsum5>self.HO[1] and self.Tsum5<self.HsO[1]:
                 f1 = ((self.tsum5-self.HO[1])/(self.HsO[1]-self.HO[1])) * 0.25 + 0.75
-            elif self.tsum5> self.HsO[1] and self.tsum5< HnS[1]:
+            elif self.tsum5> self.HsO[1] and self.tsum5<self.HnS[1]:
                 f1=((self.tsum5-self.HsO[1])/(self.HnS[1]-self.HsO[1])) * 0.75
 
 
@@ -219,7 +219,7 @@ class ThermalScreening(object):
                 thermal_screening_f = np.min([f1,thermal_screening_f])
             elif self.tsum10>self.HO[2] and self.Tsum10<self.HsO[2]:
                 f1 = ((self.tsum10-self.HO[2])/(self.HsO[2]-self.HO[2])) * 0.25 + 0.75
-            elif self.tsum10> self.HsO[2] and self.tsum10< HnS[2]:
+            elif self.tsum10> self.HsO[2] and self.tsum10< self.HnS[2]:
                 f1=((self.tsum10-self.HsO[2])/(self.HnS[2]-self.HsO[2])) * 0.75
         
         

@@ -1,3 +1,3 @@
-﻿Crop_name,LAI,HI,legume,adaptability,cycle_len,D1,D2,stage_per_1,stage_per_2,stage_per_3,stage_per_4,kc_1,kc_2,kc_3,kc_all,yloss_f1,yloss_f2,yloss_f3,yloss_f4,yloss_f_all,annual/perennial flag,min_temp 
-Rice,4,0.4,0,2,105,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,1,10
+﻿Crop_name,LAI,HI,legume,adaptability,cycle_len,D1,D2,stage_per_1,stage_per_2,stage_per_3,stage_per_4,kc_1,kc_2,kc_3,kc_all,yloss_f1,yloss_f2,yloss_f3,yloss_f4,yloss_f_all,annual/perennial flag,min_temp ,LnS,LsO,LO,HnS,HsO,H0
+Rice,4,0.4,0,2,105,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,1,10,[0,5,10],[5,10,15],[10,15,20],[15,20,25],[20,25,30],[25,30,35]
 Surgar cane,,,,,,,,,,,,,,,,,,,,,2

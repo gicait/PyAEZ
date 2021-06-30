@@ -124,18 +124,19 @@ class ThermalScreening(object):
         if self.set_lgpt_screening:
             if self.lgp0<=self.no_lgpt[0] or self.lgp5<=self.no_lgpt[1] or self.lgp10<=self.no_lgpt[2]:
                 return False
-        
-        '''if self.set_lgpt_screening:
+        '''if self.set_lgpt_screening is to be changed as below '''
+
+        if self.set_lgpt_screening:
             if self.lgp0>= self.cycle_len or self.lgp5>=self.cyclelen or self.lgp10>=self.cyclelen:
-                return False'''
+                return False
         
         if self.set_Tsum_screening:
             if self.tsum0<=self.no_Tsum[0] or self.tsum5<=self.no_Tsum[1] or self.tsum10<=self.no_Tsum[2]:
                 return False
-
-        """if self.set_Tsum_screening:
-            if (self.tsum0<=self.HnS[0] and self.tsum0>= LnS[0]) or (self.tsum5<=self.HnS[1] and self.tsum5>= LnS[1]) or (self.tsum10<=<=self.HnS[2] and self.tsum10>= LnS[2]):
-                return False"""
+            """The above condition is to be changed as below"""
+        if self.set_Tsum_screening:
+            if (self.tsum0<=self.HnS[0] and self.tsum0>= self.LnS[0]) or (self.tsum5<=self.HnS[1] and self.tsum5>= self.LnS[1]) or (self.tsum10<=self.HnS[2] and self.tsum10>=self.LnS[2]):
+                return False
 
 
         if self.set_Tprofile_screening:
@@ -181,42 +182,45 @@ class ThermalScreening(object):
                 f1 = ((self.tsum10-self.no_Tsum[2])/(self.optm_Tsum[2]-self.no_Tsum[2])) * 0.75 + 0.25
                 thermal_screening_f = np.min([f1,thermal_screening_f])
         
-        ''' if self.set_Tsum_screening:
+
+        #Changed code as following:
+        if self.set_Tsum_screening:
 
             if self.tsum0 > self.LsO[0] and self.tsum < self.LO[0] :
                 f1 = ((self.tsum0-self.LsO[0])/(self.LO[0]-self.LsO[0])) * 0.25 + 0.75
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-            Eif self.tsum0> self.LnS and self.tsum0< self.LsO:
+            elif self.tsum0> self.LnS and self.tsum0< self.LsO:
+
                 f1=((self.tsum0-self.LnS[0])/(self.LsO[0]-self.LnS[0])) * 0.75
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-            eif self.tsum0>self.HO[0] and self.Tsum0<self.HsO[0]:
+            elif self.tsum0>self.HO[0] and self.Tsum0<self.HsO[0]:
                 f1 = ((self.tsum0-self.HO[0])/(self.HsO[0]-self.HO[0])) * 0.25 + 0.75
-            eif self.tsum0> self.HsO[0] and self.tsum0< HnS[0]:
+            elif self.tsum0> self.HsO[0] and self.tsum0< HnS[0]:
                 f1=((self.tsum0-self.HsO[0])/(self.HnS[0]-self.HsO[0])) * 0.75
                 
 
-             if self.tsum5 > self.LsO[1] and self.tsum5 < self.LO[1] :
+            if self.tsum5 > self.LsO[1] and self.tsum5 < self.LO[1] :
                 f1 = ((self.tsum5-self.LsO[1])/(self.LO[1]-self.LsO[1])) * 0.25 + 0.75
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-            Eif self.tsum5> self.LnS[1] and self.tsum5< self.LsO[1]:
+            elif self.tsum5> self.LnS[1] and self.tsum5< self.LsO[1]:
                 f1=((self.tsum5-self.LnS[1])/(self.LsO[1]-self.LnS[1])) * 0.75
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-            eif self.tsum5>self.HO[1] and self.Tsum5<self.HsO[1]:
+            elif self.tsum5>self.HO[1] and self.Tsum5<self.HsO[1]:
                 f1 = ((self.tsum5-self.HO[1])/(self.HsO[1]-self.HO[1])) * 0.25 + 0.75
-            eif self.tsum5> self.HsO[1] and self.tsum5< HnS[1]:
+            elif self.tsum5> self.HsO[1] and self.tsum5< HnS[1]:
                 f1=((self.tsum5-self.HsO[1])/(self.HnS[1]-self.HsO[1])) * 0.75
 
 
             if self.tsum10 > self.LsO[2] and self.tsum10 < self.LO[2] :
                 f1 = ((self.tsum10-self.LsO[2])/(self.LO[2]-self.LsO[2])) * 0.25 + 0.75
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-            Eif self.tsum10> self.LnS[2] and self.tsum10< self.LsO[2]:
+            elif self.tsum10> self.LnS[2] and self.tsum10< self.LsO[2]:
                 f1=((self.tsum0-self.LnS[2])/(self.LsO[2]-self.LnS[2])) * 0.75
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-            eif self.tsum10>self.HO[2] and self.Tsum10<self.HsO[2]:
+            elif self.tsum10>self.HO[2] and self.Tsum10<self.HsO[2]:
                 f1 = ((self.tsum10-self.HO[2])/(self.HsO[2]-self.HO[2])) * 0.25 + 0.75
-            eif self.tsum10> self.HsO[2] and self.tsum10< HnS[2]:
-                f1=((self.tsum10-self.HsO[2])/(self.HnS[2]-self.HsO[2])) * 0.75'''
+            elif self.tsum10> self.HsO[2] and self.tsum10< HnS[2]:
+                f1=((self.tsum10-self.HsO[2])/(self.HnS[2]-self.HsO[2])) * 0.75
         
         
      

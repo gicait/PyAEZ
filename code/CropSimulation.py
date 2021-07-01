@@ -15,7 +15,7 @@ import UtilitiesCalc
 import BioMassCalc
 import ETOCalc
 import CropWatCalc
-import ThermalScreening
+import ThermalScreening_mod_Sh
 import ClimateRegime 
 
 class CropSimulation(object):
@@ -84,6 +84,8 @@ class CropSimulation(object):
         self.HsO= HsO
         self.HO= HO
 
+        self.set_Tsum_screening = True
+
     def getRainfedCycEff(self, LGP, cycle_len):
         self.cyc_eff_rainfed = np.minimum(LGP, cycle_len)
 
@@ -102,7 +104,7 @@ class CropSimulation(object):
         print(crop_df['D2'][crop_df_index])
         self.setCropParameters(LAI=crop_df['LAI'][crop_df_index], HI=crop_df['HI'][crop_df_index], legume=crop_df['legume'][crop_df_index], adaptability=int(crop_df['adaptability'][crop_df_index]), cycle_len=int(crop_df['cycle_len'][crop_df_index]), D1=crop_df['D1'][crop_df_index], D2=crop_df['D2'][crop_df_index], min_temp=crop_df['min_temp'][crop_df_index])
 
-        LnS, LsO, LO, HO, HsO, HnS = ([] for i in range(5))        
+        LnS, LsO, LO, HO, HsO, HnS = ([] for i in range(6))        
 
         LnS.append(crop_df['LnS_0'][crop_df_index]) 
         LsO.append(crop_df['LsO_0'][crop_df_index])
@@ -111,19 +113,19 @@ class CropSimulation(object):
         HsO.append(crop_df['HsO_0'][crop_df_index])
         HO.append(crop_df['HO_0'][crop_df_index])
 
-        LnS.append(crop_df['LnS_1'][crop_df_index]) 
-        LsO.append(crop_df['LsO_1'][crop_df_index])
-        LO.append(crop_df['LO_1'][crop_df_index])
-        HnS.append(crop_df['HnS_1'][crop_df_index]) 
-        HsO.append(crop_df['HsO_1'][crop_df_index])
-        HO.append(crop_df['HO_1'][crop_df_index])
+        LnS.append(crop_df['LnS_5'][crop_df_index]) 
+        LsO.append(crop_df['LsO_5'][crop_df_index])
+        LO.append(crop_df['LO_5'][crop_df_index])
+        HnS.append(crop_df['HnS_5'][crop_df_index]) 
+        HsO.append(crop_df['HsO_5'][crop_df_index])
+        HO.append(crop_df['HO_5'][crop_df_index])
 
-        LnS.append(crop_df['LnS_1'][crop_df_index]) 
-        LsO.append(crop_df['LsO_1'][crop_df_index])
-        LO.append(crop_df['LO_1'][crop_df_index])
-        HnS.append(crop_df['HnS_1'][crop_df_index]) 
-        HsO.append(crop_df['HsO_1'][crop_df_index])
-        HO.append(crop_df['HO_1'][crop_df_index])
+        LnS.append(crop_df['LnS_10'][crop_df_index]) 
+        LsO.append(crop_df['LsO_10'][crop_df_index])
+        LO.append(crop_df['LO_10'][crop_df_index])
+        HnS.append(crop_df['HnS_10'][crop_df_index]) 
+        HsO.append(crop_df['HsO_10'][crop_df_index])
+        HO.append(crop_df['HO_10'][crop_df_index])
 
         self.setAccTsum(LnS, LsO, LO, HO, HsO, HnS)
 
@@ -287,7 +289,7 @@ class CropSimulation(object):
                     pet_daily_season = pet_daily_2year[i_cycle : i_cycle+self.cycle_len]
 
                     # conduct tests to check simulation should be carried out or not based on growing period threshold. if not, goes to next location (pixel)
-                    obj_screening = ThermalScreening.ThermalScreening()
+                    obj_screening = ThermalScreening_mod_Sh.ThermalScreening()
                     obj_screening.setClimateData(minT_daily_season, maxT_daily_season)
 
                     if self.set_tclimate_screening:
@@ -295,6 +297,7 @@ class CropSimulation(object):
                     if self.set_lgpt_screening:
                         obj_screening.setLGPTScreening(self.no_lgpt, self.optm_lgpt)
                     if self.set_Tsum_screening:
+                        # print("hey alright till")
                         # obj_screening.setTSumScreening(self.no_Tsum, self.optm_Tsum)
                         obj_screening.SetTSumScreening(self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO)
                     if self.set_Tprofile_screening:
@@ -304,6 +307,7 @@ class CropSimulation(object):
                     if not obj_screening.getSuitability():
                         continue
                     else:
+                        # print("going apply reduction factor")
                         thermal_screening_f = obj_screening.getReductionFactor()
 
                     # calculate biomass

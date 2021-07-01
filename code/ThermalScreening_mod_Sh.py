@@ -99,7 +99,7 @@ class ThermalScreening(object):
 
     #     self.set_Tsum_screening = True
 
-    def setTSumScreening(self, LnS, LsO, LO, HnS, HsO, HO ):
+    def SetTSumScreening(self, LnS, LsO, LO, HnS, HsO, HO):
         self.LnS=LnS
         self.LsO=LsO
         self.LO=LO
@@ -127,14 +127,15 @@ class ThermalScreening(object):
                 return False
         '''if self.set_lgpt_screening is to be changed as below '''
 
-        if self.set_lgpt_screening:
-            if self.lgp0>= self.cycle_len or self.lgp5>=self.cyclelen or self.lgp10>=self.cyclelen:
-                return False
+        # if self.set_lgpt_screening:
+        #     if self.lgp0>= self.cycle_len or self.lgp5>=self.cyclelen or self.lgp10>=self.cyclelen:
+        #         return False
         
-        if self.set_Tsum_screening:
-            if self.tsum0<=self.no_Tsum[0] or self.tsum5<=self.no_Tsum[1] or self.tsum10<=self.no_Tsum[2]:
-                return False
-            """The above condition is to be changed as below"""
+        # if self.set_Tsum_screening:
+        #     if self.tsum0<=self.no_Tsum[0] or self.tsum5<=self.no_Tsum[1] or self.tsum10<=self.no_Tsum[2]:
+        #         return False
+
+        """The above condition is to be changed as below"""
         if self.set_Tsum_screening:
             
             # check with thieleng ****
@@ -152,6 +153,7 @@ class ThermalScreening(object):
 
         thermal_screening_f = 1
 
+        # print("reducition applying")
         if self.set_lgpt_screening:
 
             # According to the documentation  the Temperature growing periods and Frost free period falls under type B constraints. 
@@ -188,16 +190,20 @@ class ThermalScreening(object):
         
 
         '''the modified reduction factor for T_sum'''
+        # print("checking for lololloo ")
         if self.set_Tsum_screening:
-
+            # print("checking for 0, 5, and 10")
             if self.tsum0 > self.LsO[0] and self.tsum0 < self.LO[0] :
                 f1 = ((self.tsum0-self.LsO[0])/(self.LO[0]-self.LsO[0])) * 0.25 + 0.75
             elif self.tsum0 > self.HO[0] and self.tsum0 < self.HsO[0]:
                 f1 = ((self.tsum0-self.HO[0])/(self.HsO[0]-self.HO[0])) * 0.25 + 0.75
-            elif self.tsum0 > self.LnS and self.tsum0 < self.LsO:
+            elif self.tsum0 > self.LnS[0] and self.tsum0 < self.LsO[0]:
                 f1 = ((self.tsum0-self.LnS[0])/(self.LsO[0]-self.LnS[0])) * 0.75
             elif self.tsum0 > self.HsO[0] and self.tsum0 < self.HnS[0]:
                 f1=((self.tsum0-self.HsO[0])/(self.HnS[0]-self.HsO[0])) * 0.75
+            elif self.tsum0 > self.LO[0] and self.tsum0 < self.HO[0]:
+                f1 = 1
+                # print("im right")
 
             # confirm with thieleng ***
             thermal_screening_f = np.min([f1,thermal_screening_f])

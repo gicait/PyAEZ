@@ -76,13 +76,13 @@ class CropSimulation(object):
         self.yloss_f = yloss_f  # yield loss for D1, D2, D3, D4
         self.yloss_f_all = yloss_f_all  # yield loss for entire growth cycle
 
-    #self.setAccTsum(LnS, LsO, LO,HnS, HsO,HO)
-    #   self.LnS=LnS
-    #   self.LsO=LsO
-    #   self.LO=LO
-    #   self.HnS=HnS
-    #   self.HsO= HsO
-    #   self.HO= HO
+    def setAccTsum(self, LnS, LsO, LO,HnS, HsO,HO):
+        self.LnS=LnS
+        self.LsO=LsO
+        self.LO=LO
+        self.HnS=HnS
+        self.HsO= HsO
+        self.HO= HO
 
     def getRainfedCycEff(self, LGP, cycle_len):
         self.cyc_eff_rainfed = np.minimum(LGP, cycle_len)
@@ -101,7 +101,31 @@ class CropSimulation(object):
         print("index:", crop_df_index)
         print(crop_df['D2'][crop_df_index])
         self.setCropParameters(LAI=crop_df['LAI'][crop_df_index], HI=crop_df['HI'][crop_df_index], legume=crop_df['legume'][crop_df_index], adaptability=int(crop_df['adaptability'][crop_df_index]), cycle_len=int(crop_df['cycle_len'][crop_df_index]), D1=crop_df['D1'][crop_df_index], D2=crop_df['D2'][crop_df_index], min_temp=crop_df['min_temp'][crop_df_index])
-        #self.setAccTsum(LnS=crop_df['LnS'][crop_df_index], LsO=crop_df['LsO'][crop_df_index], L0=crop_df['LO'][crop_df_index],HnS=crop_df['HnS'][crop_df_index], HsO=crop_df['HsO'][crop_df_index],HO=crop_df['HO'][crop_df_index])
+
+        LnS, LsO, LO, HO, HsO, HnS = ([] for i in range(5))        
+
+        LnS.append(crop_df['LnS_0'][crop_df_index]) 
+        LsO.append(crop_df['LsO_0'][crop_df_index])
+        LO.append(crop_df['LO_0'][crop_df_index])
+        HnS.append(crop_df['HnS_0'][crop_df_index]) 
+        HsO.append(crop_df['HsO_0'][crop_df_index])
+        HO.append(crop_df['HO_0'][crop_df_index])
+
+        LnS.append(crop_df['LnS_1'][crop_df_index]) 
+        LsO.append(crop_df['LsO_1'][crop_df_index])
+        LO.append(crop_df['LO_1'][crop_df_index])
+        HnS.append(crop_df['HnS_1'][crop_df_index]) 
+        HsO.append(crop_df['HsO_1'][crop_df_index])
+        HO.append(crop_df['HO_1'][crop_df_index])
+
+        LnS.append(crop_df['LnS_1'][crop_df_index]) 
+        LsO.append(crop_df['LsO_1'][crop_df_index])
+        LO.append(crop_df['LO_1'][crop_df_index])
+        HnS.append(crop_df['HnS_1'][crop_df_index]) 
+        HsO.append(crop_df['HsO_1'][crop_df_index])
+        HO.append(crop_df['HO_1'][crop_df_index])
+
+        self.setAccTsum(LnS, LsO, LO, HO, HsO, HnS)
 
         self.setCropCycleParameters(stage_per=[crop_df['stage_per_1'][crop_df_index], crop_df['stage_per_2'][crop_df_index], crop_df['stage_per_3'][crop_df_index], crop_df['stage_per_4'][crop_df_index]], kc=[crop_df['kc_1'][crop_df_index], crop_df['kc_2'][crop_df_index], crop_df['kc_3'][crop_df_index]], kc_all=crop_df['kc_all'][crop_df_index], yloss_f=[crop_df['yloss_f1'][crop_df_index], crop_df['yloss_f2'][crop_df_index], crop_df['yloss_f3'][crop_df_index], crop_df['yloss_f4'][crop_df_index]], yloss_f_all=crop_df['yloss_f_all'][crop_df_index])
        
@@ -172,11 +196,11 @@ class CropSimulation(object):
 
         self.set_lgpt_screening = True
 
-    def setTSumScreening(self, no_Tsum, optm_Tsum):
-        self.no_Tsum = no_Tsum
-        self.optm_Tsum = optm_Tsum
+    # def setTSumScreening(self, no_Tsum, optm_Tsum):
+    #     self.no_Tsum = no_Tsum
+    #     self.optm_Tsum = optm_Tsum
 
-        self.set_Tsum_screening = True
+    #     self.set_Tsum_screening = True
 
     def setTProfileScreening(self, no_Tprofile, optm_Tprofile):
         self.no_Tprofile = no_Tprofile
@@ -271,8 +295,8 @@ class CropSimulation(object):
                     if self.set_lgpt_screening:
                         obj_screening.setLGPTScreening(self.no_lgpt, self.optm_lgpt)
                     if self.set_Tsum_screening:
-                        obj_screening.setTSumScreening(self.no_Tsum, self.optm_Tsum)
-                    #   obj_screening.SetTSumScreening(self.LnS,self.LsO, self.LO,self.HnS, self.HsO, self.HO)
+                        # obj_screening.setTSumScreening(self.no_Tsum, self.optm_Tsum)
+                        obj_screening.SetTSumScreening(self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO)
                     if self.set_Tprofile_screening:
                         obj_screening.setTProfileScreening(self.no_Tprofile, self.optm_Tprofile)
 

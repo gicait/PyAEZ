@@ -93,20 +93,21 @@ class ThermalScreening(object):
 
         self.set_lgpt_screening = True
 
-    def setTSumScreening(self, no_Tsum, optm_Tsum):
-        self.no_Tsum = no_Tsum
-        self.optm_Tsum = optm_Tsum
+    # def setTSumScreening(self, no_Tsum, optm_Tsum):
+    #     self.no_Tsum = no_Tsum
+    #     self.optm_Tsum = optm_Tsum
 
+    #     self.set_Tsum_screening = True
+
+    def setTSumScreening(self, LnS, LsO, LO, HnS, HsO, HO ):
+        self.LnS=LnS
+        self.LsO=LsO
+        self.LO=LO
+        self.HnS=HnS
+        self.HsO=HsO
+        self.HO=HO
+        
         self.set_Tsum_screening = True
-
-    #def setTSumScreening(self,self.LnS,self.LsO, self.LO,self.HnS, self.HsO, self.HO ):
-     #   self.LnS=LnS
-     #  self.LsO=LsO
-     #  self.LO=LO
-     #  self.HnS=HnS
-     #  self.HsO=HsO
-     #  self.HO=HO
-    #    self.set_Tsum_screening = True
 
     
     def setTProfileScreening(self, no_Tprofile, optm_Tprofile):
@@ -135,9 +136,10 @@ class ThermalScreening(object):
                 return False
             """The above condition is to be changed as below"""
         if self.set_Tsum_screening:
-            if (self.tsum0<=self.HnS[0] and self.tsum0>= self.LnS[0]) or (self.tsum5<=self.HnS[1] and self.tsum5>= self.LnS[1]) or (self.tsum10<=self.HnS[2] and self.tsum10>=self.LnS[2]):
+            
+            # check with thieleng ****
+            if (self.tsum0 > self.HnS[0] or self.tsum0 < self.LnS[0]) or (self.tsum5 > self.HnS[1] or self.tsum5 < self.LnS[1]) or (self.tsum10 > self.HnS[2] or self.tsum10 < self.LnS[2]):
                 return False
-
 
         if self.set_Tprofile_screening:
             for i1 in range(len(self.tprofile)):
@@ -152,6 +154,10 @@ class ThermalScreening(object):
 
         if self.set_lgpt_screening:
 
+            # According to the documentation  the Temperature growing periods and Frost free period falls under type B constraints. 
+            # And there are 3 type B constrains. LGP6 and LGP 10 falls under second type where sub-optimal and not- suitable is the same.
+            # looking at the excel sheel that was provided we don't need to calculate redection factors for LGPT.
+
             if self.lgp0 < self.optm_lgpt[0]:
                 f1 = ((self.lgp0-self.no_lgpt[0])/(self.optm_lgpt[0]-self.no_lgpt[0])) * 0.75 + 0.25
                 thermal_screening_f = np.min([f1,thermal_screening_f])
@@ -163,68 +169,62 @@ class ThermalScreening(object):
             if self.lgp10 < self.optm_lgpt[2]:
                 f1 = ((self.lgp10-self.no_lgpt[2])/(self.optm_lgpt[2]-self.no_lgpt[2])) * 0.75 + 0.25
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-            # According to the documentation  the Temperature growing periods and Frost free period falls under type B constraints. 
-            # And there are 3 type B constrains. LGP6 and LGP 10 falls under second type where sub-optimal and not- suitable is the same.
-            # looking at the excel sheel that was provided we don't need to calculate redection factors for LGPT.
-            #  
+        
 
-        if self.set_Tsum_screening:
 
-            if self.tsum0 < self.optm_Tsum[0]:
-                f1 = ((self.tsum0-self.no_Tsum[0])/(self.optm_Tsum[0]-self.no_Tsum[0])) * 0.75 + 0.25
-                thermal_screening_f = np.min([f1,thermal_screening_f])
+        # if self.set_Tsum_screening:
 
-            if self.tsum5 < self.optm_Tsum[1]:
-                f1 = ((self.tsum5-self.no_Tsum[1])/(self.optm_Tsum[1]-self.no_Tsum[1])) * 0.75 + 0.25
-                thermal_screening_f = np.min([f1,thermal_screening_f])
+        #     if self.tsum0 < self.optm_Tsum[0]:
+        #         f1 = ((self.tsum0-self.no_Tsum[0])/(self.optm_Tsum[0]-self.no_Tsum[0])) * 0.75 + 0.25
+        #         thermal_screening_f = np.min([f1,thermal_screening_f])
 
-            if self.tsum10 < self.optm_Tsum[2]:
-                f1 = ((self.tsum10-self.no_Tsum[2])/(self.optm_Tsum[2]-self.no_Tsum[2])) * 0.75 + 0.25
-                thermal_screening_f = np.min([f1,thermal_screening_f])
+        #     if self.tsum5 < self.optm_Tsum[1]:
+        #         f1 = ((self.tsum5-self.no_Tsum[1])/(self.optm_Tsum[1]-self.no_Tsum[1])) * 0.75 + 0.25
+        #         thermal_screening_f = np.min([f1,thermal_screening_f])
+
+        #     if self.tsum10 < self.optm_Tsum[2]:
+        #         f1 = ((self.tsum10-self.no_Tsum[2])/(self.optm_Tsum[2]-self.no_Tsum[2])) * 0.75 + 0.25
+        #         thermal_screening_f = np.min([f1,thermal_screening_f])
         
 
         '''the modified reduction factor for T_sum'''
         if self.set_Tsum_screening:
 
-            if self.tsum0 > self.LsO[0] and self.tsum < self.LO[0] :
+            if self.tsum0 > self.LsO[0] and self.tsum0 < self.LO[0] :
                 f1 = ((self.tsum0-self.LsO[0])/(self.LO[0]-self.LsO[0])) * 0.25 + 0.75
-                thermal_screening_f = np.min([f1,thermal_screening_f])
-            elif self.tsum0> self.LnS and self.tsum0< self.LsO:
-
-                f1=((self.tsum0-self.LnS[0])/(self.LsO[0]-self.LnS[0])) * 0.75
-                thermal_screening_f = np.min([f1,thermal_screening_f])
-            elif self.tsum0>self.HO[0] and self.Tsum0<self.HsO[0]:
+            elif self.tsum0 > self.HO[0] and self.tsum0 < self.HsO[0]:
                 f1 = ((self.tsum0-self.HO[0])/(self.HsO[0]-self.HO[0])) * 0.25 + 0.75
-            elif self.tsum0> self.HsO[0] and self.tsum0< self.HnS[0]:
+            elif self.tsum0 > self.LnS and self.tsum0 < self.LsO:
+                f1 = ((self.tsum0-self.LnS[0])/(self.LsO[0]-self.LnS[0])) * 0.75
+            elif self.tsum0 > self.HsO[0] and self.tsum0 < self.HnS[0]:
                 f1=((self.tsum0-self.HsO[0])/(self.HnS[0]-self.HsO[0])) * 0.75
-                
 
+            # confirm with thieleng ***
+            thermal_screening_f = np.min([f1,thermal_screening_f])
+            
             if self.tsum5 > self.LsO[1] and self.tsum5 < self.LO[1] :
                 f1 = ((self.tsum5-self.LsO[1])/(self.LO[1]-self.LsO[1])) * 0.25 + 0.75
-                thermal_screening_f = np.min([f1,thermal_screening_f])
-            elif self.tsum5> self.LnS[1] and self.tsum5< self.LsO[1]:
+            elif self.tsum5 > self.LnS[1] and self.tsum5 < self.LsO[1]:
                 f1=((self.tsum5-self.LnS[1])/(self.LsO[1]-self.LnS[1])) * 0.75
-                thermal_screening_f = np.min([f1,thermal_screening_f])
-            elif self.tsum5>self.HO[1] and self.Tsum5<self.HsO[1]:
+            elif self.tsum5 > self.HO[1] and self.Tsum5 < self.HsO[1]:
                 f1 = ((self.tsum5-self.HO[1])/(self.HsO[1]-self.HO[1])) * 0.25 + 0.75
-            elif self.tsum5> self.HsO[1] and self.tsum5<self.HnS[1]:
+            elif self.tsum5 > self.HsO[1] and self.tsum5 < self.HnS[1]:
                 f1=((self.tsum5-self.HsO[1])/(self.HnS[1]-self.HsO[1])) * 0.75
 
+            # confirm with thieleng ***
+            thermal_screening_f = np.min([f1,thermal_screening_f])
 
             if self.tsum10 > self.LsO[2] and self.tsum10 < self.LO[2] :
                 f1 = ((self.tsum10-self.LsO[2])/(self.LO[2]-self.LsO[2])) * 0.25 + 0.75
-                thermal_screening_f = np.min([f1,thermal_screening_f])
-            elif self.tsum10> self.LnS[2] and self.tsum10< self.LsO[2]:
+            elif self.tsum10 > self.LnS[2] and self.tsum10 < self.LsO[2]:
                 f1=((self.tsum0-self.LnS[2])/(self.LsO[2]-self.LnS[2])) * 0.75
-                thermal_screening_f = np.min([f1,thermal_screening_f])
-            elif self.tsum10>self.HO[2] and self.Tsum10<self.HsO[2]:
+            elif self.tsum10 > self.HO[2] and self.Tsum10 < self.HsO[2]:
                 f1 = ((self.tsum10-self.HO[2])/(self.HsO[2]-self.HO[2])) * 0.25 + 0.75
-            elif self.tsum10> self.HsO[2] and self.tsum10< self.HnS[2]:
+            elif self.tsum10 > self.HsO[2] and self.tsum10 < self.HnS[2]:
                 f1=((self.tsum10-self.HsO[2])/(self.HnS[2]-self.HsO[2])) * 0.75
         
-        
-     
-
+            # confirm with thieleng ***
+            thermal_screening_f = np.min([f1,thermal_screening_f])        
 
         if self.set_Tprofile_screening:
 

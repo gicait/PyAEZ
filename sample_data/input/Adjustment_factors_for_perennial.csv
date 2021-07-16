@@ -1,4 +1,4 @@
-Crop_name,aLAI,bLAI,aHI,bHI
-Banana,0,300,90,240
-Sugarcane,70,200,120,180
-Tea,0,270,90,180
+Crop_name,aLAI,bLAI,aHI,bHI,test
+Banana,0,300,90,240,"[1,2,3]"
+Sugarcane,70,200,120,180,
+Tea,0,270,90,180,

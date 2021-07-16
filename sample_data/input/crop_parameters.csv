@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 Crop_name,LAI,HI,legume,adaptability,cycle_len,D1,D2,stage_per_1,stage_per_2,stage_per_3,stage_per_4,kc_1,kc_2,kc_3,kc_all,yloss_f1,yloss_f2,yloss_f3,yloss_f4,yloss_f_all,annual/perennial flag,min_temp,LnS,LsO,LO,HO,HsO,HnS
 Sugarcane,4,0.4,0,2,105,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,1,10,"5,10,15","0,5,15","0,10,15","0,5,10","0,5,20","0,10,20"
 Other,4,0.4,0,2,600,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,1,5,,,,,,
 Rice,4,0.4,0,2,105,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,0,10,,,,,,
+=======
+Crop_name,LAI,HI,legume,adaptability,cycle_len,D1,D2,stage_per_1,stage_per_2,stage_per_3,stage_per_4,kc_1,kc_2,kc_3,kc_all,yloss_f1,yloss_f2,yloss_f3,yloss_f4,yloss_f_all,annual/perennial flag,min_temp,LnS_0,LsO_0,LO_0,HO_0,HsO_0,HnS_0,LnS_5,LsO_5,LO_5,HO_5,HsO_5,HnS_5,LnS_10,LsO_10,LO_10,HO_10,HsO_10,HnS_10
+Sugarcane,4,0.4,0,2,105,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,1,10,1300,1350,1400,2050,2150,2300,1300,1350,1400,2050,2150,2300,1300,1350,1400,2050,2150,2300
+Other,4,0.4,0,2,600,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,1,5,,,,,,,,,,,,,,,,,,
+Rice,4,0.4,0,2,105,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,0,10,,,,,,,,,,,,,,,,,,
+>>>>>>> 7f583da9ad361e0d717f3d2b181cb64f0fd87f44

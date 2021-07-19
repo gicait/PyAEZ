@@ -1,12 +1,12 @@
 Crop,Constraint,Type,Optimal,Sub-Optimal,Not-Suitable,Comparision parameters,Remarks
-Wheat,L6a,<=,0.5×CYb  ,0.667×Cyb,0.667×Cyb,,
+Wheat,L6a,<=,0.5ï¿½CYb  ,0.667ï¿½Cyb,0.667ï¿½Cyb,,
 Wheat,L6b,=,0,0,0,,
-Wheat,L2a+ L2b,<=,0.333×Cyb,0.4×Cyb,0.333×Cyb,,Optimal and not suitable has same value
+Wheat,L2a+ L2b,<=,0.333ï¿½Cyb,0.4ï¿½Cyb,0.333ï¿½Cyb,,Optimal and not suitable has same value
 Wheat,L1a+L1b,=,0,0,0,,
-Wheat,L2b+L3b+L4+L5,<,0.5×Cyb,0.5×CYb,0.5×CYb,,
+Wheat,L2b+L3b+L4+L5,<,0.5ï¿½Cyb,0.5ï¿½CYb,0.5ï¿½CYb,,
 Wheat,N3b+N4b+N5b+N6b-(L3b+L4b+L5b),>=,Cya,Cya,Cya,,
 Soybean,L6a+L6b,=,0,0,0,,
-Soybean,L5a+l5b,<=,0.167xCY,0.333x CY,0.333x CY,,
+Soybean,L5a+L5b,<=,0.167xCY,0.333x CY,0.333x CY,,
 Soybean,L4a+L3a+L3b+L4b,>=,0.167xCY,0.083x CY,0.333xCY,,
 Soybean,L4a+L3a+L2a+L2b+L3b+L4b,<=,0.667xCY,0.500xCY,0.333xCY,,
 Soybean,L1a+L1b,<=,0.333xCY,0.500xCY,0.667xCY,,

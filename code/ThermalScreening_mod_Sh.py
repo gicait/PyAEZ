@@ -66,8 +66,6 @@ class ThermalScreening(object):
 
         return [A9,A8,A7,A6,A5,A4,A3,A2,A1,B1,B2,B3,B4,B5,B6,B7,B8,B9]
 
-
-
     def setClimateData(self, minT_daily, maxT_daily):
         self.meanT_daily = (minT_daily + maxT_daily) / 2
 
@@ -119,13 +117,15 @@ class ThermalScreening(object):
 
 #--------------------------------------------------------------------------------------------------------------------
         """Sriram you can find pesudocode below"""
-        #def setTypeB('path'):
+    def setTypeB('path'):
         #      get formula 
         #      read optimal, sub-opitimal and not suitable data
         #      calculate the values= self.TypeB
         #      self.set_typeBconstraint= true
         #      read the comparsion operator
         #      return calculated values 
+
+
         
 #-----------------------------------------------------------------------------------------------------------------------------
 

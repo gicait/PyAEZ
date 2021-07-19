@@ -97,6 +97,7 @@ class CropSimulation(object):
             self.cyc_eff_irrigated = np.minimum(LGPT10, cycle_len)
 
     def setPerennialCropParametersFromCSV(self, file_path, crop_name):
+        self.crop_name = crop_name
         df = pd.read_csv(file_path)
         crop_df_index = df.index[df['Crop_name'] == crop_name].tolist()[0]
         crop_df = df.loc[df['Crop_name'] == crop_name]
@@ -209,6 +210,18 @@ class CropSimulation(object):
         self.optm_Tprofile = optm_Tprofile
 
         self.set_Tprofile_screening = True
+    
+    def ReadThermalScreeningRukesFromCSV(self, path):
+        a = 1
+        # must be called after cropname is ddeclared
+        # with open(path, 'r') as cs
+
+        #self.thermalscreeningrules =  [   
+        #     [constraint1, opr1, op1, subop1, notsu1], 
+        #     ..., 
+        #     [constraint6, opr6, op6, subop6, notsu6]]
+        # ]
+
 
     def simulateCropCycle(self, start_doy=1, end_doy=365, step_doy=1, leap_year=False):
 
@@ -301,7 +314,12 @@ class CropSimulation(object):
                         # obj_screening.setTSumScreening(self.no_Tsum, self.optm_Tsum)
                         obj_screening.SetTSumScreening(self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO)
                     if self.set_Tprofile_screening:
-                        obj_screening.setTProfileScreening(self.no_Tprofile, self.optm_Tprofile)
+
+                        obj_screening.setTypeB(self.thermalscreeningrules)
+
+                        # obj_screening.setTProfileScreening(self.no_Tprofile, self.optm_Tprofile)
+                        # chnage to read from csv
+                        
 
                     thermal_screening_f = 1
                     if not obj_screening.getSuitability():

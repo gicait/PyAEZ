@@ -116,6 +116,21 @@ class ThermalScreening(object):
 
         self.set_Tprofile_screening = True
 
+
+#--------------------------------------------------------------------------------------------------------------------
+        """Sriram you can find pesudocode below"""
+        #def setTypeB('path'):
+        #      get formula 
+        #      read optimal, sub-opitimal and not suitable data
+        #      calculate the values= self.TypeB
+        #      self.set_typeBconstraint= true
+        #      read the comparsion operator
+        #      return calculated values 
+        
+#-----------------------------------------------------------------------------------------------------------------------------
+
+
+
     def getSuitability(self):
 
         if self.set_tclimate_screening:
@@ -125,17 +140,7 @@ class ThermalScreening(object):
         if self.set_lgpt_screening:
             if self.lgp0<=self.no_lgpt[0] or self.lgp5<=self.no_lgpt[1] or self.lgp10<=self.no_lgpt[2]:
                 return False
-        '''if self.set_lgpt_screening is to be changed as below '''
-
-        # if self.set_lgpt_screening:
-        #     if self.lgp0>= self.cycle_len or self.lgp5>=self.cyclelen or self.lgp10>=self.cyclelen:
-        #         return False
         
-        # if self.set_Tsum_screening:
-        #     if self.tsum0<=self.no_Tsum[0] or self.tsum5<=self.no_Tsum[1] or self.tsum10<=self.no_Tsum[2]:
-        #         return False
-
-        """The above condition is to be changed as below"""
         if self.set_Tsum_screening:
             
             # check with thieleng ****
@@ -149,6 +154,22 @@ class ThermalScreening(object):
 
         return True
 
+#------------------------------------------------------------------------------------------------------------------------
+
+        # """Sriram this is for Suitablility test"""
+        # for i1 in range(len(self.TypeB))
+        # if self.set_TypeBConstrain:
+        #     if self.optimal== self.notsuitable:
+        #         if self.TypeB comparison_parameter self.optimal:
+        #         return False
+        #     else:
+        #         if self.TypeB comparison_operator self.optimal and self.TypeB comparison_operator self.notsuitable
+#-----------------------------------------------------------------------------------------------------------------------
+
+
+            
+
+
     def getReductionFactor(self):
 
         thermal_screening_f = 1
@@ -156,9 +177,7 @@ class ThermalScreening(object):
         # print("reducition applying")
         if self.set_lgpt_screening:
 
-            # According to the documentation  the Temperature growing periods and Frost free period falls under type B constraints. 
-            # And there are 3 type B constrains. LGP6 and LGP 10 falls under second type where sub-optimal and not- suitable is the same.
-            # looking at the excel sheel that was provided we don't need to calculate redection factors for LGPT.
+            # fall under typB so will be calcualated in next function
 
             if self.lgp0 < self.optm_lgpt[0]:
                 f1 = ((self.lgp0-self.no_lgpt[0])/(self.optm_lgpt[0]-self.no_lgpt[0])) * 0.75 + 0.25
@@ -240,3 +259,21 @@ class ThermalScreening(object):
                     thermal_screening_f = np.min([f1,thermal_screening_f])
 
         return thermal_screening_f
+
+        def getsuitability_typeB():
+            read csv file 
+            if self.set_TypeB:
+                for i1 in range(len(self.typeB)):
+                    if self.optimal[i1]==self.notsuitable[i1]:
+                        f1= 1
+                    elif self.optimal[i1] != self.suboptimal[i1] and self.subopitmal[i1] != self.notsuitable[i1]:
+                        if self.TypeB[i1] comparison_paramer self.optimal[i1] and self.TypeB[i1] comparison parameter self. sub0ptimal[i1]:
+                            f1 = ((self.TypeB-self.LsO[i1])/(self.LO[2]-self.LsO[2])) * 0.25 + 0.75
+
+
+
+
+
+                set 
+
+

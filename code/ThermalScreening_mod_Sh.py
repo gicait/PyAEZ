@@ -3,7 +3,9 @@ PyAEZ
 Written by N. Lakmal Deshapriya
 """
 
+from code.UtilitiesCalc import UtilitiesCalc
 import numpy as np
+import UtilitiesCalc as ut
 
 class ThermalScreening(object):
 
@@ -67,6 +69,7 @@ class ThermalScreening(object):
         return [A9,A8,A7,A6,A5,A4,A3,A2,A1,B1,B2,B3,B4,B5,B6,B7,B8,B9]
 
     def setClimateData(self, minT_daily, maxT_daily):
+        
         self.meanT_daily = (minT_daily + maxT_daily) / 2
 
         self.lgp0 = self.getThermalLGP0()
@@ -114,11 +117,33 @@ class ThermalScreening(object):
 
         self.set_Tprofile_screening = True
 
+#-----------------------------------------------------------------------------------------------------------------------------------
+    """ Sriram we need to calculate 4 values RHav, RHmin, DTavg, DThigh"""
+    # def set_RH_and_DT(self, rel_humidity_daily_point, min_temp_daily, max_temp_daily):
+    #     self.RH = rel_humidity_daily_point
+    #     self.min_temp_daily = min_temp_daily
+    #     self.max_temp_daily = max_temp_daily
+    #     self.RHavg = np.average(self.RH)
+    #     self.DTRavg = np.average(self.max_temp_daily) - np.average( self.min_temp_daily)
+
+
+    #     #converting daily data into monthly using utilitiesCal module to calculate RHmin and DTRhigh
+
+    #     monthly = UtilitiesCalc.UtilitiesCalc()
+    #     self.RHmonthly = monthly.averageDailyToMonthly(self.RH)
+    #     self.RHmin = np.amin( self.RHmonthly)
+
+    #     self.DTR = monthly.averageDailyToMonthly(self.max_temp_daily) - monthly.averageDailyToMonthly(self.min_temp_daily)
+    #     self.DTRhigh = np.amax( self.DTR)
+        
+
+
 
 #--------------------------------------------------------------------------------------------------------------------
         """Sriram you can find pesudocode below"""
-    def setTypeB('path'):
+    #def setTypeB('path'):
         #      get formula 
+        #      get LGP values from above functions 
         #      read optimal, sub-opitimal and not suitable data
         #      calculate the values= self.TypeB
         #      self.set_typeBconstraint= true
@@ -136,10 +161,10 @@ class ThermalScreening(object):
         if self.set_tclimate_screening:
             if self.t_climate in self.no_t_climate:
                 return False
-
-        if self.set_lgpt_screening:
-            if self.lgp0<=self.no_lgpt[0] or self.lgp5<=self.no_lgpt[1] or self.lgp10<=self.no_lgpt[2]:
-                return False
+    # will be screened with the help of CSV file
+        # if self.set_lgpt_screening:
+        #     if self.lgp0<=self.no_lgpt[0] or self.lgp5<=self.no_lgpt[1] or self.lgp10<=self.no_lgpt[2]:
+        #         return False
         
         if self.set_Tsum_screening:
             
@@ -147,10 +172,11 @@ class ThermalScreening(object):
             if (self.tsum0 > self.HnS[0] or self.tsum0 < self.LnS[0]) or (self.tsum5 > self.HnS[1] or self.tsum5 < self.LnS[1]) or (self.tsum10 > self.HnS[2] or self.tsum10 < self.LnS[2]):
                 return False
 
-        if self.set_Tprofile_screening:
-            for i1 in range(len(self.tprofile)):
-                if self.tprofile[i1] <= self.no_Tprofile[i1]:
-                    return False
+    # will be screened with the help CSV file
+        # if self.set_Tprofile_screening:
+        #     for i1 in range(len(self.tprofile)):
+        #         if self.tprofile[i1] <= self.no_Tprofile[i1]:
+        #             return False
 
         return True
 

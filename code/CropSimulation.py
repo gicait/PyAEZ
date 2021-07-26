@@ -292,6 +292,7 @@ class CropSimulation(object):
                     wind2m_daily_2year = np.tile(wind2m_daily_point, 2)
                     totalPrec_daily_2year = np.tile(totalPrec_daily_point, 2)
                     pet_daily_2year = np.tile(pet_daily_point, 2)
+                    
 
                     # extract climate data within the season to pass in to calculation classes
                     minT_daily_season = minT_daily_2year[i_cycle : i_cycle+self.cycle_len]
@@ -300,9 +301,11 @@ class CropSimulation(object):
                     wind2m_daily_season = wind2m_daily_2year[i_cycle : i_cycle+self.cycle_len]
                     totalPrec_daily_season = totalPrec_daily_2year[i_cycle : i_cycle+self.cycle_len]
                     pet_daily_season = pet_daily_2year[i_cycle : i_cycle+self.cycle_len]
+                
 
                     # conduct tests to check simulation should be carried out or not based on growing period threshold. if not, goes to next location (pixel)
                     obj_screening = ThermalScreening_mod_Sh.ThermalScreening()
+                    #Passing all the climate data from a single function
                     obj_screening.setClimateData(minT_daily_season, maxT_daily_season)
 
                     if self.set_tclimate_screening:
@@ -314,7 +317,11 @@ class CropSimulation(object):
                         # obj_screening.setTSumScreening(self.no_Tsum, self.optm_Tsum)
                         obj_screening.SetTSumScreening(self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO)
                     if self.set_Tprofile_screening:
-
+                        #---------------------------------------------------------------------------------#
+                        # sriram we need to pass 3 values to calcute RHavg, RHmin, DTavg, DTRhigh
+                        #also
+                        # if self.is_perennial:
+                        #     obj_screening.sethumidity(self.rel_humidity_daily_point, self.minT_daily_point, self.maxT_daily_point)
                         obj_screening.setTypeB(self.thermalscreeningrules)
 
                         # obj_screening.setTProfileScreening(self.no_Tprofile, self.optm_Tprofile)

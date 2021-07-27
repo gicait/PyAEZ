@@ -3,6 +3,7 @@ PyAEZ
 Written by N. Lakmal Deshapriya
 """
 
+from _typeshed import Self
 from code.UtilitiesCalc import UtilitiesCalc
 import numpy as np
 import UtilitiesCalc as ut
@@ -140,9 +141,14 @@ class ThermalScreening(object):
 
 
 #--------------------------------------------------------------------------------------------------------------------
-        """Sriram you can find pesudocode below"""
-    #def setTypeB('path'):
-        #      get formula 
+    """
+        Sriram you can find pesudocode below
+    """
+    #def setTypeB(rules, is_perennial):
+
+        #      formula = rules[0]
+        #      op = rules[1]
+        #  
         #      get LGP values from above functions 
         #      read optimal, sub-opitimal and not suitable data
         #      calculate the values= self.TypeB

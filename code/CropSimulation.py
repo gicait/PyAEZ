@@ -211,7 +211,7 @@ class CropSimulation(object):
 
         self.set_Tprofile_screening = True
     
-    def ReadThermalScreeningRukesFromCSV(self, path):
+    def ReadThermalScreeningRulesFromCSV(self, path):
         a = 1
         # must be called after cropname is ddeclared
         # with open(path, 'r') as cs
@@ -326,6 +326,7 @@ class CropSimulation(object):
 
                         # obj_screening.setTProfileScreening(self.no_Tprofile, self.optm_Tprofile)
                         # chnage to read from csv
+                        # ReadThermalScreeningRukesFromCSV
                         
 
                     thermal_screening_f = 1

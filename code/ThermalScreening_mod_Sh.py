@@ -3,7 +3,6 @@ PyAEZ
 Written by N. Lakmal Deshapriya
 """
 
-from _typeshed import Self
 from code.UtilitiesCalc import UtilitiesCalc
 import numpy as np
 import UtilitiesCalc as ut
@@ -16,6 +15,7 @@ class ThermalScreening(object):
         self.set_lgpt_screening = False
         self.set_Tsum_screening = False
         self.set_Tprofile_screening = False
+        self.set_typeBconstraint = False
 
 
     def getThermalLGP0(self):
@@ -202,22 +202,10 @@ class ThermalScreening(object):
         self.cal_value = []
         for i in range (len(formula)):
             self.cal_value.append(eval(formula[i]))
-            self.set_typeBconstraint= True
+            
+        self.set_typeBconstraint = True
+    
 
-    """
-        Sriram you can find pesudocode below
-    """
-    #def setTypeB(rules, is_perennial):
-
-        #      formula = rules[0]
-        #      op = rules[1]
-        #  
-        #      get LGP values from above functions 
-        #      read optimal, sub-opitimal and not suitable data
-        #      calculate the values= self.TypeB
-        #      self.set_typeBconstraint= true
-        #      read the comparsion operator
-        #      return calculated values 
 
 
         
@@ -230,10 +218,7 @@ class ThermalScreening(object):
         if self.set_tclimate_screening:
             if self.t_climate in self.no_t_climate:
                 return False
-    # will be screened with the help of CSV file
-        # if self.set_lgpt_screening:
-        #     if self.lgp0<=self.no_lgpt[0] or self.lgp5<=self.no_lgpt[1] or self.lgp10<=self.no_lgpt[2]:
-        #         return False
+    
         
         if self.set_Tsum_screening:
             
@@ -241,18 +226,19 @@ class ThermalScreening(object):
             if (self.tsum0 > self.HnS[0] or self.tsum0 < self.LnS[0]) or (self.tsum5 > self.HnS[1] or self.tsum5 < self.LnS[1]) or (self.tsum10 > self.HnS[2] or self.tsum10 < self.LnS[2]):
                 return False
 
-    # will be screened with the help CSV file
-        # if self.set_Tprofile_screening:
-        #     for i1 in range(len(self.tprofile)):
-        #         if self.tprofile[i1] <= self.no_Tprofile[i1]:
-        #             return False
-
+        if self.set_typeBconstraint:
+            for i1 in range(len(self.cal_value)):
+            
+                if self.opr [i1] == '==' :
+                    if self.cal_value[i1] != self.optm[i1]:
+                        return False
+                elif self.cal_value[i1] == '<=' :
+                    if self.cal_value[i1]  <= self.optm[i1] and self.cal_value >= self.notsuitable[i1]:
+                        return False
+                elif self.cal_value[i1] == '>=':
+                    if self.cal_value[i1] >= self.optm[i1] and self.cal_value <= self.notsuitable[i1]:
+                        return False
         return True
-
-#------------------------------------------------------------------------------------------------------------------------
-
-        # """Sriram this is for Suitablility test"""
-    
 
                     
       
@@ -266,39 +252,7 @@ class ThermalScreening(object):
 
         thermal_screening_f = 1
 
-        # print("reducition applying")
-        # if self.set_lgpt_screening:
 
-        #     # fall under typB so will be calcualated in next function
-
-        #     if self.lgp0 < self.optm_lgpt[0]:
-        #         f1 = ((self.lgp0-self.no_lgpt[0])/(self.optm_lgpt[0]-self.no_lgpt[0])) * 0.75 + 0.25
-        #         thermal_screening_f = np.min([f1,thermal_screening_f])
-
-        #     if self.lgp5 < self.optm_lgpt[1]:
-        #         f1 = ((self.lgp5-self.no_lgpt[1])/(self.optm_lgpt[1]-self.no_lgpt[1])) * 0.75 + 0.25
-        #         thermal_screening_f = np.min([f1,thermal_screening_f])
-
-        #     if self.lgp10 < self.optm_lgpt[2]:
-        #         f1 = ((self.lgp10-self.no_lgpt[2])/(self.optm_lgpt[2]-self.no_lgpt[2])) * 0.75 + 0.25
-        #         thermal_screening_f = np.min([f1,thermal_screening_f])
-        
-
-
-        # if self.set_Tsum_screening:
-
-        #     if self.tsum0 < self.optm_Tsum[0]:
-        #         f1 = ((self.tsum0-self.no_Tsum[0])/(self.optm_Tsum[0]-self.no_Tsum[0])) * 0.75 + 0.25
-        #         thermal_screening_f = np.min([f1,thermal_screening_f])
-
-        #     if self.tsum5 < self.optm_Tsum[1]:
-        #         f1 = ((self.tsum5-self.no_Tsum[1])/(self.optm_Tsum[1]-self.no_Tsum[1])) * 0.75 + 0.25
-        #         thermal_screening_f = np.min([f1,thermal_screening_f])
-
-        #     if self.tsum10 < self.optm_Tsum[2]:
-        #         f1 = ((self.tsum10-self.no_Tsum[2])/(self.optm_Tsum[2]-self.no_Tsum[2])) * 0.75 + 0.25
-        #         thermal_screening_f = np.min([f1,thermal_screening_f])
-        
 
         '''the modified reduction factor for T_sum'''
         # print("checking for lololloo ")
@@ -314,7 +268,7 @@ class ThermalScreening(object):
                 f1=((self.tsum0-self.HsO[0])/(self.HnS[0]-self.HsO[0])) * 0.75
             elif self.tsum0 > self.LO[0] and self.tsum0 < self.HO[0]:
                 f1 = 1
-                # print("im right")
+                
 
             # confirm with thieleng ***
             thermal_screening_f = np.min([f1,thermal_screening_f])
@@ -343,13 +297,8 @@ class ThermalScreening(object):
             # confirm with thieleng ***
             thermal_screening_f = np.min([f1,thermal_screening_f])        
 
-        #if self.set_Tprofile_screening:
-
-           # for i1 in range(len(tprofile)):
-                #if self.tprofile[i1] < self.optm_Tprofile[i1]:
-                    #f1 = ((self.tprofile[i1]-self.no_Tprofile[i1])/(self.optm_Tprofile[i1]-self.no_Tprofile[i1])) * 0.75 + 0.25
-                    #thermal_screening_f = np.min([f1,thermal_screening_f])
-        if self.setTypeB:
+     
+        if self.set_typeBconstraint:
             for i1 in range (len(self.cal_value)):
                 if self.optm[i1] == self.notsuitable[i1]:
                     f1 = 1
@@ -371,9 +320,6 @@ class ThermalScreening(object):
                      elif self.optm[i1] != self.soptm[i1] and self.soptm[i1] == self.notsuitable[i1]:
                         f1 = ((self.cal_value[i1]-self.optm[i1])/(self.soptm[i1]-self.optm[i1])) * 0.25 + 0.75
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-
-
-
         return thermal_screening_f
 
        

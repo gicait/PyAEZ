@@ -6,6 +6,7 @@ Written by N. Lakmal Deshapriya
 from code.UtilitiesCalc import UtilitiesCalc
 import numpy as np
 import UtilitiesCalc as ut
+import pandas as pd
 
 class ThermalScreening(object):
 
@@ -118,35 +119,89 @@ class ThermalScreening(object):
         self.set_Tprofile_screening = True
 
 #-----------------------------------------------------------------------------------------------------------------------------------
-    """ Sriram we need to calculate 4 values RHav, RHmin, DTavg, DThigh"""
-    # def set_RH_and_DT(self, rel_humidity_daily_point, min_temp_daily, max_temp_daily):
-    #     self.RH = rel_humidity_daily_point
-    #     self.min_temp_daily = min_temp_daily
-    #     self.max_temp_daily = max_temp_daily
-    #     self.RHavg = np.average(self.RH)
-    #     self.DTRavg = np.average(self.max_temp_daily) - np.average( self.min_temp_daily)
+
+    def set_RH_and_DT(self, rel_humidity_daily_point, min_temp_daily, max_temp_daily):
+         self.RH = rel_humidity_daily_point
+         self.min_temp_daily = min_temp_daily
+         self.max_temp_daily = max_temp_daily
+         self.RHavg = np.average(self.RH)
+         self.DTRavg = np.average(self.max_temp_daily) - np.average( self.min_temp_daily)
 
 
     #     #converting daily data into monthly using utilitiesCal module to calculate RHmin and DTRhigh
 
-    #     monthly = UtilitiesCalc.UtilitiesCalc()
-    #     self.RHmonthly = monthly.averageDailyToMonthly(self.RH)
-    #     self.RHmin = np.amin( self.RHmonthly)
+         monthly = UtilitiesCalc.UtilitiesCalc()
+         self.RHmonthly = monthly.averageDailyToMonthly(self.RH)
+         self.RHmin = np.amin( self.RHmonthly)
 
-    #     self.DTR = monthly.averageDailyToMonthly(self.max_temp_daily) - monthly.averageDailyToMonthly(self.min_temp_daily)
-    #     self.DTRhigh = np.amax( self.DTR)
+         self.DTR = monthly.averageDailyToMonthly(self.max_temp_daily) - monthly.averageDailyToMonthly(self.min_temp_daily)
+         self.DTRhigh = np.amax( self.DTR)
         
 
 
 
 #--------------------------------------------------------------------------------------------------------------------
-        """Sriram you can find pesudocode below"""
-    #def setTypeB('path'):
-        #      get formula 
-        #      get LGP values from above functions 
-        #      read optimal, sub-opitimal and not suitable data
-        #      calculate the values= self.TypeB
-        #      self.set_typeBconstraint= true
+    """Sriram you can find pesudocode below"""
+    def setTypeB(self, formula, opr, optm, soptm, notsuitable, is_perennial):
+        self.formula= formula
+        self.opr = opr
+        self.optm = optm
+        self.soptm = soptm
+        self.notsuitable = notsuitable 
+        T_profile = self.getTemperatureProfile()
+        if is_perennial:
+            N9a = T_profile[0]
+            N9b = T_profile[1]
+            N7a = T_profile[2]
+            N6a = T_profile[3]
+            N5a = T_profile[4]
+            N4a = T_profile[5]
+            N3a = T_profile[6]
+            N2a = T_profile[7]
+            N1a = T_profile[8]
+
+            N1b =T_profile[9]
+            N2b = T_profile[10]
+            N3b = T_profile[11]
+            N4b = T_profile[12]
+            N5b = T_profile[13]
+            N6b = T_profile[14]
+            N7b = T_profile[15]
+            N8b = T_profile[16]
+            N9b = T_profile[17]
+            RHavg = self.RH
+            RHmin = self.RHmin
+            DTRavg = self.DTRavg
+            DTRhigh = self.DTRhigh
+        else:
+            L9a = T_profile[0]
+            L8a = T_profile[1]
+            L7a = T_profile[2]
+            L6a = T_profile[3]
+            L5a = T_profile[4]
+            L4a = T_profile[5]
+            L3a = T_profile[6]
+            L2a = T_profile[7]
+            L1a = T_profile[8]
+
+            L1b =T_profile[9]
+            L2b = T_profile[10]
+            L3b = T_profile[11]
+            L4b = T_profile[12]
+            L5b = T_profile[13]
+            L6b = T_profile[14]
+            L7b = T_profile[15]
+            L8b = T_profile[16]
+            L9b = T_profile[17]
+
+        LGP0 = self.getThermalLGP0()
+        LGP5 = self.getThermalLGP10()
+        LGP10 = self.getThermalLGP10()
+
+        self.cal_value = []
+        for i in range (len(formula)):
+            self.cal_value.append(eval(formula[i]))
+            self.set_typeBconstraint= True
         #      read the comparsion operator
         #      return calculated values 
 
@@ -183,13 +238,10 @@ class ThermalScreening(object):
 #------------------------------------------------------------------------------------------------------------------------
 
         # """Sriram this is for Suitablility test"""
-        # for i1 in range(len(self.TypeB))
-        # if self.set_TypeBConstrain:
-        #     if self.optimal== self.notsuitable:
-        #         if self.TypeB comparison_parameter self.optimal:
-        #         return False
-        #     else:
-        #         if self.TypeB comparison_operator self.optimal and self.TypeB comparison_operator self.notsuitable
+    
+
+                    
+      
 #-----------------------------------------------------------------------------------------------------------------------
 
 
@@ -201,21 +253,21 @@ class ThermalScreening(object):
         thermal_screening_f = 1
 
         # print("reducition applying")
-        if self.set_lgpt_screening:
+        # if self.set_lgpt_screening:
 
-            # fall under typB so will be calcualated in next function
+        #     # fall under typB so will be calcualated in next function
 
-            if self.lgp0 < self.optm_lgpt[0]:
-                f1 = ((self.lgp0-self.no_lgpt[0])/(self.optm_lgpt[0]-self.no_lgpt[0])) * 0.75 + 0.25
-                thermal_screening_f = np.min([f1,thermal_screening_f])
+        #     if self.lgp0 < self.optm_lgpt[0]:
+        #         f1 = ((self.lgp0-self.no_lgpt[0])/(self.optm_lgpt[0]-self.no_lgpt[0])) * 0.75 + 0.25
+        #         thermal_screening_f = np.min([f1,thermal_screening_f])
 
-            if self.lgp5 < self.optm_lgpt[1]:
-                f1 = ((self.lgp5-self.no_lgpt[1])/(self.optm_lgpt[1]-self.no_lgpt[1])) * 0.75 + 0.25
-                thermal_screening_f = np.min([f1,thermal_screening_f])
+        #     if self.lgp5 < self.optm_lgpt[1]:
+        #         f1 = ((self.lgp5-self.no_lgpt[1])/(self.optm_lgpt[1]-self.no_lgpt[1])) * 0.75 + 0.25
+        #         thermal_screening_f = np.min([f1,thermal_screening_f])
 
-            if self.lgp10 < self.optm_lgpt[2]:
-                f1 = ((self.lgp10-self.no_lgpt[2])/(self.optm_lgpt[2]-self.no_lgpt[2])) * 0.75 + 0.25
-                thermal_screening_f = np.min([f1,thermal_screening_f])
+        #     if self.lgp10 < self.optm_lgpt[2]:
+        #         f1 = ((self.lgp10-self.no_lgpt[2])/(self.optm_lgpt[2]-self.no_lgpt[2])) * 0.75 + 0.25
+        #         thermal_screening_f = np.min([f1,thermal_screening_f])
         
 
 
@@ -277,29 +329,37 @@ class ThermalScreening(object):
             # confirm with thieleng ***
             thermal_screening_f = np.min([f1,thermal_screening_f])        
 
-        if self.set_Tprofile_screening:
+        #if self.set_Tprofile_screening:
 
-            for i1 in range(len(tprofile)):
-                if self.tprofile[i1] < self.optm_Tprofile[i1]:
-                    f1 = ((self.tprofile[i1]-self.no_Tprofile[i1])/(self.optm_Tprofile[i1]-self.no_Tprofile[i1])) * 0.75 + 0.25
-                    thermal_screening_f = np.min([f1,thermal_screening_f])
+           # for i1 in range(len(tprofile)):
+                #if self.tprofile[i1] < self.optm_Tprofile[i1]:
+                    #f1 = ((self.tprofile[i1]-self.no_Tprofile[i1])/(self.optm_Tprofile[i1]-self.no_Tprofile[i1])) * 0.75 + 0.25
+                    #thermal_screening_f = np.min([f1,thermal_screening_f])
+        if self.setTypeB:
+            for i1 in range (len(self.cal_value)):
+                if self.optm[i1] == self.notsuitable[i1]:
+                    f1 = 1
+                elif self.opr[i1] == '<=' :
+                    if self.optm[i1] != self.soptm[i1] and self.soptm[i1] != self.notsuitable[i1]:
+                        if self.cal_value[i1] >= self.optm [i1] and self.cal_value[i1] <= self.soptm[i1]:
+                            f1 = ((self.cal_value[i1]-self.optm[i1])/(self.soptm[i1]-self.optm[i1])) * 0.25 + 0.75
+                        elif self.cal_value[i1] >= self.soptm and self.cal_value[i1] <= self.notsuitable[i1]:
+                            f1=((self.cal_value[i1]-self.soptm[i1])/(self.notsuitable[i1]-self.soptm[i1])) * 0.75
+                    elif self.optm[i1] != self.soptm[i1] and self.soptm[i1] == self.notsuitable[i1]:
+                        f1 = ((self.cal_value[i1]-self.optm[i1])/(self.soptm[i1]-self.optm[i1])) * 0.25 + 0.75
+                
+                elif self.opr[i1] == '>=':
+                     if self.optm[i1] != self.soptm[i1] and self.soptm[i1] != self.notsuitable[i1]:
+                         if self.cal_value[i1] <= self.optm [i1] and self.cal_value[i1] >= self.soptm[i1]:
+                            f1 = ((self.cal_value[i1]-self.soptm[i1])/(self.optm[i1]-self.soptm[i1])) * 0.25 + 0.75
+                         elif self.cal_value[i1] <= self.soptm and self.cal_value[i1] >= self.notsuitable[i1]:
+                            f1=((self.cal_value[i1]-self.notsuitable[i1])/(self.soptm[i1]-self.notsuitable[i1])) * 0.75
+                     elif self.optm[i1] != self.soptm[i1] and self.soptm[i1] == self.notsuitable[i1]:
+                        f1 = ((self.cal_value[i1]-self.optm[i1])/(self.soptm[i1]-self.optm[i1])) * 0.25 + 0.75
+                thermal_screening_f = np.min([f1,thermal_screening_f])
+
+
 
         return thermal_screening_f
 
-        def getsuitability_typeB():
-            read csv file 
-            if self.set_TypeB:
-                for i1 in range(len(self.typeB)):
-                    if self.optimal[i1]==self.notsuitable[i1]:
-                        f1= 1
-                    elif self.optimal[i1] != self.suboptimal[i1] and self.subopitmal[i1] != self.notsuitable[i1]:
-                        if self.TypeB[i1] comparison_paramer self.optimal[i1] and self.TypeB[i1] comparison parameter self. sub0ptimal[i1]:
-                            f1 = ((self.TypeB-self.LsO[i1])/(self.LO[2]-self.LsO[2])) * 0.25 + 0.75
-
-
-
-
-
-                set 
-
-
+       

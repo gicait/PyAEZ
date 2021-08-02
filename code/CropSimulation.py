@@ -212,16 +212,20 @@ class CropSimulation(object):
         self.set_Tprofile_screening = True
     
     def ReadThermalScreeningRulesFromCSV(self, path):
-        a = 1
-        # must be called after cropname is ddeclared
-        # with open(path, 'r') as cs
-
-        #self.thermalscreeningrules =  [   
-        #     [constraint1, opr1, op1, subop1, notsu1], 
-        #     ..., 
-        #     [constraint6, opr6, op6, subop6, notsu6]]
-        # ]
-
+        df = pd.read_csv(path)
+        crop_df_index = df.index[df['Crop'] == self.crop_name].tolist()
+        crop_df = df.loc[df['Crop'] == self.crop_name]
+        print(type(crop_df))
+        self.formula =crop_df['Constraint'][crop_df_index].to_numpy() 
+        self.opr = crop_df['Type'][crop_df_index].to_numpy()
+        self.optm = crop_df['Optimal'][crop_df_index].to_numpy()
+        self.soptm = crop_df['Sub-optimal'][crop_df_index].to_numpy()
+        self.notsuitable= crop_df['Not-Suitable'][crop_df_index].to_numpy()
+        #self.thermalscreeningrules= crop_df.to_numpy()
+        
+        
+        
+       
 
     def simulateCropCycle(self, start_doy=1, end_doy=365, step_doy=1, leap_year=False):
 
@@ -320,13 +324,12 @@ class CropSimulation(object):
                         #---------------------------------------------------------------------------------#
                         # sriram we need to pass 3 values to calcute RHavg, RHmin, DTavg, DTRhigh
                         #also
-                        # if self.is_perennial:
-                        #     obj_screening.sethumidity(self.rel_humidity_daily_point, self.minT_daily_point, self.maxT_daily_point)
-                        obj_screening.setTypeB(self.thermalscreeningrules)
+                        if self.is_perennial:
+                             obj_screening.sethumidity(self.rel_humidity_daily_point, self.minT_daily_point, self.maxT_daily_point)
+                        obj_screening.setTypeB(self.formula, self.opr, self.optm, self.soptm, self.notsuitable, self.is_perennial)
 
                         # obj_screening.setTProfileScreening(self.no_Tprofile, self.optm_Tprofile)
                         # chnage to read from csv
-                        # ReadThermalScreeningRukesFromCSV
                         
 
                     thermal_screening_f = 1

@@ -3,9 +3,9 @@ PyAEZ
 Written by N. Lakmal Deshapriya
 """
 
-from code.UtilitiesCalc import UtilitiesCalc
+
 import numpy as np
-import UtilitiesCalc as ut
+import UtilitiesCalc
 import pandas as pd
 
 class ThermalScreening(object):
@@ -67,7 +67,7 @@ class ThermalScreening(object):
         B3 = np.sum( np.logical_and(meanT_diff<0, np.logical_and(meanT_first>=20, meanT_first<25)) )
         B2 = np.sum( np.logical_and(meanT_diff<0, np.logical_and(meanT_first>=25, meanT_first<30)) )
         B1 = np.sum( np.logical_and(meanT_diff<0, meanT_first>=30) )
-
+ 
         return [A9,A8,A7,A6,A5,A4,A3,A2,A1,B1,B2,B3,B4,B5,B6,B7,B8,B9]
 
     def setClimateData(self, minT_daily, maxT_daily):
@@ -127,16 +127,19 @@ class ThermalScreening(object):
          self.max_temp_daily = max_temp_daily
          self.RHavg = np.average(self.RH)
          self.DTRavg = np.average(self.max_temp_daily) - np.average( self.min_temp_daily)
+       
 
 
     #     #converting daily data into monthly using utilitiesCal module to calculate RHmin and DTRhigh
 
-         monthly = UtilitiesCalc.UtilitiesCalc()
-         self.RHmonthly = monthly.averageDailyToMonthly(self.RH)
+         obj_utilities = UtilitiesCalc.UtilitiesCalc()
+         self.RHmonthly = obj_utilities.averageDailyToMonthly(self.RH)
          self.RHmin = np.amin( self.RHmonthly)
 
-         self.DTR = monthly.averageDailyToMonthly(self.max_temp_daily) - monthly.averageDailyToMonthly(self.min_temp_daily)
+         self.DTR = obj_utilities.averageDailyToMonthly(self.max_temp_daily) - obj_utilities.averageDailyToMonthly(self.min_temp_daily)
          self.DTRhigh = np.amax( self.DTR)
+
+         print(self.RHavg, self.RHmin, self.DTRavg, self.DTRhigh)
         
 
 
@@ -146,9 +149,9 @@ class ThermalScreening(object):
     def setTypeB(self, formula, opr, optm, soptm, notsuitable, is_perennial):
         self.formula= formula
         self.opr = opr
-        self.optm = optm
-        self.soptm = soptm
-        self.notsuitable = notsuitable 
+        self.optm = []
+        self.soptm = []
+        self.notsuitable = []
         T_profile = self.getTemperatureProfile()
         if is_perennial:
             N9a = T_profile[0]
@@ -198,10 +201,13 @@ class ThermalScreening(object):
         LGP0 = self.getThermalLGP0()
         LGP5 = self.getThermalLGP10()
         LGP10 = self.getThermalLGP10()
-
         self.cal_value = []
         for i in range (len(formula)):
             self.cal_value.append(eval(formula[i]))
+            self.optm.append(float(optm[i]))
+            self.soptm.append(float(soptm[i]))
+            self.notsuitable.append(float(notsuitable[i]))
+            
             
         self.set_typeBconstraint = True
     
@@ -229,14 +235,14 @@ class ThermalScreening(object):
         if self.set_typeBconstraint:
             for i1 in range(len(self.cal_value)):
             
-                if self.opr [i1] == '==' :
+                if self.opr [i1] == '=' :
                     if self.cal_value[i1] != self.optm[i1]:
                         return False
-                elif self.cal_value[i1] == '<=' :
-                    if self.cal_value[i1]  <= self.optm[i1] and self.cal_value >= self.notsuitable[i1]:
+                elif self.opr[i1] == '<=' :
+                    if self.cal_value[i1]  <= self.optm[i1] or self.cal_value[i1] >= self.notsuitable[i1]:
                         return False
-                elif self.cal_value[i1] == '>=':
-                    if self.cal_value[i1] >= self.optm[i1] and self.cal_value <= self.notsuitable[i1]:
+                elif self.opr[i1] == '>=':
+                    if self.cal_value[i1] >= self.optm[i1] or self.cal_value[i1] <= self.notsuitable[i1]:
                         return False
         return True
 
@@ -306,7 +312,7 @@ class ThermalScreening(object):
                     if self.optm[i1] != self.soptm[i1] and self.soptm[i1] != self.notsuitable[i1]:
                         if self.cal_value[i1] >= self.optm [i1] and self.cal_value[i1] <= self.soptm[i1]:
                             f1 = ((self.cal_value[i1]-self.optm[i1])/(self.soptm[i1]-self.optm[i1])) * 0.25 + 0.75
-                        elif self.cal_value[i1] >= self.soptm and self.cal_value[i1] <= self.notsuitable[i1]:
+                        elif self.cal_value[i1] >= self.soptm[i1] and self.cal_value[i1] <= self.notsuitable[i1]:
                             f1=((self.cal_value[i1]-self.soptm[i1])/(self.notsuitable[i1]-self.soptm[i1])) * 0.75
                     elif self.optm[i1] != self.soptm[i1] and self.soptm[i1] == self.notsuitable[i1]:
                         f1 = ((self.cal_value[i1]-self.optm[i1])/(self.soptm[i1]-self.optm[i1])) * 0.25 + 0.75
@@ -315,7 +321,7 @@ class ThermalScreening(object):
                      if self.optm[i1] != self.soptm[i1] and self.soptm[i1] != self.notsuitable[i1]:
                          if self.cal_value[i1] <= self.optm [i1] and self.cal_value[i1] >= self.soptm[i1]:
                             f1 = ((self.cal_value[i1]-self.soptm[i1])/(self.optm[i1]-self.soptm[i1])) * 0.25 + 0.75
-                         elif self.cal_value[i1] <= self.soptm and self.cal_value[i1] >= self.notsuitable[i1]:
+                         elif self.cal_value[i1] <= self.soptm[i1] and self.cal_value[i1] >= self.notsuitable[i1]:
                             f1=((self.cal_value[i1]-self.notsuitable[i1])/(self.soptm[i1]-self.notsuitable[i1])) * 0.75
                      elif self.optm[i1] != self.soptm[i1] and self.soptm[i1] == self.notsuitable[i1]:
                         f1 = ((self.cal_value[i1]-self.optm[i1])/(self.soptm[i1]-self.optm[i1])) * 0.25 + 0.75

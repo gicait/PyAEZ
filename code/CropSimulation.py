@@ -90,7 +90,7 @@ class CropSimulation(object):
         self.cyc_eff_rainfed = np.minimum(LGP, cycle_len)
 
     def getIrrigatedCycEff(self, min_temp, LGPT5, LGPT10, cycle_len):
-        print(min_temp)
+       
         if min_temp == 5:
             self.cyc_eff_irrigated = np.minimum(LGPT5, cycle_len)
         else:
@@ -161,7 +161,7 @@ class CropSimulation(object):
             self.getIrrigatedCycEff(self.min_temp, self.LGPT5, self.LGPT10, self.cycle_len)
             self.getRainfedCycEff(self.LGP, self.cycle_len)
 
-            perennial_file_path = './sample_data/input/Adjustment_factors_for_perennial.csv'
+            perennial_file_path = r"D:\3. Py-AEZ\PyAEZ\sample_data\input\Adjustment_factors_for_perennial.csv"
             p_df = pd.read_csv(perennial_file_path)
             perennial_df_index = p_df.index[p_df['Crop_name'] == crop_name].to_list()[0]
             perennial_df = p_df.loc[p_df['Crop_name'] == crop_name]
@@ -215,12 +215,14 @@ class CropSimulation(object):
         df = pd.read_csv(path)
         crop_df_index = df.index[df['Crop'] == self.crop_name].tolist()
         crop_df = df.loc[df['Crop'] == self.crop_name]
-        print(type(crop_df))
+        
         self.formula =crop_df['Constraint'][crop_df_index].to_numpy() 
         self.opr = crop_df['Type'][crop_df_index].to_numpy()
         self.optm = crop_df['Optimal'][crop_df_index].to_numpy()
-        self.soptm = crop_df['Sub-optimal'][crop_df_index].to_numpy()
+        self.soptm = crop_df['Sub-Optimal'][crop_df_index].to_numpy()
         self.notsuitable= crop_df['Not-Suitable'][crop_df_index].to_numpy()
+
+        self.set_type_B = True
         #self.thermalscreeningrules= crop_df.to_numpy()
         
         
@@ -269,6 +271,7 @@ class CropSimulation(object):
                     wind2m_daily_point = obj_utilities.interpMonthlyToDaily(self.wind2m_monthly[i_row, i_col,:],  1, days_in_year, no_minus_values=True)
                     totalPrec_daily_point = obj_utilities.interpMonthlyToDaily(self.totalPrec_monthly[i_row, i_col,:],  1, days_in_year, no_minus_values=True)
                     rel_humidity_daily_point = obj_utilities.interpMonthlyToDaily(self.rel_humidity_monthly[i_row, i_col,:],  1, days_in_year, no_minus_values=True)
+                    
                 else:
                     minT_daily_point = self.minT_daily[i_row, i_col,:]
                     maxT_daily_point = self.maxT_daily[i_row, i_col,:]
@@ -276,6 +279,7 @@ class CropSimulation(object):
                     wind2m_daily_point = self.wind2m_daily[i_row, i_col,:]
                     totalPrec_daily_point = self.totalPrec_daily[i_row, i_col,:]
                     rel_humidity_daily_point = self.rel_humidity_daily[i_row, i_col,:]
+                    
 
                 # calculate ETO for full year for particular location (pixel)
                 obj_eto = ETOCalc.ETOCalc(1, minT_daily_point.shape[0], self.latitude_map[i_row, i_col], self.elevation[i_row, i_col])
@@ -312,31 +316,25 @@ class CropSimulation(object):
                     #Passing all the climate data from a single function
                     obj_screening.setClimateData(minT_daily_season, maxT_daily_season)
 
-                    if self.set_tclimate_screening:
-                        obj_screening.setThermalClimateScreening(self.t_climate[i_row, i_col], self.no_t_climate)
-                    if self.set_lgpt_screening:
-                        obj_screening.setLGPTScreening(self.no_lgpt, self.optm_lgpt)
-                    if self.set_Tsum_screening:
-                        # print("hey alright till")
-                        # obj_screening.setTSumScreening(self.no_Tsum, self.optm_Tsum)
-                        obj_screening.SetTSumScreening(self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO)
-                    if self.set_Tprofile_screening:
-                        #---------------------------------------------------------------------------------#
-                        # sriram we need to pass 3 values to calcute RHavg, RHmin, DTavg, DTRhigh
-                        #also
-                        if self.is_perennial:
-                             obj_screening.sethumidity(self.rel_humidity_daily_point, self.minT_daily_point, self.maxT_daily_point)
-                        obj_screening.setTypeB(self.formula, self.opr, self.optm, self.soptm, self.notsuitable, self.is_perennial)
+                    # if self.set_tclimate_screening:
+                    #     obj_screening.setThermalClimateScreening(self.t_climate[i_row, i_col], self.no_t_climate)
+                    # if self.set_lgpt_screening:
+                    #     obj_screening.setLGPTScreening(self.no_lgpt, self.optm_lgpt)
 
-                        # obj_screening.setTProfileScreening(self.no_Tprofile, self.optm_Tprofile)
-                        # chnage to read from csv
+                    if self.set_Tsum_screening:
+                        obj_screening.SetTSumScreening(self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO)
+                    if self.set_type_B:
+                        if self.is_perennial:
+                             obj_screening.set_RH_and_DT(rel_humidity_daily_point, minT_daily_point, maxT_daily_point)
+                        
+                        obj_screening.setTypeB(self.formula, self.opr, self.optm, self.soptm, self.notsuitable, self.is_perennial)
                         
 
                     thermal_screening_f = 1
                     if not obj_screening.getSuitability():
                         continue
                     else:
-                        # print("going apply reduction factor")
+                        print("going apply reduction factor")
                         thermal_screening_f = obj_screening.getReductionFactor()
 
                     # calculate biomass

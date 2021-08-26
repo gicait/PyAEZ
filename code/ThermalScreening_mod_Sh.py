@@ -139,7 +139,7 @@ class ThermalScreening(object):
          self.DTR = obj_utilities.averageDailyToMonthly(self.max_temp_daily) - obj_utilities.averageDailyToMonthly(self.min_temp_daily)
          self.DTRhigh = np.amax( self.DTR)
 
-         print(self.RHavg, self.RHmin, self.DTRavg, self.DTRhigh)
+        #print(self.RHavg, self.RHmin, self.DTRavg, self.DTRhigh)
         
 
 
@@ -153,9 +153,11 @@ class ThermalScreening(object):
         self.soptm = []
         self.notsuitable = []
         T_profile = self.getTemperatureProfile()
-        if is_perennial:
+        #print('perrinal', is_perennial)
+        #checking of variables 
+        if is_perennial:           
             N9a = T_profile[0]
-            N9b = T_profile[1]
+            N8a = T_profile[1]
             N7a = T_profile[2]
             N6a = T_profile[3]
             N5a = T_profile[4]
@@ -173,6 +175,15 @@ class ThermalScreening(object):
             N7b = T_profile[15]
             N8b = T_profile[16]
             N9b = T_profile[17]
+            N1 = N1a 
+            N2 = N2a
+            N3 = N3a
+            N4 = N4a
+            N5 = N5a
+            N6 = N6a
+            N7 = N7a
+            N8 = N8a
+            N9 = N9a
             RHavg = self.RH
             RHmin = self.RHmin
             DTRavg = self.DTRavg
@@ -197,6 +208,8 @@ class ThermalScreening(object):
             L7b = T_profile[15]
             L8b = T_profile[16]
             L9b = T_profile[17]
+        
+        
 
         LGP0 = self.getThermalLGP0()
         LGP5 = self.getThermalLGP10()
@@ -207,7 +220,8 @@ class ThermalScreening(object):
             self.optm.append(float(optm[i]))
             self.soptm.append(float(soptm[i]))
             self.notsuitable.append(float(notsuitable[i]))
-            
+
+        #print(self.cal_value, T_profile[3])  
             
         self.set_typeBconstraint = True
     
@@ -223,28 +237,33 @@ class ThermalScreening(object):
 
         if self.set_tclimate_screening:
             if self.t_climate in self.no_t_climate:
+                #print('tclimate')
                 return False
     
         
         if self.set_Tsum_screening:
             
             # check with thieleng ****
-            if (self.tsum0 > self.HnS[0] or self.tsum0 < self.LnS[0]) or (self.tsum5 > self.HnS[1] or self.tsum5 < self.LnS[1]) or (self.tsum10 > self.HnS[2] or self.tsum10 < self.LnS[2]):
+            if (self.tsum0 > self.HnS or self.tsum0 < self.LnS) :
                 return False
 
         if self.set_typeBconstraint:
             for i1 in range(len(self.cal_value)):
-            
+                #print (self.opr[i1])
                 if self.opr [i1] == '=' :
                     if self.cal_value[i1] != self.optm[i1]:
+                        #print('Type B', self.cal_value[i1], self.optm[i1])
                         return False
                 elif self.opr[i1] == '<=' :
-                    if self.cal_value[i1]  <= self.optm[i1] or self.cal_value[i1] >= self.notsuitable[i1]:
+                    if self.cal_value[i1]  <= self.optm[i1] or self.cal_value[i1] <= self.notsuitable[i1]:
+                        #print('Type B',self.optm[i1] ,'<=', self.cal_value[i1],'<=' , self.notsuitable[i1])
                         return False
                 elif self.opr[i1] == '>=':
                     if self.cal_value[i1] >= self.optm[i1] or self.cal_value[i1] <= self.notsuitable[i1]:
+                        #print('Type B', self.optm[i1], self.cal_value[i1], self.notsuitable[i1])
                         return False
-        return True
+        
+        return True    
 
                     
       
@@ -264,44 +283,56 @@ class ThermalScreening(object):
         # print("checking for lololloo ")
         if self.set_Tsum_screening:
             # print("checking for 0, 5, and 10")
-            if self.tsum0 > self.LsO[0] and self.tsum0 < self.LO[0] :
-                f1 = ((self.tsum0-self.LsO[0])/(self.LO[0]-self.LsO[0])) * 0.25 + 0.75
-            elif self.tsum0 > self.HO[0] and self.tsum0 < self.HsO[0]:
-                f1 = ((self.tsum0-self.HO[0])/(self.HsO[0]-self.HO[0])) * 0.25 + 0.75
-            elif self.tsum0 > self.LnS[0] and self.tsum0 < self.LsO[0]:
-                f1 = ((self.tsum0-self.LnS[0])/(self.LsO[0]-self.LnS[0])) * 0.75
-            elif self.tsum0 > self.HsO[0] and self.tsum0 < self.HnS[0]:
-                f1=((self.tsum0-self.HsO[0])/(self.HnS[0]-self.HsO[0])) * 0.75
-            elif self.tsum0 > self.LO[0] and self.tsum0 < self.HO[0]:
+            if self.tsum0 > self.LsO and self.tsum0 < self.LO :
+                f1 = ((self.tsum0-self.LsO)/(self.LO-self.LsO)) * 0.25 + 0.75
+                thermal_screening_f = np.min([f1,thermal_screening_f])
+            elif self.tsum0 > self.HO and self.tsum0 < self.HsO:
+                f1 = ((self.tsum0-self.HO)/(self.HsO-self.HO)) * 0.25 + 0.75
+                thermal_screening_f = np.min([f1,thermal_screening_f])
+            elif self.tsum0 > self.LnS and self.tsum0 < self.LsO:
+                f1 = ((self.tsum0-self.LnS)/(self.LsO-self.LnS)) * 0.75
+                thermal_screening_f = np.min([f1,thermal_screening_f])
+            elif self.tsum0 > self.HsO and self.tsum0 < self.HnS:
+                f1=((self.tsum0-self.HsO)/(self.HnS-self.HsO)) * 0.75
+                thermal_screening_f = np.min([f1,thermal_screening_f])
+            elif self.tsum0 > self.LO and self.tsum0 < self.HO:
                 f1 = 1
                 
 
             # confirm with thieleng ***
-            thermal_screening_f = np.min([f1,thermal_screening_f])
+            #thermal_screening_f = np.min([f1,thermal_screening_f])
             
-            if self.tsum5 > self.LsO[1] and self.tsum5 < self.LO[1] :
-                f1 = ((self.tsum5-self.LsO[1])/(self.LO[1]-self.LsO[1])) * 0.25 + 0.75
-            elif self.tsum5 > self.LnS[1] and self.tsum5 < self.LsO[1]:
-                f1=((self.tsum5-self.LnS[1])/(self.LsO[1]-self.LnS[1])) * 0.75
-            elif self.tsum5 > self.HO[1] and self.Tsum5 < self.HsO[1]:
-                f1 = ((self.tsum5-self.HO[1])/(self.HsO[1]-self.HO[1])) * 0.25 + 0.75
-            elif self.tsum5 > self.HsO[1] and self.tsum5 < self.HnS[1]:
-                f1=((self.tsum5-self.HsO[1])/(self.HnS[1]-self.HsO[1])) * 0.75
+            # if self.tsum5 > self.LsO[1] and self.tsum5 < self.LO[1] :
+            #     f1 = ((self.tsum5-self.LsO[1])/(self.LO[1]-self.LsO[1])) * 0.25 + 0.75
+            #     thermal_screening_f = np.min([f1,thermal_screening_f])
+            # elif self.tsum5 > self.LnS[1] and self.tsum5 < self.LsO[1]:
+            #     f1=((self.tsum5-self.LnS[1])/(self.LsO[1]-self.LnS[1])) * 0.75
+            #     thermal_screening_f = np.min([f1,thermal_screening_f])
+            # elif self.tsum5 > self.HO[1] and self.tsum5 < self.HsO[1]:
+            #     f1 = ((self.tsum5-self.HO[1])/(self.HsO[1]-self.HO[1])) * 0.25 + 0.75
+            #     thermal_screening_f = np.min([f1,thermal_screening_f])
+            # elif self.tsum5 > self.HsO[1] and self.tsum5 < self.HnS[1]:
+            #     f1=((self.tsum5-self.HsO[1])/(self.HnS[1]-self.HsO[1])) * 0.75
+            #     thermal_screening_f = np.min([f1,thermal_screening_f])
 
             # confirm with thieleng ***
-            thermal_screening_f = np.min([f1,thermal_screening_f])
+            #thermal_screening_f = np.min([f1,thermal_screening_f])
 
-            if self.tsum10 > self.LsO[2] and self.tsum10 < self.LO[2] :
-                f1 = ((self.tsum10-self.LsO[2])/(self.LO[2]-self.LsO[2])) * 0.25 + 0.75
-            elif self.tsum10 > self.LnS[2] and self.tsum10 < self.LsO[2]:
-                f1=((self.tsum0-self.LnS[2])/(self.LsO[2]-self.LnS[2])) * 0.75
-            elif self.tsum10 > self.HO[2] and self.Tsum10 < self.HsO[2]:
-                f1 = ((self.tsum10-self.HO[2])/(self.HsO[2]-self.HO[2])) * 0.25 + 0.75
-            elif self.tsum10 > self.HsO[2] and self.tsum10 < self.HnS[2]:
-                f1=((self.tsum10-self.HsO[2])/(self.HnS[2]-self.HsO[2])) * 0.75
+            # if self.tsum10 > self.LsO[2] and self.tsum10 < self.LO[2] :
+            #     f1 = ((self.tsum10-self.LsO[2])/(self.LO[2]-self.LsO[2])) * 0.25 + 0.75
+            #     thermal_screening_f = np.min([f1,thermal_screening_f])
+            # elif self.tsum10 > self.LnS[2] and self.tsum10 < self.LsO[2]:
+            #     f1=((self.tsum0-self.LnS[2])/(self.LsO[2]-self.LnS[2])) * 0.75
+            #     thermal_screening_f = np.min([f1,thermal_screening_f])
+            # elif self.tsum10 > self.HO[2] and self.tsum10 < self.HsO[2]:
+            #     f1 = ((self.tsum10-self.HO[2])/(self.HsO[2]-self.HO[2])) * 0.25 + 0.75
+            #     thermal_screening_f = np.min([f1,thermal_screening_f])
+            # elif self.tsum10 > self.HsO[2] and self.tsum10 < self.HnS[2]:
+            #     f1=((self.tsum10-self.HsO[2])/(self.HnS[2]-self.HsO[2])) * 0.75
+            #     thermal_screening_f = np.min([f1,thermal_screening_f])
         
             # confirm with thieleng ***
-            thermal_screening_f = np.min([f1,thermal_screening_f])        
+            #thermal_screening_f = np.min([f1,thermal_screening_f])        
 
      
         if self.set_typeBconstraint:

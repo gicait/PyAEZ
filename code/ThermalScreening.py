@@ -175,15 +175,15 @@ class ThermalScreening(object):
             N7b = T_profile[15]
             N8b = T_profile[16]
             N9b = T_profile[17]
-            N1 = N1a 
-            N2 = N2a
-            N3 = N3a
-            N4 = N4a
-            N5 = N5a
-            N6 = N6a
-            N7 = N7a
-            N8 = N8a
-            N9 = N9a
+            N1 = N1a + N1b
+            N2 = N2a + N2b
+            N3 = N3a + N3b
+            N4 = N4a + N4b
+            N5 = N5a + N5b
+            N6 = N6a + N6b
+            N7 = N7a + N7b
+            N8 = N8a + N8b
+            N9 = N9a + N9b
             RHavg = self.RH
             RHmin = self.RHmin
             DTRavg = self.DTRavg
@@ -208,6 +208,16 @@ class ThermalScreening(object):
             L7b = T_profile[15]
             L8b = T_profile[16]
             L9b = T_profile[17]
+
+            L1 = L1a + L1b
+            L2 = L2a + L2b
+            L3 = L3a + L3b 
+            L4 = L4a + L4b
+            L5 = L5a + L5b
+            L6 = L6a + L6b
+            L7 = L7a + L7b
+            L8 = L8a + L8b
+            L9 = L9a + L9b   
         
         
 

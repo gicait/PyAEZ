@@ -15,7 +15,7 @@ import UtilitiesCalc
 import BioMassCalc
 import ETOCalc
 import CropWatCalc
-import ThermalScreening_mod_Sh
+import ThermalScreening
 import ClimateRegime 
 
 class CropSimulation(object):
@@ -98,20 +98,24 @@ class CropSimulation(object):
 
     def setCropParametersFromCSV(self, file_path, crop_name, mode):
         self.crop_name = crop_name
-        xls = pd.ExcelFile(file_path)
-        if mode == 'H':
-            df = pd.read_excel(xls, 'high')
-        elif mode == 'M':
-            df = pd.read_excel(xls, 'medium')
-        elif mode == 'L':
-            df = pd.read_excel(xls, 'low')
-        else:
-            print('The output mode is incorrect. Please assign H for high, M for medium and L for low')
+        df = pd.read_csv(file_path)
+        
         crop_df_index = df.index[df['Crop_name'] == crop_name].tolist()[0]
         crop_df = df.loc[df['Crop_name'] == crop_name]
         print("index:", crop_df_index)
         print(crop_df['D2'][crop_df_index])
-        self.setCropParameters(LAI=crop_df['LAI'][crop_df_index], HI=crop_df['HI'][crop_df_index], legume=crop_df['legume'][crop_df_index], adaptability=int(crop_df['adaptability'][crop_df_index]), cycle_len=int(crop_df['cycle_len'][crop_df_index]), D1=crop_df['D1'][crop_df_index], D2=crop_df['D2'][crop_df_index], min_temp=crop_df['min_temp'][crop_df_index])
+        if mode == 'H':
+            LAI =crop_df['H_LAI'][crop_df_index]
+            HI=crop_df['H_HI'][crop_df_index]
+        elif mode == 'M':
+            LAI=crop_df['M_LAI'][crop_df_index]
+            HI=crop_df['M_HI'][crop_df_index]
+        elif mode == 'L':
+            LAI=crop_df['L_LAI'][crop_df_index]
+            HI=crop_df['L_HI'][crop_df_index]
+        else:
+            print('The output mode is incorrect. Please assign H for high, M for medium and L for low')
+        self.setCropParameters(LAI, HI, legume=crop_df['legume'][crop_df_index], adaptability=int(crop_df['adaptability'][crop_df_index]), cycle_len=int(crop_df['cycle_len'][crop_df_index]), D1=crop_df['D1'][crop_df_index], D2=crop_df['D2'][crop_df_index], min_temp=crop_df['min_temp'][crop_df_index])
 
         LnS = crop_df['LnS'][crop_df_index]
         LsO = crop_df['LsO'][crop_df_index]
@@ -121,26 +125,6 @@ class CropSimulation(object):
         Ho = crop_df['HO'][crop_df_index]
 
 
-        # LnS.append(crop_df['LnS_0'][crop_df_index]) 
-        # LsO.append(crop_df['LsO_0'][crop_df_index])
-        # LO.append(crop_df['LO_0'][crop_df_index])
-        # HnS.append(crop_df['HnS_0'][crop_df_index]) 
-        # HsO.append(crop_df['HsO_0'][crop_df_index])
-        # HO.append(crop_df['HO_0'][crop_df_index])
-
-        # LnS.append(crop_df['LnS_5'][crop_df_index]) 
-        # LsO.append(crop_df['LsO_5'][crop_df_index])
-        # LO.append(crop_df['LO_5'][crop_df_index])
-        # HnS.append(crop_df['HnS_5'][crop_df_index]) 
-        # HsO.append(crop_df['HsO_5'][crop_df_index])
-        # HO.append(crop_df['HO_5'][crop_df_index])
-
-        # LnS.append(crop_df['LnS_10'][crop_df_index]) 
-        # LsO.append(crop_df['LsO_10'][crop_df_index])
-        # LO.append(crop_df['LO_10'][crop_df_index])
-        # HnS.append(crop_df['HnS_10'][crop_df_index]) 
-        # HsO.append(crop_df['HsO_10'][crop_df_index])
-        # HO.append(crop_df['HO_10'][crop_df_index])
 
         self.setAccTsum(LnS, LsO, Lo, Ho, HsO, HnS)
 
@@ -329,7 +313,7 @@ class CropSimulation(object):
                 
 
                     # conduct tests to check simulation should be carried out or not based on growing period threshold. if not, goes to next location (pixel)
-                    obj_screening = ThermalScreening_mod_Sh.ThermalScreening()
+                    obj_screening = ThermalScreening.ThermalScreening()
                     #Passing all the climate data from a single function
                     obj_screening.setClimateData(minT_daily_season, maxT_daily_season)
 

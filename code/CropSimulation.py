@@ -350,7 +350,6 @@ class CropSimulation(object):
                     if self.is_perennial:
                         # Calculation biomass for rainfed condition
                         #print("--------------")
-                        
                        
                         if self.cyc_eff_rainfed[i_row, i_col] > self.cycle_len or self.cyc_eff_irrigated > self.cycle_len:
                             print('inside checking loop')

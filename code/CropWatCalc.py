@@ -95,9 +95,9 @@ class CropWatCalc(object):
         '''Assess Yield Loss in entire growth cycle'''
 
         peta_all_sum = np.sum( peta_all )
-        petc_all_sum = np.sum( petc_all )
+        self.petc_all_sum = np.sum( petc_all )
 
-        f0 = 1 - self.yloss_f_all * ( 1 - (peta_all_sum/petc_all_sum) )
+        f0 = 1 - self.yloss_f_all * ( 1 - (peta_all_sum/self.petc_all_sum) )
 
         '''Assess Yield Loss in individual growth stages separately'''
 
@@ -134,3 +134,5 @@ class CropWatCalc(object):
 
     def waterreduction(self):
         return self.f_final
+    def petcmap(self):
+        return self.petc_all_sum

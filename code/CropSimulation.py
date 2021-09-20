@@ -79,15 +79,7 @@ class CropSimulation(object):
         self.HO= HO
         self.set_Tsum_screening = True
 
-    def getRainfedCycEff(self, LGP, cycle_len):
-        self.cyc_eff_rainfed = np.minimum(LGP, cycle_len)
-
-    def getIrrigatedCycEff(self, min_temp, LGPT5, LGPT10, cycle_len):   
-        if min_temp == 5:
-            self.cyc_eff_irrigated = np.minimum(LGPT5, cycle_len)
-        else:
-            self.cyc_eff_irrigated = np.minimum(LGPT10, cycle_len)
-   
+    
     def adjustmentParameterPerennial(self, path):
         climate = ClimateRegime.ClimateRegime()
         climate.elevation = self.elevation
@@ -111,11 +103,12 @@ class CropSimulation(object):
         self.LGPT10= climate.getThermalLGP10()
         #reading the csv file 
         p_df = pd.read_csv(path)
-        self.cyc_eff_rainfed= self.LGP
-        if self.min_temp == 5:
-            self.cyc_eff_irrigated = self.LGPT5
-        elif self.min_temp == 10:
-            self.cyc_eff_irrigated = self.LGPT10
+
+        # self.cyc_eff_rainfed= self.LGP
+        # if self.min_temp == 5:
+        #     self.cyc_eff_irrigated = self.LGPT5
+        # elif self.min_temp == 10:
+        #     self.cyc_eff_irrigated = self.LGPT10
 
         perennial_df_index = p_df.index[p_df['Crop_name'] == self.crop_name].to_list()[0]
         perennial_df = p_df.loc[p_df['Crop_name'] == self.crop_name]
@@ -173,14 +166,16 @@ class CropSimulation(object):
 
         self.set_mask = True
 
-    def adjustForPerennialCrop(self,  aLAI, bLAI, aHI, bHI):
-        print('working')
+    def adjustForPerennialCrop_rainfed(self,  aLAI, bLAI, aHI, bHI):
+        
         self.LAi_rainfed = self.LAi * ((self.cyc_eff_rainfed-aLAI)/bLAI) # leaf area index adjustment for perennial crops
         self.HI_rainfed = self.HI * ((self.cyc_eff_rainfed-aHI)/bHI) # harvest index adjustment for perennial crops
+    
+    def adjustForPerennialCrop_irrigated(self,  aLAI, bLAI, aHI, bHI):
+        
         self.LAi_irrigated = self.LAi * ((self.cyc_eff_irrigated-aLAI)/bLAI) # leaf area index adjustment for perennial crops
         self.HI_irrigated = self.HI * ((self.cyc_eff_irrigated-aHI)/bHI) # harvest index adjustment for perennial crops
-
-       
+      
     def setThermalClimateScreening(self, t_climate, no_t_climate):
         self.t_climate = t_climate
         self.no_t_climate = no_t_climate # list of unsuitable thermal climate
@@ -348,18 +343,38 @@ class CropSimulation(object):
                     obj_maxyield.setClimateData(minT_daily_season, maxT_daily_season, shortRad_daily_season)
 
                     if self.is_perennial:
-                        # Calculation biomass for rainfed condition
-                        #print("--------------")
-                       
-                        if self.cyc_eff_rainfed[i_row, i_col] > self.cycle_len or self.cyc_eff_irrigated > self.cycle_len:
-                            print('inside checking loop')
-                            self.adjustForPerennialCrop(self.aLAI, self.bLAI, self.aHI, self.bHI)
+                        
+                        if self.LGP[i_row, i_col] < self.cycle_len :
+                            self.cyc_eff_rainfed = self.LGP[i_row, i_col]
+                            self.adjustForPerennialCrop_rainfed(self.aLAI, self.bLAI, self.aHI, self.bHI)
                         else:
-                            self.LAi_irrigated[i_row, i_col] = self.LAi
-                            self.HI_irrigated[i_row, i_col] = self.HI
-                            self.LAi_rainfed[i_row, i_col] = self.LAi
-                            self.HI_rainfed[i_row, i_col] = self.HI
-                        obj_maxyield.setCropParameters(self.LAi_rainfed[i_row, i_col]+1, self.HI_rainfed[i_row, i_col]+1, self.legume, self.adaptability)
+                            self.cyc_eff_rainfed = self.cycle_len
+                            self.LAi_rainfed = self.LAi
+                            self.HI_rainfed = self.HI
+
+                        if self.min_temp == 5:
+
+                            if self.LGPT5[i_row, i_col] < self.cycle_len:
+                                self.cyc_eff_irrigated = self.LGPT5
+                                self.adjustForPerennialCrop_irrigated(self.aLAI, self.bLAI, self.aHI, self.bHI)
+                            else:
+                                self.cyc_eff_irrigated = self.cycle_len
+                                self.LAi_irrigated = self.LAi
+                                self.HI_irrigated = self.HI
+
+                        else:
+                             if self.LGPT10[i_row, i_col] < self.cycle_len:
+                                self.cyc_eff_irrigated = self.LGPT10
+                                self.adjustForPerennialCrop_irrigated(self.aLAI, self.bLAI, self.aHI, self.bHI)
+                             else:
+                                self.cyc_eff_irrigated = self.cycle_len
+                                self.LAi_irrigated = self.LAi
+                                self.HI_irrigated = self.HI
+
+                           
+                       
+
+                        obj_maxyield.setCropParameters(self.LAi_rainfed, self.HI_rainfed, self.legume, self.adaptability)
                         obj_maxyield.calculateBioMass()
                         est_yield_rainfed = obj_maxyield.calculateYield()
                         
@@ -385,7 +400,7 @@ class CropSimulation(object):
                         yield_of_all_crop_cycles_rainfed.append( est_yield_moisture_limited )
                         
                         # Calculation biomass for rainfed condition
-                        obj_maxyield.setCropParameters(self.LAi_irrigated[i_row, i_col]+1, self.HI_irrigated[i_row, i_col]+1, self.legume, self.adaptability)
+                        obj_maxyield.setCropParameters(self.LAi_irrigated, self.HI_irrigated, self.legume, self.adaptability)
                         obj_maxyield.calculateBioMass()
                         est_yield_irrigated = obj_maxyield.calculateYield()
 

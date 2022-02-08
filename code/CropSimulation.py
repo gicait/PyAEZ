@@ -26,6 +26,8 @@ class CropSimulation(object):
         self.set_lgpt_screening = False
         self.set_Tsum_screening = False
         self.set_Tprofile_screening = False
+        self.adjustment = False
+      
 
     def setMonthlyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity):
         # either one of monthly or daily climate data should be set
@@ -216,7 +218,23 @@ class CropSimulation(object):
         #self.thermalscreeningrules= crop_df.to_numpy()
         
         
+    # def thermalscreeningfunction(self, cycle_len, start_doy, minT_daily_season, maxT_daily_season, i_row, i_col, rel_humidity_daily_point, minT_daily_point, maxT_daily_point):
+    #     obj_screening = ThermalScreening.ThermalScreening()
+    #     self.cyc_len =cycle_len
+    #     start_doy = start_doy
+    #     obj_screening.setparamerter(self.cyc_len, start_doy)
+    #     obj_screening.setClimateData(minT_daily_season, maxT_daily_season)
+    #     if self.set_tclimate_screening:
+    #          obj_screening.setThermalClimateScreening(self.t_climate[i_row, i_col], self.no_t_climate)
         
+    #     if self.set_type_B:
+    #         if self.is_perennial:
+    #             obj_screening.set_RH_and_DT(rel_humidity_daily_point, minT_daily_point, maxT_daily_point)
+    #         obj_screening.setTypeB(self.formula, self.opr, self.optm, self.soptm, self.notsuitable, self.is_perennial)
+        
+        
+
+
        
 
     def simulateCropCycle(self, start_doy=1, end_doy=365, step_doy=1, leap_year=False):
@@ -306,28 +324,65 @@ class CropSimulation(object):
                     wind2m_daily_season = wind2m_daily_2year[i_cycle : i_cycle+self.cycle_len]
                     totalPrec_daily_season = totalPrec_daily_2year[i_cycle : i_cycle+self.cycle_len]
                     pet_daily_season = pet_daily_2year[i_cycle : i_cycle+self.cycle_len]
+                    
+                    #checking if it is perinal crop or not 
+                    if self.is_perennial:
+                        if self.LGP[i_row, i_col] < self.cycle_len :
+                            self.adjustment = True
+                            self.cyc_eff_rainfed = self.LGP[i_row, i_col]
+                            self.adjustForPerennialCrop_rainfed(self.aLAI, self.bLAI, self.aHI, self.bHI)
+                        else:
+                            self.cyc_eff_rainfed = self.cycle_len
+                            self.LAi_rainfed = self.LAi
+                            self.HI_rainfed = self.HI
+
+                        if self.min_temp == 5:
+
+                            if self.LGPT5[i_row, i_col] < self.cycle_len:
+                                self.adjustment = True
+                                self.cyc_eff_irrigated = self.LGPT5
+                                self.adjustForPerennialCrop_irrigated(self.aLAI, self.bLAI, self.aHI, self.bHI)
+                            else:
+                                self.cyc_eff_irrigated = self.cycle_len
+                                self.LAi_irrigated = self.LAi
+                                self.HI_irrigated = self.HI
+
+                        else:
+                            if self.LGPT10[i_row, i_col] < self.cycle_len:
+                                self.cyc_eff_irrigated = self.LGPT10
+                                self.adjustForPerennialCrop_irrigated(self.aLAI, self.bLAI, self.aHI, self.bHI)
+                            else:
+                                self.cyc_eff_irrigated = self.cycle_len
+                                self.LAi_irrigated = self.LAi
+                                self.HI_irrigated = self.HI
                 
 
                     # conduct tests to check simulation should be carried out or not based on growing period threshold. if not, goes to next location (pixel)
+                    
                     obj_screening = ThermalScreening.ThermalScreening()
-                    #Passing all the climate data from a single function
+                    obj_screening.setparamerter(self.cycle_len, start_doy)
                     obj_screening.setClimateData(minT_daily_season, maxT_daily_season)
-
                     if self.set_tclimate_screening:
-                         obj_screening.setThermalClimateScreening(self.t_climate[i_row, i_col], self.no_t_climate)
-                    # if self.set_lgpt_screening:
-                    #     obj_screening.setLGPTScreening(self.no_lgpt, self.optm_lgpt)
+                        obj_screening.setThermalClimateScreening(self.t_climate[i_row, i_col], self.no_t_climate)
+        
+                   
+                    if self.adjustment:
+                        obj_screening.setparameteradjusted(self.cyc_eff_rainfed, self.cyc_eff_irrigated, start_doy)
+                        
+                    else:
+                        obj_screening.setparamerter(self.cycle_len, start_doy)
 
-                    if self.set_Tsum_screening:
-                        obj_screening.SetTSumScreening(self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO)
+                    obj_screening.setClimateData(minT_daily_season, maxT_daily_season)
+                    if self.set_tclimate_screening:
+                        obj_screening.setThermalClimateScreening(self.t_climate[i_row, i_col], self.no_t_climate)
+                    
                     if self.set_type_B:
                         if self.is_perennial:
-                             obj_screening.set_RH_and_DT(rel_humidity_daily_point, minT_daily_point, maxT_daily_point)
-                        
+                            obj_screening.set_RH_and_DT(rel_humidity_daily_point, minT_daily_point, maxT_daily_point)
                         obj_screening.setTypeB(self.formula, self.opr, self.optm, self.soptm, self.notsuitable, self.is_perennial)
-                        
 
-                    #thermal_screening_f = 1
+
+
                     self.reductionfactorF1[i_row, i_col] =1
                     if not  obj_screening.getSuitability():
                         print('value is not suitable thus yield is not calculated')
@@ -344,32 +399,7 @@ class CropSimulation(object):
 
                     if self.is_perennial:
                         
-                        if self.LGP[i_row, i_col] < self.cycle_len :
-                            self.cyc_eff_rainfed = self.LGP[i_row, i_col]
-                            self.adjustForPerennialCrop_rainfed(self.aLAI, self.bLAI, self.aHI, self.bHI)
-                        else:
-                            self.cyc_eff_rainfed = self.cycle_len
-                            self.LAi_rainfed = self.LAi
-                            self.HI_rainfed = self.HI
-
-                        if self.min_temp == 5:
-
-                            if self.LGPT5[i_row, i_col] < self.cycle_len:
-                                self.cyc_eff_irrigated = self.LGPT5
-                                self.adjustForPerennialCrop_irrigated(self.aLAI, self.bLAI, self.aHI, self.bHI)
-                            else:
-                                self.cyc_eff_irrigated = self.cycle_len
-                                self.LAi_irrigated = self.LAi
-                                self.HI_irrigated = self.HI
-
-                        else:
-                             if self.LGPT10[i_row, i_col] < self.cycle_len:
-                                self.cyc_eff_irrigated = self.LGPT10
-                                self.adjustForPerennialCrop_irrigated(self.aLAI, self.bLAI, self.aHI, self.bHI)
-                             else:
-                                self.cyc_eff_irrigated = self.cycle_len
-                                self.LAi_irrigated = self.LAi
-                                self.HI_irrigated = self.HI
+                       
 
                            
                        

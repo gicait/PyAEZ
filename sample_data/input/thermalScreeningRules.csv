@@ -10,6 +10,4 @@ Soybean,L4a+L3a+L3b+L4b,>=,10,5,3
 Soybean,L4a+L3a+L2a+L2b+L3b+L4b,<=,15,30,45
 Soybean,L1a+L1b,<=,15,30,50
 Coffee,N1a,=,0,0,0
-Coffee,RHmin,<=,80,90,94.5
-Coffee,RHmin,>=,40,30,28.5
 Coffee,N2a,<=,330,182,136

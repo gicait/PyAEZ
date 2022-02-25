@@ -361,18 +361,16 @@ class CropSimulation(object):
                     
                     obj_screening = ThermalScreening.ThermalScreening()
                     obj_screening.setparamerter(self.cycle_len, start_doy)
-                    obj_screening.setClimateData(minT_daily_season, maxT_daily_season)
-                    if self.set_tclimate_screening:
-                        obj_screening.setThermalClimateScreening(self.t_climate[i_row, i_col], self.no_t_climate)
-        
-                   
-                    if self.adjustment:
+                    
+
+                    if self.adjustment:         #if the perennial crop is adjusted then Cycle efficent might be different for irrigated and rainfed conditions so we pass both the value and check under thhe both situation
                         obj_screening.setparameteradjusted(self.cyc_eff_rainfed, self.cyc_eff_irrigated, start_doy)
                         
-                    else:
-                        obj_screening.setparamerter(self.cycle_len, start_doy)
+                   
+                        
 
                     obj_screening.setClimateData(minT_daily_season, maxT_daily_season)
+                    obj_screening.SetTSumScreening(self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO)
                     if self.set_tclimate_screening:
                         obj_screening.setThermalClimateScreening(self.t_climate[i_row, i_col], self.no_t_climate)
                     
@@ -380,30 +378,24 @@ class CropSimulation(object):
                         if self.is_perennial:
                             obj_screening.set_RH_and_DT(rel_humidity_daily_point, minT_daily_point, maxT_daily_point)
                         obj_screening.setTypeB(self.formula, self.opr, self.optm, self.soptm, self.notsuitable, self.is_perennial)
-
-
+                    
+                    
 
                     self.reductionfactorF1[i_row, i_col] =1
                     if not  obj_screening.getSuitability():
-                        print('value is not suitable thus yield is not calculated')
+                        print('value is not suitable thus yield is not calculated for the pixel')
                         continue
                     else:
                         #print("going apply reduction factor")
                         #thermal_screening_f = obj_screening.getReductionFactor()
                         self.reductionfactorF1[i_row, i_col] = obj_screening.getReductionFactor()
-
+                       
 
                     # calculate biomass
                     obj_maxyield = BioMassCalc.BioMassCalc(i_cycle, i_cycle+self.cycle_len-1, self.latitude_map[i_row, i_col])
                     obj_maxyield.setClimateData(minT_daily_season, maxT_daily_season, shortRad_daily_season)
 
                     if self.is_perennial:
-                        
-                       
-
-                           
-                       
-
                         obj_maxyield.setCropParameters(self.LAi_rainfed, self.HI_rainfed, self.legume, self.adaptability)
                         obj_maxyield.calculateBioMass()
                         est_yield_rainfed = obj_maxyield.calculateYield()

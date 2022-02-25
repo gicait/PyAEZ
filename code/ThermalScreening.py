@@ -72,20 +72,23 @@ class ThermalScreening(object):
  
         return [A9,A8,A7,A6,A5,A4,A3,A2,A1,B1,B2,B3,B4,B5,B6,B7,B8,B9]
 
-    def setClimateData(self, minT_daily, maxT_daily, ):
-        
+    def setClimateData(self, minT_daily, maxT_daily):
+       
+        #self.cycle_len=cycle_len
         self.meanT_daily = (minT_daily + maxT_daily) / 2
 
         self.lgp0 = self.getThermalLGP0()
         self.lgp5 = self.getThermalLGP5()
         self.lgp10 = self.getThermalLGP10()
         self.tprofile = self.getTemperatureProfile()
+        self.tsum0 = self.getTemperatureSum0(self.cycle_len)
 
         if self.set_parameter_adjusted: #if the perennial crop is adjusted we must check for both condition
             self.tsum0_r = self.getTemperatureSum0(self.cycle_len_r)
             self.tsum0_i = self.getTemperatureSum0(self.cycle_len_i)
         else:
             self.tsum0 = self.getTemperatureSum0(self.cycle_len)
+            
 
     def setThermalClimateScreening(self, t_climate, no_t_climate):
         self.t_climate = t_climate
@@ -109,6 +112,7 @@ class ThermalScreening(object):
         self.HO=HO
         
         self.set_Tsum_screening = True
+        #print ('working')
 
     
     def setTProfileScreening(self, no_Tprofile, optm_Tprofile):
@@ -250,9 +254,8 @@ class ThermalScreening(object):
     
         
         if self.set_Tsum_screening:
-            
+           # print('check tsum0')        
             # check with thieleng ****
-
             if (self.tsum0 > self.HnS or self.tsum0 < self.LnS) :
                 print('tsum')
                 return False
@@ -290,25 +293,30 @@ class ThermalScreening(object):
         '''the modified reduction factor for T_sum'''
         
         if self.set_Tsum_screening:
-            #print("tsum", self.tsum0,self.tsum5, self.tsum10, "range", self.LnS, self.HnS)
+            print("tsum", self.tsum0, "range", self.LnS, self.HnS)
+            print (self.set_parameter_adjusted)
             if self.set_parameter_adjusted:
                 self.get_adjusted_reduction_factor(self.tsum0_i)
                 self.get_adjusted_reduction_factor(self.tsum0_r)
-            else:
-                if self.tsum0 > self.LsO and self.tsum0 < self.LO :
+            if not self.set_parameter_adjusted:
+                print ('entering loop')
+                if self.tsum0 >= self.LsO and self.tsum0 <= self.LO :
                     f1 = ((self.tsum0-self.LsO)/(self.LO-self.LsO)) * 0.25 + 0.75
                     thermal_screening_f = np.min([f1,thermal_screening_f])
-                elif self.tsum0 > self.HO and self.tsum0 < self.HsO:
-                    f1 = ((self.tsum0-self.HO)/(self.HsO-self.HO)) * 0.25 + 0.75
+                elif self.tsum0 >= self.HO and self.tsum0 <= self.HsO:
+                    f1 = ((self.HsO-self.tsum0)/(self.HsO-self.HO)) * 0.25 + 0.75
                     thermal_screening_f = np.min([f1,thermal_screening_f])
-                elif self.tsum0 > self.LnS and self.tsum0 < self.LsO:
+                elif self.tsum0 >= self.LnS and self.tsum0 <= self.LsO:
                     f1 = ((self.tsum0-self.LnS)/(self.LsO-self.LnS)) * 0.75
                     thermal_screening_f = np.min([f1,thermal_screening_f])
-                elif self.tsum0 > self.HsO and self.tsum0 < self.HnS:
-                    f1=((self.tsum0-self.HsO)/(self.HnS-self.HsO)) * 0.75
+                elif self.tsum0 >= self.HsO and self.tsum0 <= self.HnS:
+                    f1=((self.HnS-self.tsum0)/(self.HnS-self.HsO)) * 0.75
                     thermal_screening_f = np.min([f1,thermal_screening_f])
-                elif self.tsum0 > self.LO and self.tsum0 < self.HO:
+                elif self.tsum0 >= self.LO and self.tsum0 <= self.HO:
                     f1 = 1
+                elif self.tsum0< self.LnS or self.tsum0 > self.HnS:
+                    f1=0
+                
                      
         if self.set_typeBconstraint:
             for i1 in range (len(self.cal_value)):
@@ -331,6 +339,7 @@ class ThermalScreening(object):
                             f1=((self.cal_value[i1]-self.notsuitable[i1])/(self.soptm[i1]-self.notsuitable[i1])) * 0.75
                      elif self.optm[i1] != self.soptm[i1] and self.soptm[i1] == self.notsuitable[i1]:
                         f1 = ((self.cal_value[i1]-self.optm[i1])/(self.soptm[i1]-self.optm[i1])) * 0.25 + 0.75
+                
                 thermal_screening_f = np.min([f1,thermal_screening_f])
         return thermal_screening_f
 
@@ -338,18 +347,26 @@ class ThermalScreening(object):
     def get_adjusted_reduction_factor(self, tsum0):
         if self.set_Tsum_screening:
             thermal_screening_f = 1
-            #print("tsum", self.tsum0,self.tsum5, self.tsum10, "range", self.LnS, self.HnS)
+            
             if tsum0 > self.LsO and tsum0 < self.LO :
                 f1 = ((tsum0-self.LsO)/(self.LO-self.LsO)) * 0.25 + 0.75
+                
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-            elif tsum0 > self.HO and tsum0 < self.HsO:
-                f1 = ((tsum0-self.HO)/(self.HsO-self.HO)) * 0.25 + 0.75
+            elif self.tsum0 >= self.HO and self.tsum0 <= self.HsO:
+                f1 = ((self.HsO-self.tsum0)/(self.HsO-self.HO)) * 0.25 + 0.75
+                
                 thermal_screening_f = np.min([f1,thermal_screening_f])
             elif tsum0 > self.LnS and tsum0 < self.LsO:
                 f1 = ((tsum0-self.LnS)/(self.LsO-self.LnS)) * 0.75
+                
                 thermal_screening_f = np.min([f1,thermal_screening_f])
-            elif tsum0 > self.HsO and tsum0 < self.HnS:
-                f1=((tsum0-self.HsO)/(self.HnS-self.HsO)) * 0.75
+            elif self.tsum0 >= self.HsO and self.tsum0 <= self.HnS:
+                f1=((self.HnS-self.tsum0)/(self.HnS-self.HsO)) * 0.75
                 thermal_screening_f = np.min([f1,thermal_screening_f])
+                
+                
             elif tsum0 > self.LO and tsum0 < self.HO:
                 f1 = 1
+            elif self.tsum0< self.LnS or self.tsum0 > self.HnS:
+                f1=0
+            

@@ -256,6 +256,7 @@ class CropSimulation(object):
         self.water_reductionF2= np.zeros((self.im_height, self.im_width));
         self.Eto = np.zeros((self.im_height, self.im_width, days_in_year));
         self.Etc = np.zeros((self.im_height, self.im_width, days_in_year));
+        
 
         for i_row in range(self.im_height):
 
@@ -301,6 +302,8 @@ class CropSimulation(object):
                 pet_daily_point = obj_eto.calculateETO()
                 #print (len(pet_daily_point))
                 self.Eto[i_row, i_col] = obj_eto.calculateETO()
+                
+
 
                 # list that stores yield estimations of all cycles per particular location (pixel)
                 yield_of_all_crop_cycles_rainfed = []
@@ -389,6 +392,7 @@ class CropSimulation(object):
                         #print("going apply reduction factor")
                         #thermal_screening_f = obj_screening.getReductionFactor()
                         self.reductionfactorF1[i_row, i_col] = obj_screening.getReductionFactor()
+                        
                        
 
                     # calculate biomass
@@ -481,5 +485,11 @@ class CropSimulation(object):
         return reduction_factor
     
     def getEtocandEtcMap(self):
-        etomap= [self.Eto, self.Etc]
+        sum_etomap= np.sum(self.Eto, axis = 2)
+        sum_etc = np.sum(self.Etc, axis=2)
+        etomap= [sum_etomap, sum_etc]
+        #etomap = [self.Eto, self.Etc]
         return etomap
+
+    def getreduction(self):
+        return self.reductionfactorF1

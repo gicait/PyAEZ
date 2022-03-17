@@ -1,7 +1,7 @@
 Crop,Constraint,Type,Optimal,Sub-Optimal,Not-Suitable
 Wheat,L6a,<=,-0.5,2,2
 Wheat,L6b,=,0,0,0
-Wheat,L2a+ L2b,<=,0.333,0.4,0.333
+Wheat,L2a+ L2b,<=,-0.333,0,0.333
 Wheat,L1a+L1b,=,0,0,0
 Wheat,L2b+L3b+L4a+L5a,<,0.5,0.5,0.5
 Soybean,L6a+L6b,=,0,0,0

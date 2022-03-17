@@ -155,6 +155,7 @@ class ThermalScreening(object):
         self.soptm = []
         self.notsuitable = []
         T_profile = self.getTemperatureProfile()
+        
         #print('perrinal', is_perennial)
         #checking of variables 
         if is_perennial:           
@@ -220,6 +221,7 @@ class ThermalScreening(object):
             L7 = L7a + L7b
             L8 = L8a + L8b
             L9 = L9a + L9b   
+            
         
         
 
@@ -257,7 +259,7 @@ class ThermalScreening(object):
            # print('check tsum0')        
             # check with thieleng ****
             if (self.tsum0 > self.HnS or self.tsum0 < self.LnS) :
-                print('tsum')
+                print('tsum', self.tsum0, self.HnS, self.LnS)
                 return False
 
         if self.set_typeBconstraint:
@@ -269,7 +271,7 @@ class ThermalScreening(object):
                         
                         return False
                 elif self.opr[i1] == '<=' :
-                    if self.cal_value[i1]  <= self.optm[i1] or self.cal_value[i1] <= self.notsuitable[i1]:
+                    if self.cal_value[i1]  <= self.optm[i1] or self.cal_value[i1] >= self.notsuitable[i1]:
                         print('Type B',self.optm[i1] ,'<=', self.cal_value[i1],'<=' , self.notsuitable[i1])
                         return False
                 elif self.opr[i1] == '>=':
@@ -314,8 +316,7 @@ class ThermalScreening(object):
                     thermal_screening_f = np.min([f1,thermal_screening_f])
                 elif self.tsum0 >= self.LO and self.tsum0 <= self.HO:
                     f1 = 1
-                elif self.tsum0< self.LnS or self.tsum0 > self.HnS:
-                    f1=0
+                thermal_screening_f = np.min([f1,thermal_screening_f])
                 
                      
         if self.set_typeBconstraint:

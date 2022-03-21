@@ -6,7 +6,11 @@ Written by N. Lakmal Deshapriya
 import numpy as np
 import matplotlib.pyplot as plt
 import imageio
-import gdal
+try: 
+    import gdal
+except ImportError:
+    from osgeo import gdal
+ 
 
 import UtilitiesCalc
 import BioMassCalc

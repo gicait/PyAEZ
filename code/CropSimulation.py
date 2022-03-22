@@ -6,10 +6,11 @@ Written by N. Lakmal Deshapriya
 import numpy as np
 import matplotlib.pyplot as plt
 import imageio
-# import gdal
-from osgeo import gdal
+
+#from osgeo import gdal
 import pandas as pd
 import io
+
 
 import UtilitiesCalc
 import BioMassCalc
@@ -254,8 +255,7 @@ class CropSimulation(object):
         self.crop_calender = np.zeros((self.im_height, self.im_width));
         self.reductionfactorF1= np.zeros((self.im_height,self.im_width));
         self.water_reductionF2= np.zeros((self.im_height, self.im_width));
-        self.Eto = np.zeros((self.im_height, self.im_width, days_in_year));
-        self.Etc = np.zeros((self.im_height, self.im_width, days_in_year));
+       
         
 
         for i_row in range(self.im_height):
@@ -300,10 +300,7 @@ class CropSimulation(object):
                 shortRad_dailyy_point_MJm2day = (shortRad_daily_point*3600*24)/1000000 # convert w/m2 to MJ/m2/day
                 obj_eto.setClimateData(minT_daily_point, maxT_daily_point, wind2m_daily_point, shortRad_dailyy_point_MJm2day, rel_humidity_daily_point)
                 pet_daily_point = obj_eto.calculateETO()
-                #print (len(pet_daily_point))
-                self.Eto[i_row, i_col] = obj_eto.calculateETO()
                 
-
 
                 # list that stores yield estimations of all cycles per particular location (pixel)
                 yield_of_all_crop_cycles_rainfed = []
@@ -325,8 +322,8 @@ class CropSimulation(object):
                     maxT_daily_season = maxT_daily_2year[i_cycle : i_cycle+self.cycle_len]
                     shortRad_daily_season = shortRad_daily_2year[i_cycle : i_cycle+self.cycle_len]
                     wind2m_daily_season = wind2m_daily_2year[i_cycle : i_cycle+self.cycle_len]
-                    totalPrec_daily_season = totalPrec_daily_2year[i_cycle : i_cycle+self.cycle_len]
-                    pet_daily_season = pet_daily_2year[i_cycle : i_cycle+self.cycle_len]
+                    self.totalPrec_daily_season = totalPrec_daily_2year[i_cycle : i_cycle+self.cycle_len]
+                    self.pet_daily_season = pet_daily_2year[i_cycle : i_cycle+self.cycle_len]
                     
                     #checking if it is perinal crop or not 
                     if self.is_perennial:
@@ -410,7 +407,7 @@ class CropSimulation(object):
 
                         # apply cropwat
                         obj_cropwat = CropWatCalc.CropWatCalc(i_cycle, i_cycle+self.cycle_len-1)
-                        obj_cropwat.setClimateData(pet_daily_season, totalPrec_daily_season)
+                        obj_cropwat.setClimateData(self.pet_daily_season, self.totalPrec_daily_season)
 
                         # check Sa is a raster or single value and extract Sa value accordingly
                         if len(np.array(self.Sa).shape) == 2:
@@ -441,21 +438,21 @@ class CropSimulation(object):
                     
 
                         # reduce thermal screening factor
-                        est_yield = est_yield * self.reductionfactorF1[i_row, i_col]
+                        self.est_yield = est_yield * self.reductionfactorF1[i_row, i_col]
                         
 
                         # apply cropwat
                         obj_cropwat = CropWatCalc.CropWatCalc(i_cycle, i_cycle+self.cycle_len-1)
-                        obj_cropwat.setClimateData(pet_daily_season, totalPrec_daily_season)
+                        obj_cropwat.setClimateData(self.pet_daily_season, self.totalPrec_daily_season)
                         # check Sa is a raster or single value and extract Sa value accordingly
                         if len(np.array(self.Sa).shape) == 2:
                             Sa_temp = self.Sa[i_row, i_col]
                         else:
                             Sa_temp = self.Sa
-                        obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f, self.yloss_f_all, est_yield, self.D1, self.D2, Sa_temp, self.pc)
+                        obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f, self.yloss_f_all, self.est_yield, self.D1, self.D2, Sa_temp, self.pc)
                         est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
                         self.water_reductionF2 [i_row, i_col] = obj_cropwat.waterreduction()
-                        self.Etc[i_row, i_col] = obj_cropwat.petcmap()
+                        #self.Etc[i_row, i_col] = obj_cropwat.petcmap()
                         
 
                         # append current cycle yield to a list
@@ -484,12 +481,69 @@ class CropSimulation(object):
         reduction_factor = [self.reductionfactorF1 , self.water_reductionF2]
         return reduction_factor
     
-    def getEtocandEtcMap(self):
-        sum_etomap= np.sum(self.Eto, axis = 2)
-        sum_etc = np.sum(self.Etc, axis=2)
-        etomap= [sum_etomap, sum_etc]
-        #etomap = [self.Eto, self.Etc]
-        return etomap
+    # def getEtocandEtcMap(self):
+    #     sum_etomap= np.sum(self.Eto, axis = 2)
+    #     sum_etc = np.sum(self.Etc, axis=2)
+    #     etomap= [sum_etomap, sum_etc]
+    #     #etomap = [self.Eto, self.Etc]
+    #     return etomap
+    def getEtoandEtcMap(self):
+        crop_calender2 =( np.tile(self.crop_calender, 2))
+        self.Eto = np.zeros((self.im_height, self.im_width, self.cycle_len+1));
+        self.Etc = np.zeros((self.im_height, self.im_width, self.cycle_len+1));
+
+        for i_row in range (self.im_height):
+            for i_col in range (self.im_width):
+                if self.set_monthly:
+                    obj_utilities = UtilitiesCalc.UtilitiesCalc()
+
+                    minT_daily_point = obj_utilities.interpMonthlyToDaily(self.minT_monthly[i_row, i_col,:],  crop_calender2[i_row, i_col], crop_calender2[i_row, i_col]+self.cycle_len)
+                    maxT_daily_point = obj_utilities.interpMonthlyToDaily(self.maxT_monthly[i_row, i_col,:], crop_calender2[i_row, i_col], crop_calender2[i_row,i_col]+self.cycle_len)
+                    shortRad_daily_point = obj_utilities.interpMonthlyToDaily(self.shortRad_monthly[i_row, i_col,:],  crop_calender2[i_row, i_col],crop_calender2[i_row,i_col]+ self.cycle_len, no_minus_values=True)
+                    wind2m_daily_point = obj_utilities.interpMonthlyToDaily(self.wind2m_monthly[i_row, i_col,:], crop_calender2[i_row, i_col], crop_calender2[i_row,i_col]+self.cycle_len, no_minus_values=True)
+                    totalPrec_daily_point = obj_utilities.interpMonthlyToDaily(self.totalPrec_monthly[i_row, i_col,:],  crop_calender2[i_row, i_col],crop_calender2[i_row,i_col]+ self.cycle_len, no_minus_values=True)
+                    rel_humidity_daily_point = obj_utilities.interpMonthlyToDaily(self.rel_humidity_monthly[i_row, i_col,:], crop_calender2[i_row, i_col], crop_calender2[i_row,i_col]+self.cycle_len, no_minus_values=True)
+                    
+                else:
+                    minT_daily_point = self.minT_daily[i_row, i_col,:]
+                    maxT_daily_point = self.maxT_daily[i_row, i_col,:]
+                    shortRad_daily_point = self.shortRad_daily[i_row, i_col,:] 
+                    wind2m_daily_point = self.wind2m_daily[i_row, i_col,:]
+                    totalPrec_daily_point = self.totalPrec_daily[i_row, i_col,:]
+                    rel_humidity_daily_point = self.rel_humidity_daily[i_row, i_col,:]
+                    
+                
+                # calculate ETO for cycle length period for particular location (pixel)
+                obj_eto = ETOCalc.ETOCalc(int(crop_calender2[i_row, i_col]), int(crop_calender2[i_row,i_col])+self.cycle_len, self.latitude_map[i_row, i_col], self.elevation[i_row, i_col])
+                shortRad_dailyy_point_MJm2day = (shortRad_daily_point*3600*24)/1000000 # convert w/m2 to MJ/m2/day
+                obj_eto.setClimateData(minT_daily_point, maxT_daily_point, wind2m_daily_point, shortRad_dailyy_point_MJm2day, rel_humidity_daily_point)
+                #pet_daily_point = obj_eto.calculateETO()
+                #print (len(pet_daily_point))
+                print(self.Eto.shape, i_col)
+                print(minT_daily_point.shape)
+                self.Eto[i_row, i_col] = obj_eto.calculateETO()
+                
+                #Calculating Value of Ect for cycle lenght period for particular location(pixel)
+                for i_cycle in range(int(crop_calender2[i_row, i_col])):
+                    # reduce thermal screening factor
+                                               
+                        # apply cropwat
+                        obj_cropwat = CropWatCalc.CropWatCalc(i_cycle, i_cycle+self.cycle_len-1)
+                        obj_cropwat.setClimateData(self.pet_daily_season, self.totalPrec_daily_season)
+                        # check Sa is a raster or single value and extract Sa value accordingly
+                        if len(np.array(self.Sa).shape) == 2:
+                            Sa_temp = self.Sa[i_row, i_col]
+                        else:
+                            Sa_temp = self.Sa
+                        obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f, self.yloss_f_all, self.est_yield, self.D1, self.D2, Sa_temp, self.pc)
+                        est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
+                        self.water_reductionF2 [i_row, i_col] = obj_cropwat.waterreduction()
+                        self.Etc[i_row, i_col] = obj_cropwat.petcmap()
+        
+        self.eto_sum = np.sum(self.Eto, axis = 2)
+        self.etc_sum = np.sum(self.Etc, axis= 2)
+        eto_etc_map = [self.eto_sum, self.etc_sum]
+        return(eto_etc_map)
 
     def getreduction(self):
         return self.reductionfactorF1

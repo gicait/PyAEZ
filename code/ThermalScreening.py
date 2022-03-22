@@ -295,8 +295,6 @@ class ThermalScreening(object):
         '''the modified reduction factor for T_sum'''
         
         if self.set_Tsum_screening:
-            print("tsum", self.tsum0, "range", self.LnS, self.HnS)
-            print (self.set_parameter_adjusted)
             if self.set_parameter_adjusted:
                 self.get_adjusted_reduction_factor(self.tsum0_i)
                 self.get_adjusted_reduction_factor(self.tsum0_r)

@@ -519,8 +519,6 @@ class CropSimulation(object):
                 obj_eto.setClimateData(minT_daily_point, maxT_daily_point, wind2m_daily_point, shortRad_dailyy_point_MJm2day, rel_humidity_daily_point)
                 #pet_daily_point = obj_eto.calculateETO()
                 #print (len(pet_daily_point))
-                print(self.Eto.shape, i_col)
-                print(minT_daily_point.shape)
                 self.Eto[i_row, i_col] = obj_eto.calculateETO()
                 
                 #Calculating Value of Ect for cycle lenght period for particular location(pixel)

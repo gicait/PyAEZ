@@ -1,0 +1,31 @@
+{% set data = load_setup_py_data() %}
+package:
+  name: "pyaez"
+  version: {{ data.get('version') }}
+
+source:
+  path: ./../
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+    - setuptools
+    - numpy
+    - scipy
+    - gdal
+    - numba
+
+about:
+  home: https://github.com/gicait/PyAEZ
+  license: MIT
+  license_familY: MIT
+  license_file: LICENSE
+  summary: "PyAEZ is a python package consisted of many algorithms related to Agro-ecalogical zoning (AEZ) framework. PyAEZ tries to encapsulate all complex calculations in AEZ and try to provide user friendly, and intuitive ways to input data and output results after calculations."
+
+extra:
+  recipe-maintainers:
+    - iamtekson

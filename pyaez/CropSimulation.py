@@ -7,11 +7,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import imageio
 
-import UtilitiesCalc
-import BioMassCalc
-import ETOCalc
-import CropWatCalc
-import ThermalScreening
+from . import UtilitiesCalc
+from . import BioMassCalc
+from . import ETOCalc
+from . import CropWatCalc
+from . import ThermalScreening
 
 try: 
     from osgeo import gdal

@@ -1,4 +1,5 @@
 [![Downloads](https://pepy.tech/badge/pyaez)](https://pepy.tech/project/pyaez)
+[![PyPI version](https://badge.fury.io/py/PyAEZ.svg)]([https://badge.fury.io/py/PyAEZ](https://pypi.org/project/PyAEZ/))
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/gicait/PyAEZ/blob/master/LICENSE)
 
 # PyAEZ

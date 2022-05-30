@@ -6,4 +6,4 @@
 
 __author__ = "Geoinformatics Center, Asian Institute of Technology, Thailand"
 __email__ = "geoinfo@ait.asia"
-__version__ = "1.0.0"
+__version__ = "1.1.0"

@@ -15,6 +15,7 @@ requirements:
     - python
     - setuptools
     - numpy
+    - pandas
     - scipy
     - gdal
     - numba

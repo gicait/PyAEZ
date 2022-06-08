@@ -83,7 +83,7 @@ Use this bibtex to cite us.
 
 Principal Investigators (PIs) of the project:
 
-- Dr. Kavinda Gunasekara (kavinda@ait.asia)
+- Dr. Kavinda Gunasekara (kavinda@ait.ac.th)
 - Prof. Rajendra Shrestha (rajendra@ait.ac.th)
 
 ### Funding

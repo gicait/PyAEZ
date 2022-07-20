@@ -5,8 +5,8 @@ Written by N. Lakmal Deshapriya and Thaileng Thol
 
 import numpy as np
 np.seterr(divide='ignore', invalid='ignore') # ignore "divide by zero" or "divide by NaN" warning
-import UtilitiesCalc
-import ETOCalc
+from . import UtilitiesCalc
+from . import ETOCalc
 
 class ClimateRegime(object):
 

@@ -1,5 +1,9 @@
+*.pyc
 build
 dist
 *.egg-info
-venv/
+venv
 test.py
+__pycache__
+.ipynb_checkpoints
+

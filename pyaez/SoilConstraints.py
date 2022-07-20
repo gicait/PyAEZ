@@ -6,8 +6,8 @@ Written by N. Lakmal Deshapriya
 import numpy as np
 import csv
 
-import ALL_REDUCTION_FACTORS_IRR as crop_P_IRR
-import ALL_REDUCTION_FACTORS_RAIN as crop_P_RAIN
+from . import ALL_REDUCTION_FACTORS_IRR as crop_P_IRR
+from . import ALL_REDUCTION_FACTORS_RAIN as crop_P_RAIN
 
 class SoilConstraints(object):
 

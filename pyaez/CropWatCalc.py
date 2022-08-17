@@ -1,3 +1,10 @@
+"""
+PyAEZ
+Written by N. Lakmal Deshapriya and Thaileng Thol
+
+Reference: http://oar.icrisat.org/198/1/316_2009_GTAE_55_Poten_obt_yield_in_SAT.pdf
+"""
+
 import numpy as np
 
 class CropWatCalc(object):
@@ -95,9 +102,9 @@ class CropWatCalc(object):
         '''Assess Yield Loss in entire growth cycle'''
 
         peta_all_sum = np.sum( peta_all )
-        self.petc_all_sum = np.sum( petc_all )
+        petc_all_sum = np.sum( petc_all )
 
-        f0 = 1 - self.yloss_f_all * ( 1 - (peta_all_sum/self.petc_all_sum) )
+        f0 = 1 - self.yloss_f_all * ( 1 - (peta_all_sum/petc_all_sum) )
 
         '''Assess Yield Loss in individual growth stages separately'''
 
@@ -120,19 +127,14 @@ class CropWatCalc(object):
 
         '''Use more severe of above two conditions determines final yield'''
 
-        self.f_final = np.min([f0,f1])
+        f_final = np.min([f0,f1])
 
         # to avoid, possible error
-        if self.f_final < 0:
-            self.f_final = 0
-        if self.f_final > 1:
-            self.f_final = 1
+        if f_final < 0:
+            f_final = 0
+        if f_final > 1:
+            f_final = 1
 
-        y_water_limited = self.f_final * self.y_potential
+        y_water_limited = f_final * self.y_potential
 
         return y_water_limited
-
-    def waterreduction(self):
-        return self.f_final
-    def petcmap(self):
-        return self.petc_all_sum

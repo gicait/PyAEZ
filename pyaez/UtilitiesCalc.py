@@ -5,11 +5,7 @@ Written by N. Lakmal Deshapriya
 
 import numpy as np
 from scipy.interpolate import interp1d
-try:
-    from osgeo import gdal
-except: 
-    import gdal
-
+import gdal
 
 class UtilitiesCalc(object):
 

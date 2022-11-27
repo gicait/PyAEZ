@@ -11,7 +11,7 @@ PyAEZ is a python package consisted of many algorithms related to Agro-ecalogica
 Now the package can be installed using `pip` command as below,
 
 ```shell
-pip install pyaez==1.0.0
+pip install pyaez==2.0.0
 ```
 
 Alternatively, can be installed using using `conda` command as below,
@@ -43,7 +43,7 @@ Other than 6 main modules and utility module, following 3 major algorithms relat
 - numpy
 - scipy
 - gdal
-- numba (optional)
+- numba 
 
 ### Step-by-step Process
 
@@ -56,7 +56,7 @@ Following 6 Jupyter notebooks in the repository can be used as worked full examp
 - NB5_TerrainConstraints.ipynb
 - NB6_EconomicSuitability.ipynb
 
-**Note**: _NB2_CropSimulation.ipynb_ takes a huge amount of time due to automatic crop calendar calculations. Hence, we have rewritten core parts of PyAEZ (_CropWatCalc.py_, _BioMassCalc.py_ and _ETOCalc.py_) with [Numba](http://numba.pydata.org/) compatible manner as well. Numba translates Python functions to optimized machine code at runtime, allowing calculation speeds close to C or FORTRAN. If you are using [Numba](http://numba.pydata.org/), you can replace _CropWatCalc.py_, _BioMassCalc.py_ and _ETOCalc.py_ files in _PyAEZ/code/_ with Numba version of those files located in _PyAEZ/code/numba_core/_ when you are running _NB2_CropSimulation.ipynb_.
+**Note**: _NB2_CropSimulation.ipynb_ takes a huge amount of time due to automatic crop calendar calculations. Hence, we have rewritten core parts of PyAEZ (_CropWatCalc.py_, _BioMassCalc.py_ and _ETOCalc.py_) with [Numba](http://numba.pydata.org/) compatible manner as well. Numba translates Python functions to optimized machine code at runtime, allowing calculation speeds close to C or FORTRAN.
 
 ### Documentation
 
@@ -67,10 +67,10 @@ API Documentation is located in "docs" folder.
 Use this bibtex to cite us.
 
 ```
-@misc{PyAEZ_2020,
+@misc{PyAEZ_2022,
   title={PyAEZ Python Package for Agro-ecological zoning (AEZ)},
-  author={N. Lakmal Deshapriya, Thaileng Thol, Kavinda Gunasekara, Rajendra Shrestha, Gianluca Franceschini, Freddy Nachtergaele, Monica Petri, Beau Damen},
-  year={2020},
+  author={N. Lakmal Deshapriya, Swun Wunna Htet, Kittiphon Boonma, Thaileng Thol, Kavinda Gunasekara, Rajendra Shrestha, Gianluca Franceschini, Freddy Nachtergaele, Monica Petri, Beau Damen},
+  year={2022},
   publisher={Github},
   journal={GitHub repository},
   howpublished={\url{https://github.com/gicait/PyAEZ}},
@@ -81,10 +81,6 @@ Use this bibtex to cite us.
 
 [Geoinformatics Center](www.geoinfo.ait.ac.th) of [Asian Institute of Technology](www.ait.ac.th).
 
-Principal Investigators (PIs) of the project:
-
-- Dr. Kavinda Gunasekara (kavinda@ait.ac.th)
-- Prof. Rajendra Shrestha (rajendra@ait.ac.th)
 
 ### Funding
 

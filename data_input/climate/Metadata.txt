@@ -1,0 +1,8 @@
+The folder includes:
+
+1. 3-D climate datasets in npy format, which physical quantities are adjusted individually.
+2. 2-D numpy dataset of median altitude and country mask.
+
+NOTE
+
+Do not remove the final processed numpy datasets unnecessarily.

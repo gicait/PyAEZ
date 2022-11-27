@@ -1,16 +1,30 @@
 """
-PyAEZ
-Written by N. Lakmal Deshapriya
+PyAEZ: Additional calculations used throughout AEZ modules
+2020: N. Lakmal Deshapriya
+2022: Swun Wunna Htet, K. Boonma
 """
 
 import numpy as np
 from scipy.interpolate import interp1d
-import gdal
+#try:
+#import gdal
+#
+from osgeo import gdal
 
 class UtilitiesCalc(object):
 
     def interpMonthlyToDaily(self, monthly_vector, cycle_begin, cycle_end, no_minus_values=False):
-        # if 'no_minus_values' is true, negative values will be forced to be zero.
+        """Interpolate monthly climate data to daily climate data
+
+        Args:
+            monthly_vector (1D NumPy): monthly data that needs interpolating to daily 
+            cycle_begin (int): Starting Julian day
+            cycle_end (int): Ending Julian day
+            no_minus_values (bool, optional): Set minus values to zero. Defaults to False.
+
+        Returns:
+            1D NumPy: Daily climate data vector
+        """        
 
         doy_middle_of_month = np.arange(0,12)*30 + 15 # Calculate doy of middle of month
 
@@ -25,7 +39,14 @@ class UtilitiesCalc(object):
         return daily_vector
 
     def averageDailyToMonthly(self, daily_vector):
+        """Aggregating daily data into monthly data
 
+        Args:
+            daily_vector (1D NumPy): daily data array
+
+        Returns:
+            1D NumPy: Monthly data array
+        """        
         monthly_vector = np.zeros(12)
 
         monthly_vector[0] = np.sum(daily_vector[:31])/31
@@ -44,11 +65,21 @@ class UtilitiesCalc(object):
         return monthly_vector
 
     def generateLatitudeMap(self, lat_min, lat_max, im_height, im_width):
+        """Create latitude map from input geographical extents
 
-        lat_lim = np.linspace(lat_min, lat_max, im_height);
-        lon_lim = np.linspace(1, 1, im_width); # just temporary lon values, will not affect output of this function.
-        [X_map,Y_map] = np.meshgrid(lon_lim,lat_lim);
-        lat_map = np.flipud(Y_map);
+        Args:
+            lat_min (float): the minimum latitude
+            lat_max (float): the maximum latitude
+            im_height (float): height of the input raster (pixels,grid cells)
+            im_width (float): width of the input raster (pixels,grid cells)
+
+        Returns:
+            2D NumPy: interpolated 2D latitude map 
+        """        
+        lat_lim = np.linspace(lat_min, lat_max, im_height)
+        lon_lim = np.linspace(1, 1, im_width) # just temporary lon values, will not affect output of this function.
+        [X_map,Y_map] = np.meshgrid(lon_lim,lat_lim)
+        lat_map = np.flipud(Y_map)
 
         return lat_map
 
@@ -80,8 +111,15 @@ class UtilitiesCalc(object):
 
         return est_yield_class
 
-    def saveRaster(self, ref_raster_path, out_path, numpy_raster):
 
+    def saveRaster(self, ref_raster_path, out_path, numpy_raster):
+        """Save NumPy arrays/matrices to GeoTIFF files
+
+        Args:
+            ref_raster_path (string): File path to referece GeoTIFF for geo-tagged info.
+            out_path (string): Path for the created GeoTIFF to be saved as/to
+            numpy_raster (2D NumPy): the arrays to be saveda as GeoTIFF
+        """        
         # Read random image to get projection data
         img = gdal.Open(ref_raster_path)
         # allocating space in hard drive
@@ -92,15 +130,32 @@ class UtilitiesCalc(object):
         outdata.SetProjection(img.GetProjection())
         # write numpy matrix as new band and set no data value for the band
         outdata.GetRasterBand(1).WriteArray(numpy_raster)
-        outdata.GetRasterBand(1).SetNoDataValue(0)
+        outdata.GetRasterBand(1).SetNoDataValue(-999)
         # flush data from memory to hard drive
         outdata.FlushCache()
         outdata=None
 
     def averageRasters(self, raster_3d):
+        """Averaging a list of raster files in time dimension
+
+        Args:
+            raster_3d (3D NumPy array): any climate data
+
+        Returns:
+            2D NumPy: the averaged climate data into 'one year' array
+        """        
         # input should be a 3D raster and averaging will be done through last dimension (usually corresponding to years)
         return np.sum(raster_3d, axis=2)/raster_3d.shape[-1]
 
     def windSpeedAt2m(self, wind_speed, altitude):
+        """Convert windspeed at any altitude to those at 2m altitude
+
+        Args:
+            wind_speed (1D,2D,or 3D NumPy array): wind speed
+            altitude (float): altitude [m]
+
+        Returns:
+            1D,2D,or 3D NumPy array: Converted wind speed at 2m altitude
+        """        
         # this function converts wind speed from a particular altitude to wind speed at 2m altitude. wind_speed can be a numpy array (can be 1D, 2D or 3D)
         return wind_speed * (4.87/np.log(67.8*altitude-5.42))

@@ -5,6 +5,7 @@ package:
 
 source:
   path: ./../
+  git_url: https://github.com/gicait/PyAEZ
 
 requirements:
   build:
@@ -19,6 +20,8 @@ requirements:
     - scipy
     - gdal
     - numba
+    - jupyter
+    - ipykernel
 
 about:
   home: https://github.com/gicait/PyAEZ
@@ -31,4 +34,3 @@ extra:
   recipe-maintainers:
     - iamtekson
     - kboonma
-

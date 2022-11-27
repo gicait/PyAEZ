@@ -1,6 +1,6 @@
 """
-PyAEZ
-Written by N. Lakmal Deshapriya
+PyAEZ: Biomass Calculation
+2020: N. Lakmal Deshapriya
 """
 
 import numpy as np

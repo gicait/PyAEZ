@@ -1,6 +1,8 @@
 """
-PyAEZ
-Written by N. Lakmal Deshapriya
+PyAEZ: Climate Constraints on the attainable crop yield
+2020: N. Lakmal Deshapriya
+2022: Swun Wunna Htet, K. Boonma
+
 """
 
 import numpy as np
@@ -33,3 +35,6 @@ class ClimaticConstraints(object):
             yield_final[temp_idx] = yield_in[temp_idx] * min_yield_fact[class_num]
 
         return yield_final
+    
+
+    

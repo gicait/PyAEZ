@@ -1,9 +1,11 @@
 """
-PyAEZ
-Written by N. Lakmal Deshapriya
+PyAEZ: This module is implemented only for a single pixel location
+2020: N. Lakmal Deshapriya
+2022: Swun Wunna Htet, K. Boonma
 """
 
 import numpy as np
+from scipy.interpolate import interp1d
 
 class ThermalScreening(object):
 
@@ -26,19 +28,25 @@ class ThermalScreening(object):
     def getTemperatureSum0(self):
         tempT = self.meanT_daily
         tempT[tempT<=0] = 0
-        return np.sum(tempT)
+        return np.round(np.sum(tempT), decimals = 0)
 
     def getTemperatureSum5(self):
         tempT = self.meanT_daily
         tempT[tempT<=5] = 0
-        return np.sum(tempT)
+        return np.round(np.sum(tempT), decimals = 0)
 
     def getTemperatureSum10(self):
         tempT = self.meanT_daily
         tempT[tempT<=10] = 0
-        return np.sum(tempT)
+        return np.round(np.sum(tempT), decimals = 0)
 
     def getTemperatureProfile(self):
+        
+        # Smoothening the temperature curve (New)
+        interp_temp = np.zeros(self.meanT_daily.shape)
+        
+        days = np.arange(1, self.meanT_daily.shape[0])
+        
 
         meanT_daily_add1day = np.concatenate((self.meanT_daily, self.meanT_daily[0:1]))
         meanT_first = meanT_daily_add1day[:-1]

@@ -1,4 +1,0 @@
-Crop_name,H_LAI,M_LAI,L_LAI,H_HI,M_HI,L_HI,legume,adaptability,cycle_len,D1,D2,stage_per_1,stage_per_2,stage_per_3,stage_per_4,kc_1,kc_2,kc_3,kc_all,yloss_f1,yloss_f2,yloss_f3,yloss_f4,yloss_f_all,annual/perennial flag,min_temp,LnS,LsO,LO,HO,HsO,HnS
-Wheat,4,4,4,0.4,0.4,0.4,0,2,105,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,0,10,1300,1500,2000,2500,2800,3000
-Rice,5,3.8,2.5,0.46,0.35,0.2,0,2,110,0.75,0.75,14,27,32,27,0.5,0.5,1,1.15,0.7,1.1,1,2,2.5,1,2,2100,2300,2450,3350,3500,3700
-Coffee,3,2,1.5,0.1,0.7,0.05,0,2,270,0.75,0.75,10,30,30,30,1.1,1.2,1,1.1,1,2,2.5,1,2,1,10,4500,4800,5500,8000,8500,9000

@@ -1,6 +1,7 @@
 """
-PyAEZ: Economic Suitability
+PyAEZ version 2.1.0 (June 2023)
 2020: Thaileng Thol
+
 """
 
 import numpy as np
@@ -78,7 +79,7 @@ class EconomicSuitability(object):
     def getNormalizedNetRevenue(self, crop_name):
 
         net_revenue = self.net_revenue_list[self.crop_name_list.index(crop_name)]
-        net_revenue_max = self.net_revenue_list[0].max()#np.max(np.array(self.net_revenue_list), axis=0)
+        net_revenue_max =  np.max(np.array(self.net_revenue_list), axis=0)
 
         net_revenue_norm = np.zeros(net_revenue.shape)
 

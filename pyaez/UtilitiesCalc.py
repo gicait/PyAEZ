@@ -1,15 +1,16 @@
 """
-PyAEZ: Additional calculations used throughout AEZ modules
+PyAEZ version 2.1.0 (June 2023)
+Additional calculations used throughout AEZ modules
 2020: N. Lakmal Deshapriya
-2022: Swun Wunna Htet, K. Boonma
+2022/2023: Swun Wunna Htet, K. Boonma
 """
 
 import numpy as np
 from scipy.interpolate import interp1d
-#try:
-#import gdal
-#
-from osgeo import gdal
+try:
+    import gdal
+except:
+    from osgeo import gdal
 
 class UtilitiesCalc(object):
 
@@ -110,7 +111,6 @@ class UtilitiesCalc(object):
         est_yield_class[ np.all([est_yield_80P<est_yield], axis=0)] = 5 # very suitable
 
         return est_yield_class
-
 
     def saveRaster(self, ref_raster_path, out_path, numpy_raster):
         """Save NumPy arrays/matrices to GeoTIFF files

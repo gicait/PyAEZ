@@ -1,13 +1,14 @@
 """
-PyAEZ: Biomass Calculation
+PyAEZ version 2.1.0 (June 2023)
+Biomass Calculation
 2020: N. Lakmal Deshapriya
 """
 
 import numpy as np
 import csv
 
-import ALL_REDUCTION_FACTORS_IRR as crop_P_IRR
-import ALL_REDUCTION_FACTORS_RAIN as crop_P_RAIN
+from pyaez import ALL_REDUCTION_FACTORS_IRR as crop_P_IRR
+from pyaez import ALL_REDUCTION_FACTORS_RAIN as crop_P_RAIN
 
 class SoilConstraints(object):
 

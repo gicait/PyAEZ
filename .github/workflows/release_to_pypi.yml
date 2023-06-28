@@ -3,7 +3,7 @@ name: Publish pyAEZ to PyPI / GitHub
 on:
   push:
     tags:
-      - "v*"
+      - "v2.1.0"
 
 jobs:
   build-n-publish:

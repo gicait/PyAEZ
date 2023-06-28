@@ -60,15 +60,18 @@ Following 6 Jupyter notebooks in the GitHub repository can be used as worked ful
 
 ### Release Note PyAEZv2.1
 The goal of this release is to improve the overall accuracy and reliability of the AEZ methodology in Module 1, 2, and 3. The key updates are as follows:
+
 **Module 1**:
 - Major improvements in the Length of Growing Period (LGP) calculation routine through the implementation of Numba (a Python package to speed up the calculation) and cross-checking the methodology with the Global AEZ from IIASA. 
 - All the climatic indicators had been thoroughly cross-checked and verified with the Global AEZ outputs. 
+
 **Module 2**:
 - Reading crop/crop cycle parameters from excel sheet.
 - Updated algorithm for TSUM screening and parameter settings.
 - New thermal screening logics: permafrost screening, crop-specific rule screening.
 - Updated algorithm for perennial crop simulations.
 - New outputs: thermal reduction factor maps (fc1), yield reduction due to moisture deficit (fc2) and optimum starting date, for both rainfed and irrigated conditions.
+
 **Module 3**:
 - New look-up table setting for agro-climatic reduction factors for both rainfed and irrigated conditions.
 - Updated algorithm related to agro-climatic constraints calculation.

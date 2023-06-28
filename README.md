@@ -11,7 +11,7 @@ PyAEZ is a python package consisted of many algorithms related to Agro-ecalogica
 Now the package can be installed using `pip` command as below,
 
 ```shell
-pip install pyaez==2.1.0
+pip install pyaez==2.1
 ```
 
 Alternatively, can be installed using using `conda` command as below,

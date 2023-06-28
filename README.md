@@ -11,7 +11,7 @@ PyAEZ is a python package consisted of many algorithms related to Agro-ecalogica
 Now the package can be installed using `pip` command as below,
 
 ```shell
-pip install pyaez==2.0.0
+pip install pyaez==2.1.0
 ```
 
 Alternatively, can be installed using using `conda` command as below,
@@ -47,7 +47,7 @@ Other than 6 main modules and utility module, following 3 major algorithms relat
 
 ### Step-by-step Process
 
-Following 6 Jupyter notebooks in the repository can be used as worked full example for PyAEZ 6 major modules.
+Following 6 Jupyter notebooks in the GitHub repository can be used as worked full example for PyAEZ 6 major modules.
 
 - NB1_ClimateRegime.ipynb
 - NB2_CropSimulation.ipynb
@@ -67,10 +67,10 @@ API Documentation is located in "docs" folder.
 Use this bibtex to cite us.
 
 ```
-@misc{PyAEZ_2022,
+@misc{PyAEZ(v2.1.0),
   title={PyAEZ Python Package for Agro-ecological zoning (AEZ)},
-  author={N. Lakmal Deshapriya, Swun Wunna Htet, Kittiphon Boonma, Thaileng Thol, Kavinda Gunasekara, Rajendra Shrestha, Gianluca Franceschini, Freddy Nachtergaele, Monica Petri, Beau Damen},
-  year={2022},
+  author={Swun Wunna Htet, Kittiphon Boonma, Gianluca Franceschini, N. Lakmal Deshapriya, Thaileng Thol, Kavinda Gunasekara, Rajendra Shrestha,  Freddy Nachtergaele, Monica Petri, Beau Damen},
+  year={2023},
   publisher={Github},
   journal={GitHub repository},
   howpublished={\url{https://github.com/gicait/PyAEZ}},

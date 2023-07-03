@@ -77,7 +77,8 @@ class UtilitiesCalc(object):
         Returns:
             2D NumPy: interpolated 2D latitude map 
         """        
-        lat_lim = np.linspace(lat_min, lat_max, im_height)
+        lat_step=(lat_max-lat_min)/im_height
+        lat_lim = np.linspace(lat_min+lat_step/2, lat_max-lat_step/2, im_height)
         lon_lim = np.linspace(1, 1, im_width) # just temporary lon values, will not affect output of this function.
         [X_map,Y_map] = np.meshgrid(lon_lim,lat_lim)
         lat_map = np.flipud(Y_map)

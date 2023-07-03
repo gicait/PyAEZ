@@ -312,154 +312,154 @@ class ThermalScreening(object):
 
     # Old function
 
-    def getReductionFactor(self, rain_or_irr):
+    # def getReductionFactor(self, rain_or_irr):
 
-        thermal_screening_f = 1
+    #     thermal_screening_f = 1
 
-        # Thermal Climate Screening
-        # if self.set_tclimate_screening:
-        #     if self.t_climate in self.no_t_climate:
-        #         thermal_screening_f = 0
+    #     # Thermal Climate Screening
+    #     # if self.set_tclimate_screening:
+    #     #     if self.t_climate in self.no_t_climate:
+    #     #         thermal_screening_f = 0
 
-        # LGPT Screening logics
-        if self.set_lgpt_screening:
+    #     # LGPT Screening logics
+    #     if self.set_lgpt_screening:
 
-            if self.lgp0 < self.optm_lgpt[0]:
-                f1 = (
-                    (self.lgp0-self.no_lgpt[0])/(self.optm_lgpt[0]-self.no_lgpt[0])) * 0.75 + 0.25
-                thermal_screening_f = np.min([f1, thermal_screening_f])
+    #         if self.lgp0 < self.optm_lgpt[0]:
+    #             f1 = (
+    #                 (self.lgp0-self.no_lgpt[0])/(self.optm_lgpt[0]-self.no_lgpt[0])) * 0.75 + 0.25
+    #             thermal_screening_f = np.min([f1, thermal_screening_f])
 
-            if self.lgp5 < self.optm_lgpt[1]:
-                f1 = (
-                    (self.lgp5-self.no_lgpt[1])/(self.optm_lgpt[1]-self.no_lgpt[1])) * 0.75 + 0.25
-                thermal_screening_f = np.min([f1, thermal_screening_f])
+    #         if self.lgp5 < self.optm_lgpt[1]:
+    #             f1 = (
+    #                 (self.lgp5-self.no_lgpt[1])/(self.optm_lgpt[1]-self.no_lgpt[1])) * 0.75 + 0.25
+    #             thermal_screening_f = np.min([f1, thermal_screening_f])
 
-            if self.lgp10 < self.optm_lgpt[2]:
-                f1 = (
-                    (self.lgp10-self.no_lgpt[2])/(self.optm_lgpt[2]-self.no_lgpt[2])) * 0.75 + 0.25
-                thermal_screening_f = np.min([f1, thermal_screening_f])
+    #         if self.lgp10 < self.optm_lgpt[2]:
+    #             f1 = (
+    #                 (self.lgp10-self.no_lgpt[2])/(self.optm_lgpt[2]-self.no_lgpt[2])) * 0.75 + 0.25
+    #             thermal_screening_f = np.min([f1, thermal_screening_f])
 
-        # 2. Modification (SWH)
-        # TSUM Screening
-        if self.set_Tsum_screening:
+    #     # 2. Modification (SWH)
+    #     # TSUM Screening
+    #     if self.set_Tsum_screening:
 
-            """ If it's perennial, and parameters are adjusted, TSUM will be different for both irrigated and rainfed conditions
-            because the efficient cycle lengths are different. Thus, for TSUM0 calculation, however this has to be clarified."""
+    #         """ If it's perennial, and parameters are adjusted, TSUM will be different for both irrigated and rainfed conditions
+    #         because the efficient cycle lengths are different. Thus, for TSUM0 calculation, however this has to be clarified."""
 
-            if self.set_parameter_adjusted:
+    #         if self.set_parameter_adjusted:
 
-                if rain_or_irr == 'rain':
-                    tsum0 = self.tsum0_r
+    #             if rain_or_irr == 'rain':
+    #                 tsum0 = self.tsum0_r
 
-                elif rain_or_irr == 'irr':
-                    tsum0 = self.tsum_r
+    #             elif rain_or_irr == 'irr':
+    #                 tsum0 = self.tsum_r
 
-                # Start TSUM screening
-                if tsum0 in range(self.LO, self.HO):
-                    f1 = 1
-                    thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Start TSUM screening
+    #             if tsum0 in range(self.LO, self.HO):
+    #                 f1 = 1
+    #                 thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Sub-optimal range (Part 1) (25% reduction factor)
-                elif tsum0 in range(self.LsO, self.LO):
-                    f1 = ((tsum0-self.LsO)/(self.LO-self.LsO)) * 0.25 + 0.75
-                    thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Within Sub-optimal range (Part 1) (25% reduction factor)
+    #             elif tsum0 in range(self.LsO, self.LO):
+    #                 f1 = ((tsum0-self.LsO)/(self.LO-self.LsO)) * 0.25 + 0.75
+    #                 thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Sub-optimal range (Part 2) (25% reduction factor)
-                elif tsum0 in range(self.HO, self.HsO):
-                    f1 = ((self.HsO-tsum0)/(self.HsO-self.HO)) * 0.25 + 0.75
-                    thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Within Sub-optimal range (Part 2) (25% reduction factor)
+    #             elif tsum0 in range(self.HO, self.HsO):
+    #                 f1 = ((self.HsO-tsum0)/(self.HsO-self.HO)) * 0.25 + 0.75
+    #                 thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Marginal range (Part 1) (75% reduction factor)
-                elif tsum0 in range(self.LnS, self.LsO):
-                    f1 = ((tsum0-self.LnS)/(self.LsO-self.LnS)) * 0.75
-                    thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Within Marginal range (Part 1) (75% reduction factor)
+    #             elif tsum0 in range(self.LnS, self.LsO):
+    #                 f1 = ((tsum0-self.LnS)/(self.LsO-self.LnS)) * 0.75
+    #                 thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Marginal range (Part 2) (75% reduction factor)
-                elif tsum0 in range(self.HsO, self.HnS):
-                    f1 = ((self.HnS-tsum0)/(self.HnS-self.HsO)) * 0.75
-                    thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Within Marginal range (Part 2) (75% reduction factor)
+    #             elif tsum0 in range(self.HsO, self.HnS):
+    #                 f1 = ((self.HnS-tsum0)/(self.HnS-self.HsO)) * 0.75
+    #                 thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Not suitable range (100% reduction factor)
-                elif tsum0 <= self.LnS or tsum0 >= self.HnS:
-                    f1 = 0
-                    thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Within Not suitable range (100% reduction factor)
+    #             elif tsum0 <= self.LnS or tsum0 >= self.HnS:
+    #                 f1 = 0
+    #                 thermal_screening_f = np.min([f1, thermal_screening_f])
 
-            else:
-                # Within Optimal range (no reduction in factor)
-                if self.tsum0 in range(self.LO, self.HO):
-                     f1 = 1
-                     thermal_screening_f = np.min([f1, thermal_screening_f])
+    #         else:
+    #             # Within Optimal range (no reduction in factor)
+    #             if self.tsum0 in range(self.LO, self.HO):
+    #                  f1 = 1
+    #                  thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Sub-optimal range (Part 1) (25% reduction factor)
-                elif self.tsum0 in range(self.LsO, self.LO):
-                     f1 = ((self.tsum0-self.LsO)/ \
-                           (self.LO-self.LsO)) * 0.25 + 0.75
-                     thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Within Sub-optimal range (Part 1) (25% reduction factor)
+    #             elif self.tsum0 in range(self.LsO, self.LO):
+    #                  f1 = ((self.tsum0-self.LsO)/ \
+    #                        (self.LO-self.LsO)) * 0.25 + 0.75
+    #                  thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Sub-optimal range (Part 2) (25% reduction factor)
-                elif self.tsum0 in range(self.HO, self.HsO):
-                     f1 = ((self.HsO-self.tsum0)/ \
-                           (self.HsO-self.HO)) * 0.25 + 0.75
-                     thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Within Sub-optimal range (Part 2) (25% reduction factor)
+    #             elif self.tsum0 in range(self.HO, self.HsO):
+    #                  f1 = ((self.HsO-self.tsum0)/ \
+    #                        (self.HsO-self.HO)) * 0.25 + 0.75
+    #                  thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Marginal range (Part 1) (75% reduction factor)
-                elif self.tsum0 in range(self.LnS, self.LsO):
-                     f1 = ((self.tsum0-self.LnS)/(self.LsO-self.LnS)) * 0.75
-                     thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Within Marginal range (Part 1) (75% reduction factor)
+    #             elif self.tsum0 in range(self.LnS, self.LsO):
+    #                  f1 = ((self.tsum0-self.LnS)/(self.LsO-self.LnS)) * 0.75
+    #                  thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Marginal range (Part 2) (75% reduction factor)
-                elif self.tsum0 in range(self.HsO, self.HnS):
-                     f1 = ((self.HnS-self.tsum0)/(self.HnS-self.HsO)) * 0.75
-                     thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # Within Marginal range (Part 2) (75% reduction factor)
+    #             elif self.tsum0 in range(self.HsO, self.HnS):
+    #                  f1 = ((self.HnS-self.tsum0)/(self.HnS-self.HsO)) * 0.75
+    #                  thermal_screening_f = np.min([f1, thermal_screening_f])
 
-                # Within Not suitable range (100% reduction factor)
-                elif self.tsum0 <= self.LnS or self.tsum0 >= self.HnS:
-                     f1 = 0
-                     thermal_screening_f = np.min([f1, thermal_screening_f])   
+    #             # Within Not suitable range (100% reduction factor)
+    #             elif self.tsum0 <= self.LnS or self.tsum0 >= self.HnS:
+    #                  f1 = 0
+    #                  thermal_screening_f = np.min([f1, thermal_screening_f])   
 
-        if self.setTypeBConstraint:
+    #     if self.setTypeBConstraint:
 
-            """Loop for each user-specified rule"""
-            for i in range(len(self.calc_value)):
+    #         """Loop for each user-specified rule"""
+    #         for i in range(len(self.calc_value)):
 
-                """If calculated rule is greater than optimal threshold, fc is set to 1"""
+    #             """If calculated rule is greater than optimal threshold, fc is set to 1"""
 
-                if self.constr_type[i] == '<=':
+    #             if self.constr_type[i] == '<=':
 
-                    """If """
-                    if self.optimal[i] != self.sub_optimal[i] != self.not_suitable[i]:
+    #                 """If """
+    #                 if self.optimal[i] != self.sub_optimal[i] != self.not_suitable[i]:
 
-                        if self.calc_value[i] >= self.optimal[i] and self.calc_value[i] <= self.sub_optimal[i]:
-                            f1 = ((self.calc_value[i] - self.optimal[i])/(
-                                self.sub_optimal[i] - self.optimal[i]) * 0.25) + 0.75
+    #                     if self.calc_value[i] >= self.optimal[i] and self.calc_value[i] <= self.sub_optimal[i]:
+    #                         f1 = ((self.calc_value[i] - self.optimal[i])/(
+    #                             self.sub_optimal[i] - self.optimal[i]) * 0.25) + 0.75
 
-                        elif self.calc_value[i] >= self.sub_optimal[i] and self.calc_value[i] <= self.not_suitable[i]:
-                            f1 = ((self.calc_value[i] - self.sub_optimal[i])/(self.not_suitable[i] - self.sub_optimal[i]) * 0.25 ) + 0.75
+    #                     elif self.calc_value[i] >= self.sub_optimal[i] and self.calc_value[i] <= self.not_suitable[i]:
+    #                         f1 = ((self.calc_value[i] - self.sub_optimal[i])/(self.not_suitable[i] - self.sub_optimal[i]) * 0.25 ) + 0.75
 
-                    elif self.optimal[i] != self.sub_optimal[i] and self.sub_optimal[i] == self.not_suitable[i]:
-                        f1 = ((self.calc_value[i] - self.optimal[i])/ \
-                              (self.sub_optimal[i] - self.optimal[i]) * 0.25) + 0.75
+    #                 elif self.optimal[i] != self.sub_optimal[i] and self.sub_optimal[i] == self.not_suitable[i]:
+    #                     f1 = ((self.calc_value[i] - self.optimal[i])/ \
+    #                           (self.sub_optimal[i] - self.optimal[i]) * 0.25) + 0.75
 
-                elif self.constr_type[i] == '>=':
+    #             elif self.constr_type[i] == '>=':
 
-                    if self.optimal[i] != self.sub_optimal[i] != self.not_suitable[i]:
+    #                 if self.optimal[i] != self.sub_optimal[i] != self.not_suitable[i]:
 
-                        if self.calc_value[i] <= self.optimal[i] and self.calc_value[i] >= self.sub_optimal[i]:
-                            f1 = ((self.calc_value[i] - self.sub_optimal[i])/(
-                                self.optimal[i] - self.sub_optimal[i]) * 0.25) + 0.75
+    #                     if self.calc_value[i] <= self.optimal[i] and self.calc_value[i] >= self.sub_optimal[i]:
+    #                         f1 = ((self.calc_value[i] - self.sub_optimal[i])/(
+    #                             self.optimal[i] - self.sub_optimal[i]) * 0.25) + 0.75
 
-                        elif self.calc_value[i] <= self.sub_optimal[i] and self.calc_value[i] >= self.not_suitable[i]:
-                            f1 = ((self.calc_value[i] - self.not_suitable[i])/(
-                                self.sub_optimal[i] - self.not_suitable[i]) * 0.25) + 0.75
+    #                     elif self.calc_value[i] <= self.sub_optimal[i] and self.calc_value[i] >= self.not_suitable[i]:
+    #                         f1 = ((self.calc_value[i] - self.not_suitable[i])/(
+    #                             self.sub_optimal[i] - self.not_suitable[i]) * 0.25) + 0.75
 
-                    elif self.optimal[i] != self.sub_optimal[i] and self.sub_optimal[i] == self.not_suitable[i]:
-                        f1 = ((self.calc_value[i] - self.optimal[i])/ \
-                              (self.sub_optimal[i] - self.optimal[i]) * 0.25) + 0.75
+    #                 elif self.optimal[i] != self.sub_optimal[i] and self.sub_optimal[i] == self.not_suitable[i]:
+    #                     f1 = ((self.calc_value[i] - self.optimal[i])/ \
+    #                           (self.sub_optimal[i] - self.optimal[i]) * 0.25) + 0.75
 
-                thermal_screening_f = np.min([f1, thermal_screening_f])
-                # print('Thermal Screening factor = ', thermal_screening_f)
+    #             thermal_screening_f = np.min([f1, thermal_screening_f])
+    #             # print('Thermal Screening factor = ', thermal_screening_f)
 
-        return thermal_screening_f
+    #     return thermal_screening_f
 
 
     def getReductionFactor2(self, rain_or_irr):
@@ -502,7 +502,7 @@ class ThermalScreening(object):
                         tsum0 = self.tsum0_r
 
                     elif rain_or_irr == 'irr':
-                        tsum0 = self.tsum_r
+                        tsum0 = self.tsum0_i
 
                     # Start TSUM screening
                     if tsum0 in range(self.LO, self.HO):

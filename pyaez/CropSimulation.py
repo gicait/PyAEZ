@@ -362,6 +362,7 @@ class CropSimulation(object):
 
         # just a counter to keep track of progress
         count_pixel_completed = 0
+        total = self.im_height * self.im_width
 
         # this stores final result
         self.final_yield_rainfed = np.zeros((self.im_height, self.im_width))
@@ -389,24 +390,28 @@ class CropSimulation(object):
                 # Those unsuitable
                 if self.set_mask:
                     if self.im_mask[i_row, i_col] == self.nodata_val:
-                        count_pixel_completed = count_pixel_completed + 1
-
+                        count_pixel_completed = count_pixel_completed +1
+                        print('\rDone %: ' + str(round(count_pixel_completed /
+                        total*100, 2)), end='\r')
                         continue
 
                 # 2. Permafrost screening
                 if self.set_Permafrost_screening:
                     if np.logical_or(self.permafrost_class[i_row, i_col] == 1, self.permafrost_class[i_row, i_col] == 2):
-                        count_pixel_completed = count_pixel_completed + 1
-
+                        count_pixel_completed = count_pixel_completed +1
+                        print('\rDone %: ' + str(round(count_pixel_completed /
+                        total*100, 2)), end='\r')
                         continue
 
                 # Thermal Climate Screening
                 if self.set_tclimate_screening:
                     if self.t_climate[i_row, i_col] in self.no_t_climate:
-                        count_pixel_completed = count_pixel_completed + 1
-
+                        count_pixel_completed = count_pixel_completed +1
+                        print('\rDone %: ' + str(round(count_pixel_completed /
+                        total*100, 2)), end='\r')
                         continue
-
+                
+                count_pixel_completed = count_pixel_completed + 1
                 # this allows handing leap and non-leap year differently. This is only relevant for monthly data because this value will be used in interpolations.
                 # In case of daily data, length of vector will be taken as number of days in  a year.
                 if leap_year:
@@ -437,7 +442,6 @@ class CropSimulation(object):
                     wind2m_daily_point = self.wind2m_daily[i_row, i_col, :]
                     totalPrec_daily_point = self.totalPrec_daily[i_row, i_col, :]
                     rel_humidity_daily_point = self.rel_humidity_daily[i_row, i_col, :]
-                    sunshine_daily_point = self.sunshine[i_row, i_col, :]
 
                 # calculate ETO for full year for particular location (pixel) 7#
                 obj_eto = ETOCalc.ETOCalc(
@@ -448,7 +452,7 @@ class CropSimulation(object):
 
                 # 7. Minor change for validation purposes: shortRad_daily_point is replaced in shortRad_dailyy_point_MJm2day. (Sunshine hour data for KB Etocalc)
                 obj_eto.setClimateData(minT_daily_point, maxT_daily_point,
-                                       wind2m_daily_point, sunshine_daily_point, rel_humidity_daily_point)
+                                       wind2m_daily_point, shortRad_daily_point, rel_humidity_daily_point)
                 pet_daily_point = obj_eto.calculateETO()
 
                 # list that stores yield estimations and thermal screening factors of all cycles per particular location (pixel)
@@ -473,7 +477,7 @@ class CropSimulation(object):
 
                         # LGP duration will be efficient cycle length for rainfed conditions
                         # Later, we use LGP length to adjust for LAI and HI for rainfed conditions
-                        self.cycle_len_rain = self.LGP[i_row, i_col]
+                        self.cycle_len_rain = int(self.LGP[i_row, i_col])
                         self.adjustForPerennialCrop(
                             self.cycle_len_rain, aLAI=self.aLAI, bLAI=self.bLAI, aHI=self.aHI, bHI=self.bHI, rain_or_irr='rain')
                     else:
@@ -492,8 +496,7 @@ class CropSimulation(object):
 
                         if self.LGPT5[i_row, i_col] < self.cycle_len:
 
-                            self.cycle_len_irr = self.LGPT5[i_row, i_col].copy(
-                            )
+                            self.cycle_len_irr = int(self.LGPT5[i_row, i_col].copy())
                             self.adjustForPerennialCrop(
                                 self.cycle_len_irr, aLAI=self.aLAI, bLAI=self.bLAI, aHI=self.aHI, bHI=self.bHI, rain_or_irr='irr')
 
@@ -508,8 +511,7 @@ class CropSimulation(object):
 
                         if self.LGPT10[i_row, i_col] < self.cycle_len:
 
-                            self.cycle_len_irr = (
-                                self.LGPT10[i_row, i_col]).copy()
+                            self.cycle_len_irr = int((self.LGPT10[i_row, i_col]).copy())
                             self.adjustForPerennialCrop(
                                 self.cycle_len_irr, aLAI=self.aLAI, bLAI=self.bLAI, aHI=self.aHI, bHI=self.bHI, rain_or_irr='irr')
 
@@ -547,8 +549,8 @@ class CropSimulation(object):
                                                                   self.cycle_len_rain]
                         maxT_daily_season_rain = maxT_daily_2year[i_cycle: i_cycle +
                                                                   self.cycle_len_rain]
-                        shortRad_daily_season_rain = shortRad_daily_2year[
-                            i_cycle: i_cycle+self.cycle_len_rain]
+                        shortRad_daily_season_rain = shortRad_daily_2year[i_cycle: i_cycle+
+                                                                          self.cycle_len_rain]
                         # wind2m_daily_season_rain = wind2m_daily_2year[i_cycle : i_cycle+self.cycle_len_rain]
                         # totalPrec_daily_season_rain = totalPrec_daily_2year[i_cycle : i_cycle+self.cycle_len_rain]
                         # pet_daily_season_rain = pet_daily_2year[i_cycle : i_cycle+self.cycle_len_rain]
@@ -559,8 +561,8 @@ class CropSimulation(object):
                                                                  self.cycle_len_irr]
                         maxT_daily_season_irr = maxT_daily_2year[i_cycle: i_cycle +
                                                                  self.cycle_len_irr]
-                        shortRad_daily_season_irr = shortRad_daily_2year[
-                            i_cycle: i_cycle+self.cycle_len_irr]
+                        shortRad_daily_season_irr = shortRad_daily_2year[i_cycle: i_cycle+
+                                                                         self.cycle_len_irr]
                         # wind2m_daily_season_irr = wind2m_daily_2year[i_cycle : i_cycle+self.cycle_len_irr]
                         # totalPrec_daily_season_irr = totalPrec_daily_2year[i_cycle : i_cycle+self.cycle_len_irr]
                         # pet_daily_season_irr = pet_daily_2year[i_cycle : i_cycle+self.cycle_len_irr]
@@ -568,12 +570,12 @@ class CropSimulation(object):
                     else:
 
                         # extract climate data within the season to pass in to calculation classes
-                        minT_daily_season = minT_daily_2year[i_cycle: i_cycle+self.cycle_len]
-                        maxT_daily_season = maxT_daily_2year[i_cycle: i_cycle+self.cycle_len]
-                        shortRad_daily_season = shortRad_daily_2year[i_cycle: i_cycle+self.cycle_len]
+                        minT_daily_season = minT_daily_2year[i_cycle : i_cycle+self.cycle_len]
+                        maxT_daily_season = maxT_daily_2year[i_cycle : i_cycle+self.cycle_len ]
+                        shortRad_daily_season = shortRad_daily_2year[i_cycle : i_cycle+self.cycle_len]
                         # wind2m_daily_season = wind2m_daily_2year[i_cycle : i_cycle+self.cycle_len]
-                        totalPrec_daily_season = totalPrec_daily_2year[i_cycle: i_cycle+self.cycle_len]
-                        pet_daily_season = pet_daily_2year[i_cycle: i_cycle+self.cycle_len]
+                        totalPrec_daily_season = totalPrec_daily_2year[i_cycle : i_cycle+self.cycle_len ]
+                        pet_daily_season = pet_daily_2year[i_cycle : i_cycle+self.cycle_len ]
 
                         """Thermal Screening using each cycle length for rainfed and irrigated conditions"""
 
@@ -795,9 +797,8 @@ class CropSimulation(object):
                         self.fc2[i_row, i_col] = fc2_lst[yield_of_all_crop_cycles_rainfed.index(
                             np.max(yield_of_all_crop_cycles_rainfed))]
 
-                count_pixel_completed = count_pixel_completed + 1
-                print('\rDone: ' + str(round(count_pixel_completed /
-                      np.sum(self.im_mask != self.nodata_val)*100, 2)) + ' %', end='\r')
+                print('\rDone %: ' + str(round(count_pixel_completed /
+                        total*100, 2)), end='\r')
 
         print('\nSimulations Completed !')
 
@@ -829,7 +830,7 @@ class CropSimulation(object):
             Optimum starting date for irrigated condition.
 
         """
-        return self.crop_calender_rain
+        return self.crop_calender_irr
 
     def getOptimumCycleStartDateRainfed(self):
         """
@@ -841,7 +842,7 @@ class CropSimulation(object):
             Optimum starting date for rainfed condition.
 
         """
-        return self.crop_calender_irr
+        return self.crop_calender_rain
 
     def getThermalReductionFactor(self):
         """

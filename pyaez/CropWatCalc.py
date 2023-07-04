@@ -130,11 +130,14 @@ class CropWatCalc(object):
         f_final = np.min([f0,f1])
 
         # to avoid, possible error
-        if f_final < 0:
-            f_final = 0
-        if f_final > 1:
-            f_final = 1
+        if self.f_final < 0:
+            self.f_final = 0
+        if self.f_final > 1:
+            self.f_final = 1
 
-        y_water_limited = f_final * self.y_potential
+        y_water_limited = self.f_final * self.y_potential
 
         return y_water_limited
+
+    def getfc2factormap(self):
+        return self.f_final

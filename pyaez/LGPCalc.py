@@ -4,11 +4,11 @@ PyAEZ: LGPCalc.py calculates the length of growing period (LGP)
 2022/2023: Kittiphon Boonma 
 """
 
-import numba as nb
+from numba import jit
 import numpy as np
 
 
-@nb.jit(nopython=True)
+@jit(nopython=True)
 def rainPeak(totalPrec_monthly, meanT_daily, lgpt5_point):
     """Scan the monthly precipitation for the month with peak rainfall over 3 months
 
@@ -23,21 +23,21 @@ def rainPeak(totalPrec_monthly, meanT_daily, lgpt5_point):
         istart1(int): the ending date of the growing period
     """
     # ============================================
-    days_f = np.arange(0., 365.)
-    lgpt5_veg = days_f[meanT_daily >= 5.0]
+    days_f = np.arange(0, 365)
+    lgpt5_veg = days_f[meanT_daily >= 5]
     # ============================================
-    if lgpt5_point < 365.:
+    if lgpt5_point < 365:
         istart0 = lgpt5_veg[0]
         istart1 = setdat(istart0) + lgpt5_point-1
     else:
-        istart0 = 0.
+        istart0 = 0
         istart1 = lgpt5_point-1
 
-    return meanT_daily, istart0, istart1
+    return istart0, istart1
 # ============================================
 
 
-@nb.jit(nopython=True)
+@jit(nopython=True)
 def isfromt0(meanT_daily_new, doy):
     """Check if the Julian day is coming from the temperature
        upward or downward trend
@@ -59,7 +59,7 @@ def isfromt0(meanT_daily_new, doy):
 # ============================================
 
 
-@nb.jit(nopython=True)
+@jit(nopython=True)
 def eta(wb_old, etm, Sa, D, p, rain):
     """SUBROUTINE: Calculate actual evapotranspiration (ETa) 
 
@@ -105,7 +105,7 @@ def eta(wb_old, etm, Sa, D, p, rain):
     return wb, wx, eta
 
 
-@nb.jit(nopython=True)
+@jit(nopython=True)
 def psh(ng, et0):
     """Calculate soil moisture depletion fraction (0-1)
 
@@ -133,7 +133,7 @@ def psh(ng, et0):
     return psh
 
 
-@nb.jit(nopython=True)
+@jit(nopython=True)
 def val10day(Et):
     """Calculate 10-day moving average 
 
@@ -164,7 +164,7 @@ def val10day(Et):
     return np.array(moving_averages)
 
 
-@nb.jit(nopython=True)
+@jit(nopython=True)
 def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, istart0, istart1, Sa, D, p, kc_list, lgpt5_point):
     """Calculate actual evapotranspiration (ETa)
         This is a Numba routine, which means all the arguments are a single element -- not an array. 
@@ -340,14 +340,14 @@ def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, ista
     return Eta365, Etm365, Wb365, Wx365, Sb365, kc365
 
 
-@nb.jit(nopython=True)
+@jit(nopython=True)
 def setdat(dat1):
     if dat1 > 365:
         dat1 = dat1-365
     return dat1
 
 
-@nb.jit(nopython=True)
+@jit(nopython=True)
 def islgpt(Ta):
     ist5 = np.zeros((np.shape(Ta)))
     for i in range(len(Ta)):

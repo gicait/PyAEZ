@@ -57,6 +57,7 @@ class ClimateRegime(object):
         rel_humidity[rel_humidity < 0.05] = 0.05
         short_rad[short_rad < 0] = 0
         wind_speed[wind_speed < 0] = 0
+
         self.meanT_daily = np.zeros((self.im_height, self.im_width, 365))
         self.totalPrec_daily = np.zeros((self.im_height, self.im_width, 365))
         self.pet_daily = np.zeros((self.im_height, self.im_width, 365))
@@ -94,6 +95,7 @@ class ClimateRegime(object):
         self.meanT_daily_sealevel = self.meanT_daily + np.tile(np.reshape(self.elevation/100*0.55, (self.im_height,self.im_width,1)), (1,1,365))
         # P over PET ratio(to eliminate nan in the result, nan is replaced with zero)
         self.P_by_PET_daily = np.nan_to_num(self.totalPrec_daily / self.pet_daily)
+        self.set_monthly = True
 
     def setDailyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity):
         """Load DAILY climate data into the Class and calculate the Reference Evapotranspiration (ETo)
@@ -140,6 +142,7 @@ class ClimateRegime(object):
         self.meanT_daily_sealevel = self.meanT_daily + np.tile(np.reshape(self.elevation/100*0.55, (self.im_height,self.im_width,1)), (1,1,365))
         # P over PET ratio (to eliminate nan in the result, nan is replaced with zero)
         self.P_by_PET_daily = np.nan_to_num(self.totalPrec_daily / self.pet_daily)
+        self.set_monthly = False
 
     def getThermalClimate(self):
         """Classification of rainfall and temperature seasonality into thermal climate classes
@@ -247,6 +250,7 @@ class ClimateRegime(object):
             for i_col in range(self.im_width):
                 
                 obj_utilities = UtilitiesCalc.UtilitiesCalc()
+
                 meanT_monthly = obj_utilities.averageDailyToMonthly(self.meanT_daily[i_row, i_col, :])
                 meanT_monthly_sealevel =  obj_utilities.averageDailyToMonthly(self.meanT_daily_sealevel[i_row, i_col, :])
     
@@ -304,7 +308,7 @@ class ClimateRegime(object):
 
         lgpt0 = np.sum(self.meanT_daily>=0, axis=2)
         if self.set_mask:
-            lgpt0 = np.ma.masked_where(self.im_mask == 0, lgpt0)
+            lgpt0 = np.where(self.im_mask,lgpt0,np.nan)
         
         self.lgpt0=lgpt0.copy()
         return lgpt0
@@ -320,7 +324,7 @@ class ClimateRegime(object):
         """          
         lgpt5 = np.sum(self.meanT_daily>=5, axis=2)
         if self.set_mask:
-            lgpt5 = np.ma.masked_where(self.im_mask == 0, lgpt5)
+            lgpt5 = np.where(self.im_mask,lgpt5,np.nan)
 
         self.lgpt5 = lgpt5.copy()
         return lgpt5
@@ -336,7 +340,7 @@ class ClimateRegime(object):
 
         lgpt10 = np.sum(self.meanT_daily >= 10, axis=2)
         if self.set_mask:
-            lgpt10 = np.ma.masked_where(self.im_mask == 0, lgpt10)
+            lgpt10 = np.where(self.im_mask, lgpt10, np.nan)
 
         self.lgpt10 = lgpt10.copy()
         return lgpt10
@@ -482,7 +486,7 @@ class ClimateRegime(object):
         self.Wb365 = np.zeros(Tx365.shape)
         self.Wx365 = np.zeros(Tx365.shape)
         self.kc365 = np.zeros(Tx365.shape)
-        self.meanT_daily_new = np.zeros(Tx365.shape)
+        meanT_daily_new = np.zeros(Tx365.shape)
         self.maxT_daily_new = np.zeros(Tx365.shape)
         lgp_tot = np.zeros((self.im_height, self.im_width))
         #============================
@@ -493,8 +497,7 @@ class ClimateRegime(object):
 
                 totalPrec_monthly = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(self.totalPrec_daily[i_row, i_col, :])
                 meanT_daily_point = Ta365[i_row, i_col, :]
-                self.meanT_daily_new[i_row, i_col, :], istart0, istart1 = LGPCalc.rainPeak(
-                    totalPrec_monthly, meanT_daily_point, lgpt5_point)
+                istart0, istart1 = LGPCalc.rainPeak(totalPrec_monthly, meanT_daily_point, lgpt5_point)
                 #----------------------------------
                 if self.set_mask:
                     if self.im_mask[i_row, i_col] == self.nodata_val:

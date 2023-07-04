@@ -1,5 +1,5 @@
-pandas
-scipy
-numba
-imageio
-GDAL
+pandas=1.5.3
+numba>=0.56
+numpy>=1.23
+llvmlite>=0.40.1
+GDAL>=3.4.3

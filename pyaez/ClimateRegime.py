@@ -232,7 +232,7 @@ class ClimateRegime(object):
                     thermal_climate[i_row, i_col] = 12
                     
         if self.set_mask:
-            return np.ma.masked_where(self.im_mask == 0, thermal_climate)
+            return np.where(self.im_mask, thermal_climate, np.nan)
         else:
             return thermal_climate
     
@@ -291,7 +291,7 @@ class ClimateRegime(object):
                         thermal_zone[i_row,i_col] = 12 # Arctic
     
         if self.set_mask:
-            return np.ma.masked_where(self.im_mask == 0, thermal_zone)
+            return np.where(self.im_mask, thermal_zone, np.nan)
         else:
             return thermal_zone
 
@@ -358,7 +358,7 @@ class ClimateRegime(object):
         tsum0 = np.round(np.sum(tempT, axis=2), decimals = 0) 
         # masking
         if self.set_mask:
-            tsum0 = np.ma.masked_where(self.im_mask == 0, tsum0)
+            tsum0 = np.where(self.im_mask, tsum0, np.nan)
         return tsum0
 
     def getTemperatureSum5(self):
@@ -374,7 +374,7 @@ class ClimateRegime(object):
         tsum5 = np.round(np.sum(tempT, axis=2), decimals = 0) 
         # masking
         if self.set_mask: 
-            tsum5 = np.ma.masked_where(self.im_mask == 0, tsum5)
+            tsum5 = np.where(self.im_mask, tsum5, np.nan)
         return tsum5
         
 
@@ -391,7 +391,7 @@ class ClimateRegime(object):
         tsum10 = np.round(np.sum(tempT, axis=2), decimals = 0) 
         # masking
         if self.set_mask: 
-            tsum10 = np.ma.masked_where(self.im_mask == 0, tsum10)
+            tsum10 = np.where(self.im_mask, tsum10, np.nan)
         return tsum10
 
     def getTemperatureProfile(self):
@@ -547,7 +547,7 @@ class ClimateRegime(object):
 
         
         if self.set_mask:
-            return np.ma.masked_where(self.im_mask==0, lgp_tot)
+            return np.where(self.im_mask, lgp_tot, np.nan)
         else:
             return lgp_tot
   
@@ -573,7 +573,7 @@ class ClimateRegime(object):
         lgp_class[lgp<=0] = 1 # Hyper-arid
 
         if self.set_mask:
-            return np.ma.masked_where(self.im_mask == 0, lgp_class)
+            return np.where(self.im_mask, lgp_class, np.nan)
         else:
             return lgp_class
         
@@ -591,7 +591,7 @@ class ClimateRegime(object):
         lgp_equv[moisture_index > 2.4] = 366
 
         if self.set_mask:
-            return np.ma.masked_where(self.im_mask == 0, lgp_equv)
+            return np.where(self.im_mask, lgp_equv, np.nan)
         else:
             return lgp_equv
 
@@ -601,191 +601,7 @@ class ClimateRegime(object):
         Overall, there are no changes with the calculation steps and logics.
         '''
       
-    
-    def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t0, ts_t10):
-        """
-        This function refers to the assessment of multiple cropping potential
-        across the area through matching both growth cycle and temperature
-        requirements for individual suitable crops with time avaiability of 
-        crop growth. The logic considers crop suitability for rainfed and 
-        irrigated conditions.
 
-        Args:
-        ----------
-        t_climate : a 2-D numpy array
-            Thermal Climate.
-        lgp : a 2-D numpy array
-            Length of Growing Period.
-        lgp_t5 : a 2-D numpy array
-            Thermal growing period in days with mean daily temperatures above 5 degree Celsius.
-        lgp_t10 : a 2-D numpy array
-            Thermal growing period in days with mean daily temperatures above 10 degree Celsius.
-        ts_t10 : a 2-D numpy array
-            Accumulated temperature (degree-days) on days when mean daily temperature is greater or equal to 10 degree Celsius.
-        ts_t0 : a 2-D numpy array
-            Accumulated temperature (degree-days) on days when mean daily temperature is greater or equal to 0 degree Celsius.
-        tsg_t5 : a 2-D numpy array
-            Accumulated temperature on growing period days when mean daily temperature is greater or equal to 5 degree Celsius.
-        tsg_t10 : a 2-D numpy array
-            Accumulated temperature on growing period days when mean daily temperature is greater or equal to 10 degree Celsius.
-
-        Returns
-        -------
-        A list of two 2-D numpy arrays. The first array refers to multi-cropping
-        zone for rainfed condition, and the second refers to multi-cropping zone
-        for irrigated condition.
-
-        """
-        
-        # Definition of multi-cropping classes (Reference: GAEZ v4 Model Documentation)
-        # 1 => A Zone (Zone of no cropping, too cold or too dry for rainfed crops)
-        # 2 => B Zone (Zone of single cropping)
-        # 3 => C Zone (Zone of limited double cropping, relay cropping; single wetland rice may be possible)
-        # 4 => D Zone (Zone of double cropping; sequential double cropping including wetland rice is not possible)
-        # 5 => E Zone (Zone of double cropping with rice; sequential double cropping with one wetland rice crop is possible)
-        # 6 => F Zone (Zone of double rice cropping or limited triple cropping; may partly involve relay cropping; a third crop is not possible in case of two wetland rice crops)
-        # 7 => G Zone (Zone of triple cropping; sequential cropping of three short-cycle crops; two wetland rice crops are possible)
-        # 8 => H Zone (Zone of triple rice cropping; sequential cropping of three wetland rice crops is possible)
-        
-        # defining the constant arrays for rainfed and irrigated conditions, all pixel values start with 1
-        multi_crop_rain = np.ones((self.im_height, self.im_width)) # all values started with Zone A
-        multi_crop_irr = np.ones((self.im_height, self.im_width)) # all vauels starts with Zone A
-        
-        ts_g_t5 = np.ones((self.im_height, self.im_width))
-        ts_g_t10 = np.ones((self.im_height, self.im_width))
-        
-        # Calculation of Accumulated temperature during the growing period at specific temperature thresholds: 5 and 10 degree Celsius
-        
-        for i_r in range(self.im_height):
-            for i_c in range(self.im_width):
-
-                if self.set_mask:
-                    if self.im_mask[i_r, i_c] == self.nodata_val:
-                        continue
-                    
-                temp_1D = self.meanT_daily[i_r, i_c, :]
-                days = np.arange(0,365)
-                
-                deg = 5 # order of polynomical fit
-                
-                # creating the function of polyfit
-                polyfit = np.poly1d(np.polyfit(days,temp_1D,deg))
-                
-                # getting the interpolated value at each DOY
-                interp_daily_temp = polyfit(days)
-                
-                # Getting the start and end day of vegetative period
-                # The crop growth requires minimum temperature of at least 5 deg Celsius
-                # If not, the first DOY and the lst DOY of a year will be considered
-                try:
-                    veg_period = days[interp_daily_temp >=5]
-                    start_veg = veg_period[0]
-                    end_veg = veg_period[-1]
-                except:
-                    start_veg = 0
-                    end_veg = 364
-                
-                # Slicing the temperature within the vegetative period
-                interp_meanT_veg_T5 = interp_daily_temp[start_veg:end_veg]
-                interp_meanT_veg_T10 =  interp_daily_temp[start_veg:end_veg] *1
-                
-                # Removing the temperature of 5 and 10 deg Celsius thresholds
-                interp_meanT_veg_T5[interp_meanT_veg_T5 < 5] = 0
-                interp_meanT_veg_T10[interp_meanT_veg_T10 <10] = 0
-                
-                # Calculation of Accumulated temperatures during growing period
-                ts_g_t5[i_r, i_c] = np.sum(interp_meanT_veg_T5)
-                ts_g_t10[i_r, i_c] = np.sum(interp_meanT_veg_T10)
-
-
-        """Rainfed conditions"""
-        """Lowland tropic climate"""
-    
-        zone_B = np.all([t_climate ==1, lgp>=45, lgp_t5>=120, lgp_t10>=90, ts_t0>=1600, ts_t10>=1200], axis=0)
-        
-        # three criteria for zone C conditions
-        zone_C1 = np.all([t_climate ==1, lgp>=220, lgp_t5>=220, lgp_t10>=120, ts_t0>=5500, ts_g_t5>=3200, ts_g_t10>=2700], axis=0)
-        zone_C2 = np.all([t_climate ==1, lgp>=200, lgp_t5>=200, lgp_t10>=120, ts_t0>=6400, ts_g_t5>=3200, ts_g_t10>=2700], axis=0) # lgp_t5 is 200 instead of 210
-        zone_C3 = np.all([t_climate ==1, lgp>=180, lgp_t5>=200, lgp_t10>=120, ts_t0>=7200, ts_g_t5>=3200, ts_g_t10>=2700], axis=0)
-        
-        zone_C = np.logical_or.reduce([zone_C1==True, zone_C2==True, zone_C3==True], axis = 0)
-        
-        # three criteria for zone D conditions
-        zone_D1 = np.all([t_climate ==1, lgp>=270, lgp_t5>=270, lgp_t10>=165, ts_t0>=5500, ts_g_t5>=4000, ts_g_t10>=3200], axis=0)
-        zone_D2 = np.all([t_climate ==1, lgp>=240, lgp_t5>=240, lgp_t10>=165, ts_t0>=6400, ts_g_t5>=4000, ts_g_t10>=3200], axis=0)
-        zone_D3 = np.all([t_climate ==1, lgp>=210, lgp_t5>=240, lgp_t10>=165, ts_t0>=7200, ts_g_t5>=4000, ts_g_t10>=3200], axis=0)
-        
-        zone_D = np.logical_or.reduce([zone_D1==True, zone_D2==True, zone_D3==True], axis = 0)
-        
-        zone_F = np.all([t_climate ==1, lgp>=300, lgp_t5>=300, lgp_t10>=240, ts_t0>=7200, ts_g_t5>=5100, ts_g_t10>=4800], axis=0) # no criteria for ts_t10 in GAEZ
-        zone_H = np.all([t_climate ==1, lgp>=360, lgp_t5>=360, lgp_t10>=360, ts_t0>=7200, ts_t10>=7000], axis=0) # lgp_t10 changed to 360
-        
-        
-        """Other thermal climates"""
-        zone_B_other = np.all([t_climate!= 1, lgp>=45, lgp_t5>=120, lgp_t10>=90, ts_t0>=1600, ts_t10>=1200], axis=0)
-        zone_C_other = np.all([t_climate!= 1, lgp>=180, lgp_t5>=200, lgp_t10>=120, ts_t0>=3600, ts_t10>=3000, ts_g_t5>=3200, ts_g_t10>=2700], axis=0)
-        zone_D_other = np.all([t_climate!= 1, lgp>=210, lgp_t5>=240, lgp_t10>=165, ts_t0>=4500, ts_t10>=3600, ts_g_t5>=4000, ts_g_t10>=3200], axis=0)
-        zone_E_other = np.all([t_climate!= 1, lgp>=240, lgp_t5>=270, lgp_t10>=180, ts_t0>=4800, ts_t10>=4500, ts_g_t5>=4300, ts_g_t10>=4000], axis=0)
-        zone_F_other = np.all([t_climate!= 1, lgp>=300, lgp_t5>=300, lgp_t10>=240, ts_t0>=5400, ts_t10>=5100, ts_g_t5>=5100, ts_g_t10>=4800], axis=0)
-        zone_G_other = np.all([t_climate!= 1, lgp>=330, lgp_t5>=330, lgp_t10>=270, ts_t0>=5700, ts_t10>=5500], axis=0)
-        zone_H_other = np.all([t_climate!= 1, lgp>=360, lgp_t5>=360, lgp_t10>=330, ts_t0>=7200, ts_t10>=7000], axis=0)
-        
-
-        multi_crop_rain[np.logical_or.reduce([zone_B == True, zone_B_other == True], axis = 0)]= 2
-        multi_crop_rain[np.logical_or.reduce([zone_C == True, zone_C_other == True], axis = 0)]= 3
-        multi_crop_rain[np.logical_or.reduce([zone_D == True, zone_D_other == True], axis = 0)]= 4
-        multi_crop_rain[zone_E_other == True]= 5
-        multi_crop_rain[np.logical_or.reduce([zone_F == True, zone_F_other == True], axis = 0)]= 6
-        multi_crop_rain[np.logical_or.reduce([zone_H == True, zone_H_other == True], axis = 0)]= 8
-        
-        
-
-        
-        ###########################################################################################################################
-        """Irrigated conditions"""
-        """Lowland tropic climate"""
-        zone_B = np.all([t_climate ==1, lgp_t5>=120, lgp_t10>=90, ts_t0>=1600, ts_t10>=1200], axis=0)
-        
-        # three criteria for zone C conditions
-        zone_C1 = np.all([t_climate ==1, lgp_t5>=220, lgp_t10>=120, ts_t0>=5500, ts_g_t5>=3200, ts_g_t10>=2700], axis=0)
-        zone_C2 = np.all([t_climate ==1, lgp_t5>=200, lgp_t10>=120, ts_t0>=6400, ts_g_t5>=3200, ts_g_t10>=2700], axis=0) # lgp_t5 is 200 instead of 210
-        zone_C3 = np.all([t_climate ==1, lgp_t5>=200, lgp_t10>=120, ts_t0>=7200, ts_g_t5>=3200, ts_g_t10>=2700], axis=0)
-        
-        zone_C = np.logical_or.reduce([zone_C1==True, zone_C2==True, zone_C3==True], axis = 0)
-        
-        # three criteria for zone D conditions
-        zone_D1 = np.all([t_climate ==1, lgp_t5>=270, lgp_t10>=165, ts_t0>=5500, ts_g_t5>=4000, ts_g_t10>=3200], axis=0)
-        zone_D2 = np.all([t_climate ==1, lgp_t5>=240, lgp_t10>=165, ts_t0>=6400, ts_g_t5>=4000, ts_g_t10>=3200], axis=0)
-        zone_D3 = np.all([t_climate ==1, lgp_t5>=240, lgp_t10>=165, ts_t0>=7200, ts_g_t5>=4000, ts_g_t10>=3200], axis=0)
-        
-        zone_D = np.logical_or.reduce([zone_D1==True, zone_D2==True, zone_D3==True], axis = 0)
-        
-        zone_F = np.all([t_climate ==1, lgp_t5>=300, lgp_t10>=240, ts_t0>=7200, ts_g_t5>=5100, ts_g_t10>=4800], axis=0) # no criteria for ts_t10 in GAEZ
-        zone_H = np.all([t_climate ==1, lgp_t5>=360, lgp_t10>=360, ts_t0>=7200, ts_t10>=7000], axis=0) # lgp_t10 changed to 360
-        
-        
-        """Other thermal climates"""
-        zone_B_other = np.all([t_climate!= 1, lgp_t5>=120, lgp_t10>=90, ts_t0>=1600, ts_t10>=1200], axis=0)
-        zone_C_other = np.all([t_climate!= 1, lgp_t5>=200, lgp_t10>=120, ts_t0>=3600, ts_t10>=3000, ts_g_t5>=3200, ts_g_t10>=2700], axis=0)
-        zone_D_other = np.all([t_climate!= 1, lgp_t5>=240, lgp_t10>=165, ts_t0>=4500, ts_t10>=3600, ts_g_t5>=4000, ts_g_t10>=3200], axis=0)
-        zone_E_other = np.all([t_climate!= 1, lgp_t5>=270, lgp_t10>=180, ts_t0>=4800, ts_t10>=4500, ts_g_t5>=4300, ts_g_t10>=4000], axis=0)
-        zone_F_other = np.all([t_climate!= 1, lgp_t5>=300, lgp_t10>=240, ts_t0>=5400, ts_t10>=5100, ts_g_t5>=5100, ts_g_t10>=4800], axis=0)
-        zone_G_other = np.all([t_climate!= 1, lgp_t5>=330, lgp_t10>=270, ts_t0>=5700, ts_t10>=5500], axis=0)
-        zone_H_other = np.all([t_climate!= 1, lgp_t5>=360, lgp_t10>=330, ts_t0>=7200, ts_t10>=7000], axis=0)
-        
-        
-        multi_crop_irr[np.logical_or.reduce([zone_B == True, zone_B_other == True], axis = 0)]= 2
-        multi_crop_irr[np.logical_or.reduce([zone_C == True, zone_C_other == True], axis = 0)]= 3
-        multi_crop_irr[np.logical_or.reduce([zone_D == True, zone_D_other == True], axis = 0)]= 4
-        multi_crop_irr[zone_E_other == True]= 5
-        multi_crop_irr[np.logical_or.reduce([zone_F == True, zone_F_other == True], axis = 0)]= 6
-        multi_crop_irr[np.logical_or.reduce([zone_F == True, zone_F_other == True], axis = 0)]= 6
-        multi_crop_irr[np.logical_or.reduce([zone_H == True, zone_H_other == True], axis = 0)]= 8
-        
-        if self.set_mask:
-            return [np.ma.masked_where(self.im_mask == 0, multi_crop_rain), np.ma.masked_where(self.im_mask == 0, multi_crop_irr)]
-        else:
-            return [multi_crop_rain, multi_crop_irr]
 
 
     def TZoneFallowRequirement(self, tzone):
@@ -845,7 +661,7 @@ class ClimateRegime(object):
                         tzonefallow[i_row, i_col] = 6
                             
         if self.set_mask:
-            return np.ma.masked_where(self.im_mask == 0, tzonefallow)
+            return np.where(self.im_mask, tzonefallow, np.nan)
         else:
             return tzonefallow
     
@@ -902,7 +718,7 @@ class ClimateRegime(object):
         fi = np.nan_to_num(fi)
 
         if self.set_mask:
-            return [np.ma.masked_where(self.im_mask == 0, fi), np.ma.masked_where(self.im_mask == 0, permafrost)]
+            return [np.where(self.im_mask, fi, np.nan), np.where(self.im_mask, permafrost , np.nan)]
         else:
             return [fi, permafrost]
         
@@ -1330,7 +1146,7 @@ class ClimateRegime(object):
                             aez[i_r, i_c] = 48          
 
         if self.set_mask:
-            return np.ma.masked_where(self.im_mask==0, aez)
+            return np.where(self.im_mask, aez, np.nan)
         else:        
             return aez
     
@@ -1536,7 +1352,7 @@ def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t10, ts_t0):
                             multi_crop_irr[i_r, i_c] = 1
 
     if self.set_mask:
-        return [np.ma.masked_where(self.im_mask==0, multi_crop_rain), np.ma.masked_where(self.im_mask==0, multi_crop_irr)]
+        return [np.where(self.im_mask, multi_crop_rain, np.nan), np.where(self.im_mask, multi_crop_irr, np.nan)]
     else:        
         return [multi_crop_rain, multi_crop_irr]
                         

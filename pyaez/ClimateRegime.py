@@ -1157,204 +1157,204 @@ class ClimateRegime(object):
     according to Gunther's agreement and the documentation.
     """
          
-def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t10, ts_t0):
-    
-    # defining the constant arrays for rainfed and irrigated conditions, all pixel values start with 1
-    multi_crop_rain = np.zeros((self.im_height, self.im_width), dtype = int) # all values started with Zone A
-    multi_crop_irr = np.zeros((self.im_height, self.im_width), dtype = int) # all vauels starts with Zone A
-    
-    ts_g_t5 = np.zeros((self.im_height, self.im_width))
-    ts_g_t10 = np.zeros((self.im_height, self.im_width))
-    
-    # Calculation of Accumulated temperature during the growing period at specific temperature thresholds: 5 and 10 degree Celsius
-    
-    for i_r in range(self.im_height):
-        for i_c in range(self.im_width):
-            
-            if self.set_mask:
+    def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t10, ts_t0):
+        
+        # defining the constant arrays for rainfed and irrigated conditions, all pixel values start with 1
+        multi_crop_rain = np.zeros((self.im_height, self.im_width), dtype = int) # all values started with Zone A
+        multi_crop_irr = np.zeros((self.im_height, self.im_width), dtype = int) # all vauels starts with Zone A
+        
+        ts_g_t5 = np.zeros((self.im_height, self.im_width))
+        ts_g_t10 = np.zeros((self.im_height, self.im_width))
+        
+        # Calculation of Accumulated temperature during the growing period at specific temperature thresholds: 5 and 10 degree Celsius
+        
+        for i_r in range(self.im_height):
+            for i_c in range(self.im_width):
                 
-                if self.im_mask[i_r, i_c]== self.nodata_val:
-                    continue
-                
-                else:
+                if self.set_mask:
                     
-                    temp_1D = self.meanT_daily[i_r, i_c, :]
-                    days = np.arange(0,365)
+                    if self.im_mask[i_r, i_c]== self.nodata_val:
+                        continue
                     
-                    deg = 5 # order of polynomical fit
-                    
-                    # creating the function of polyfit
-                    polyfit = np.poly1d(np.polyfit(days,temp_1D,deg))
-                    
-                    # getting the interpolated value at each DOY
-                    interp_daily_temp = polyfit(days)
-                    
-                    # Getting the start and end day of vegetative period
-                    # The crop growth requires minimum temperature of at least 5 deg Celsius
-                    # If not, the first DOY and the lst DOY of a year will be considered
-                    try:
-                        veg_period = days[interp_daily_temp >=5]
-                        start_veg = veg_period[0]
-                        end_veg = veg_period[-1]
-                    except:
-                        start_veg = 0
-                        end_veg = 364
-                    
-                    # Slicing the temperature within the vegetative period
-                    interp_meanT_veg_T5 = interp_daily_temp[start_veg:end_veg]
-                    interp_meanT_veg_T10 =  interp_daily_temp[start_veg:end_veg] *1
-                    
-                    # Removing the temperature of 5 and 10 deg Celsius thresholds
-                    interp_meanT_veg_T5[interp_meanT_veg_T5 < 5] = 0
-                    interp_meanT_veg_T10[interp_meanT_veg_T10 <10] = 0
-                    
-                    # Calculation of Accumulated temperatures during growing period
-                    ts_g_t5[i_r, i_c] = np.sum(interp_meanT_veg_T5)
-                    ts_g_t10[i_r, i_c] = np.sum(interp_meanT_veg_T10)
-    
-    """Multi cropping zonation for rainfed conditions"""
-    for i_r in range(self.im_height):
-        for i_c in range(self.im_width):
-            
-            if self.set_mask:
-                
-                if self.im_mask[i_r, i_c]== self.nodata_val:
-                    continue
-                
-                else:
-                    
-                    if t_climate[i_r, i_c]== 1:
+                    else:
                         
-                        if np.all([lgp[i_r, i_c]>=360, lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=360, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])== True:
-                            multi_crop_rain[i_r, i_c] = 8
+                        temp_1D = self.meanT_daily[i_r, i_c, :]
+                        days = np.arange(0,365)
                         
-                        elif np.all([lgp[i_r, i_c]>=300, lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])== True:
-                            multi_crop_rain[i_r, i_c] = 6
+                        deg = 5 # order of polynomical fit
                         
-                        elif np.all([lgp[i_r, i_c]>=270, lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                            multi_crop_rain[i_r, i_c] = 4 # Ok
+                        # creating the function of polyfit
+                        polyfit = np.poly1d(np.polyfit(days,temp_1D,deg))
+                        
+                        # getting the interpolated value at each DOY
+                        interp_daily_temp = polyfit(days)
+                        
+                        # Getting the start and end day of vegetative period
+                        # The crop growth requires minimum temperature of at least 5 deg Celsius
+                        # If not, the first DOY and the lst DOY of a year will be considered
+                        try:
+                            veg_period = days[interp_daily_temp >=5]
+                            start_veg = veg_period[0]
+                            end_veg = veg_period[-1]
+                        except:
+                            start_veg = 0
+                            end_veg = 364
+                        
+                        # Slicing the temperature within the vegetative period
+                        interp_meanT_veg_T5 = interp_daily_temp[start_veg:end_veg]
+                        interp_meanT_veg_T10 =  interp_daily_temp[start_veg:end_veg] *1
+                        
+                        # Removing the temperature of 5 and 10 deg Celsius thresholds
+                        interp_meanT_veg_T5[interp_meanT_veg_T5 < 5] = 0
+                        interp_meanT_veg_T10[interp_meanT_veg_T10 <10] = 0
+                        
+                        # Calculation of Accumulated temperatures during growing period
+                        ts_g_t5[i_r, i_c] = np.sum(interp_meanT_veg_T5)
+                        ts_g_t10[i_r, i_c] = np.sum(interp_meanT_veg_T10)
+        
+        """Multi cropping zonation for rainfed conditions"""
+        for i_r in range(self.im_height):
+            for i_c in range(self.im_width):
+                
+                if self.set_mask:
+                    
+                    if self.im_mask[i_r, i_c]== self.nodata_val:
+                        continue
+                    
+                    else:
+                        
+                        if t_climate[i_r, i_c]== 1:
                             
-                        elif np.all([lgp[i_r, i_c]>=240, lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                            multi_crop_rain[i_r, i_c] = 4 # Ok
-                        
-                        elif np.all([lgp[i_r, i_c]>=210, lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                            multi_crop_rain[i_r, i_c] = 4 # OK
-                        
-                        elif np.all([lgp[i_r, i_c]>=220, lgp_t5[i_r, i_c]>=220, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                            multi_crop_rain[i_r, i_c] = 3 #OK
-                        
-                        elif np.all([lgp[i_r, i_c]>=200, lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                            multi_crop_rain[i_r, i_c] = 3# OK
-                        
-                        elif np.all([lgp[i_r, i_c]>=180, lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                            multi_crop_rain[i_r, i_c] = 3 # OK
-                        
-                        elif np.all([lgp[i_r, i_c]>=45, lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200]) == True:
-                            multi_crop_rain[i_r, i_c] = 2 # Ok
+                            if np.all([lgp[i_r, i_c]>=360, lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=360, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])== True:
+                                multi_crop_rain[i_r, i_c] = 8
                             
-                        else:
-                            multi_crop_rain[i_r, i_c] = 1 # Ok
-                        
-                    elif t_climate[i_r, i_c] != 1:
-                        
-                        if np.all([lgp[i_r, i_c]>=360, lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=330, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])== True:
-                            multi_crop_rain[i_r, i_c] = 8 # Ok
-                        
-                        elif np.all([lgp[i_r, i_c]>=330, lgp_t5[i_r, i_c]>=330, lgp_t10[i_r, i_c]>=270, ts_t0[i_r, i_c]>=5700, ts_t10[i_r, i_c]>=5500])== True:
-                            multi_crop_rain[i_r, i_c] = 7 # Ok
-                        
-                        elif np.all([lgp[i_r, i_c]>=300, lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=5400, ts_t10[i_r, i_c]>=5100, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])== True:
-                            multi_crop_rain[i_r, i_c] = 6 # Ok
-                        
-                        elif np.all([lgp[i_r, i_c]>=240, lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=180, ts_t0[i_r, i_c]>=4800, ts_t10[i_r, i_c]>=4500, ts_g_t5[i_r, i_c]>=4300, ts_g_t10[i_r, i_c]>=4000])== True:
-                            multi_crop_rain[i_r, i_c] = 5 # Ok
-                        
-                        elif np.all([lgp[i_r, i_c]>=210, lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=4500, ts_t10[i_r, i_c]>=3600, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                            multi_crop_rain[i_r, i_c] = 4 #OK
-                        
-                        elif np.all([lgp[i_r, i_c]>=180, lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=3600, ts_t10[i_r, i_c]>=3000, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                            multi_crop_rain[i_r, i_c] = 3 # Ok
-                        
-                        elif np.all([lgp[i_r, i_c]>=45, lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200]) == True:
-                            multi_crop_rain[i_r, i_c] = 2 #Ok
-                        
-                        else:
-                            multi_crop_rain[i_r, i_c] = 1 #Ok
-                        
-    
-    """Multi cropping zonation for irrigated conditions"""
-    for i_r in range(self.im_height):
-        for i_c in range(self.im_width):
-            
-            if self.set_mask:
-                
-                if self.im_mask[i_r, i_c]== self.nodata_val:
-                    continue
-                
-                else:
-                    
-                    if t_climate[i_r, i_c]== 1:
-                        
-                        if np.all([lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=360, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])==True:
-                            multi_crop_irr[i_r, i_c] =8 # ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])==True:
-                            multi_crop_irr[i_r, i_c] =6 # ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200]) == True:
-                            multi_crop_irr[i_r, i_c] =4 # Ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                            multi_crop_irr[i_r, i_c] =4 #ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                            multi_crop_irr[i_r, i_c] =4 # ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=220, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700]) == True:
-                            multi_crop_irr[i_r, i_c] =3 #Ok
+                            elif np.all([lgp[i_r, i_c]>=300, lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])== True:
+                                multi_crop_rain[i_r, i_c] = 6
                             
-                        elif np.all([lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                            multi_crop_irr[i_r, i_c] =3 #ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])==True:
-                            multi_crop_irr[i_r, i_c] =3 # Ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200]) == True:
-                            multi_crop_irr[i_r, i_c] =2 # Ok
-                        
-                        else:
-                            multi_crop_irr[i_r, i_c] =1 # Ok
+                            elif np.all([lgp[i_r, i_c]>=270, lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
+                                multi_crop_rain[i_r, i_c] = 4 # Ok
+                                
+                            elif np.all([lgp[i_r, i_c]>=240, lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
+                                multi_crop_rain[i_r, i_c] = 4 # Ok
+                            
+                            elif np.all([lgp[i_r, i_c]>=210, lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
+                                multi_crop_rain[i_r, i_c] = 4 # OK
+                            
+                            elif np.all([lgp[i_r, i_c]>=220, lgp_t5[i_r, i_c]>=220, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
+                                multi_crop_rain[i_r, i_c] = 3 #OK
+                            
+                            elif np.all([lgp[i_r, i_c]>=200, lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
+                                multi_crop_rain[i_r, i_c] = 3# OK
+                            
+                            elif np.all([lgp[i_r, i_c]>=180, lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
+                                multi_crop_rain[i_r, i_c] = 3 # OK
+                            
+                            elif np.all([lgp[i_r, i_c]>=45, lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200]) == True:
+                                multi_crop_rain[i_r, i_c] = 2 # Ok
+                                
+                            else:
+                                multi_crop_rain[i_r, i_c] = 1 # Ok
+                            
+                        elif t_climate[i_r, i_c] != 1:
+                            
+                            if np.all([lgp[i_r, i_c]>=360, lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=330, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])== True:
+                                multi_crop_rain[i_r, i_c] = 8 # Ok
+                            
+                            elif np.all([lgp[i_r, i_c]>=330, lgp_t5[i_r, i_c]>=330, lgp_t10[i_r, i_c]>=270, ts_t0[i_r, i_c]>=5700, ts_t10[i_r, i_c]>=5500])== True:
+                                multi_crop_rain[i_r, i_c] = 7 # Ok
+                            
+                            elif np.all([lgp[i_r, i_c]>=300, lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=5400, ts_t10[i_r, i_c]>=5100, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])== True:
+                                multi_crop_rain[i_r, i_c] = 6 # Ok
+                            
+                            elif np.all([lgp[i_r, i_c]>=240, lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=180, ts_t0[i_r, i_c]>=4800, ts_t10[i_r, i_c]>=4500, ts_g_t5[i_r, i_c]>=4300, ts_g_t10[i_r, i_c]>=4000])== True:
+                                multi_crop_rain[i_r, i_c] = 5 # Ok
+                            
+                            elif np.all([lgp[i_r, i_c]>=210, lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=4500, ts_t10[i_r, i_c]>=3600, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
+                                multi_crop_rain[i_r, i_c] = 4 #OK
+                            
+                            elif np.all([lgp[i_r, i_c]>=180, lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=3600, ts_t10[i_r, i_c]>=3000, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
+                                multi_crop_rain[i_r, i_c] = 3 # Ok
+                            
+                            elif np.all([lgp[i_r, i_c]>=45, lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200]) == True:
+                                multi_crop_rain[i_r, i_c] = 2 #Ok
+                            
+                            else:
+                                multi_crop_rain[i_r, i_c] = 1 #Ok
+                            
+        
+        """Multi cropping zonation for irrigated conditions"""
+        for i_r in range(self.im_height):
+            for i_c in range(self.im_width):
+                
+                if self.set_mask:
                     
-                    elif t_climate[i_r, i_c] != 1:
+                    if self.im_mask[i_r, i_c]== self.nodata_val:
+                        continue
+                    
+                    else:
                         
-                        if np.all([lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=330, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])==True:
-                            multi_crop_irr[i_r, i_c] = 8
+                        if t_climate[i_r, i_c]== 1:
+                            
+                            if np.all([lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=360, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])==True:
+                                multi_crop_irr[i_r, i_c] =8 # ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])==True:
+                                multi_crop_irr[i_r, i_c] =6 # ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200]) == True:
+                                multi_crop_irr[i_r, i_c] =4 # Ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
+                                multi_crop_irr[i_r, i_c] =4 #ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
+                                multi_crop_irr[i_r, i_c] =4 # ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=220, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700]) == True:
+                                multi_crop_irr[i_r, i_c] =3 #Ok
+                                
+                            elif np.all([lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
+                                multi_crop_irr[i_r, i_c] =3 #ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])==True:
+                                multi_crop_irr[i_r, i_c] =3 # Ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200]) == True:
+                                multi_crop_irr[i_r, i_c] =2 # Ok
+                            
+                            else:
+                                multi_crop_irr[i_r, i_c] =1 # Ok
                         
-                        elif np.all([lgp_t5[i_r, i_c]>=330, lgp_t10[i_r, i_c]>=270, ts_t0[i_r, i_c]>=5700, ts_t10[i_r, i_c]>=5500])==True:
-                            multi_crop_irr[i_r, i_c] = 7 # ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=5400, ts_t10[i_r, i_c]>=5100, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])==True:
-                            multi_crop_irr[i_r, i_c] = 6 #ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=180, ts_t0[i_r, i_c]>=4800, ts_t10[i_r, i_c]>=4500, ts_g_t5[i_r, i_c]>=4300, ts_g_t10[i_r, i_c]>=4000])==True:
-                            multi_crop_irr[i_r, i_c] = 5 #ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=4500, ts_t10[i_r, i_c]>=3600, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])==True:
-                            multi_crop_irr[i_r, i_c] = 4 #ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=3600, ts_t10[i_r, i_c]>=3000, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])==True:
-                            multi_crop_irr[i_r, i_c] = 3 # ok
-                        
-                        elif np.all([lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200])==True:
-                            multi_crop_irr[i_r, i_c] = 2 #ok
-                        
-                        else:
-                            multi_crop_irr[i_r, i_c] = 1
+                        elif t_climate[i_r, i_c] != 1:
+                            
+                            if np.all([lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=330, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])==True:
+                                multi_crop_irr[i_r, i_c] = 8
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=330, lgp_t10[i_r, i_c]>=270, ts_t0[i_r, i_c]>=5700, ts_t10[i_r, i_c]>=5500])==True:
+                                multi_crop_irr[i_r, i_c] = 7 # ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=5400, ts_t10[i_r, i_c]>=5100, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])==True:
+                                multi_crop_irr[i_r, i_c] = 6 #ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=180, ts_t0[i_r, i_c]>=4800, ts_t10[i_r, i_c]>=4500, ts_g_t5[i_r, i_c]>=4300, ts_g_t10[i_r, i_c]>=4000])==True:
+                                multi_crop_irr[i_r, i_c] = 5 #ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=4500, ts_t10[i_r, i_c]>=3600, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])==True:
+                                multi_crop_irr[i_r, i_c] = 4 #ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=3600, ts_t10[i_r, i_c]>=3000, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])==True:
+                                multi_crop_irr[i_r, i_c] = 3 # ok
+                            
+                            elif np.all([lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200])==True:
+                                multi_crop_irr[i_r, i_c] = 2 #ok
+                            
+                            else:
+                                multi_crop_irr[i_r, i_c] = 1
 
-    if self.set_mask:
-        return [np.where(self.im_mask, multi_crop_rain, np.nan), np.where(self.im_mask, multi_crop_irr, np.nan)]
-    else:        
-        return [multi_crop_rain, multi_crop_irr]
+        if self.set_mask:
+            return [np.where(self.im_mask, multi_crop_rain, np.nan), np.where(self.im_mask, multi_crop_irr, np.nan)]
+        else:        
+            return [multi_crop_rain, multi_crop_irr]
                         
     
 

@@ -127,7 +127,7 @@ class CropWatCalc(object):
 
         '''Use more severe of above two conditions determines final yield'''
 
-        f_final = np.min([f0,f1])
+        self.f_final = np.min([f0,f1])
 
         # to avoid, possible error
         if self.f_final < 0:

@@ -96,7 +96,7 @@ class ClimaticConstraints(object):
         
         self.LGP_agc = np.zeros(lgp.shape, dtype = int)
         self.clim_adj_yield = np.zeros(lgp.shape)
-        self.fc3 = np.zeros(lgp.shape)
+        self.fc3 = np.zeros(lgp.shape,np.float64)
         self.lgpt10_map = lgpt10
         
         for i_row in range(self.LGP_agc.shape[0]):
@@ -128,9 +128,8 @@ class ClimaticConstraints(object):
                 
                 """Thermal climate screening"""
                 if tclimate[i_row, i_col] in no_tclimate:
-                    
-                    self.fc3[i_row, i_col]= 0
-                    self.clim_adj_yield[i_row, i_col] = 0
+                    self.fc3[i_row, i_col]= 0.
+                    self.clim_adj_yield[i_row, i_col] = 0.
                     
                 
                 else:
@@ -168,31 +167,33 @@ class ClimaticConstraints(object):
                         
                         for interval in range(self.lgpt10_class_rain.shape[0]):
                             
-                            if self.lgpt10_map[i_row, i_col] in range(self.lgpt10_class_rain[interval][0], self.lgpt10_class_rain[interval][1]):
+                            if self.lgpt10_map[i_row, i_col] in range(self.lgpt10_class_rain[interval][0], self.lgpt10_class_rain[interval][1]+1):
                                 
                                 fc1_lgpt10 = self.lgpt10_rain[interval]
+                                
+                        if np.isnan(self.lgpt10_map[i_row, i_col]):
+                            fc1_lgpt10 = 0.
+                        if self.ann_meanTdaily[i_row, i_col] >= 20:
+                            
+                            for class_index in range(self.wetness_days_class_rain.shape[0]):
+                                
+                                if self.LGP_agc[i_row, i_col] in range(self.wetness_days_class_rain[class_index][0], self.wetness_days_class_rain[class_index][1]+1):
+                                        
+                                    fc3_irr_wtout_e = self.fc3_rain_gte20[class_index]   
+                                    self.fc3[i_row, i_col] = np.minimum(fc3_irr_wtout_e, fc1_lgpt10)
+                                        
+                                
+                        elif self.ann_meanTdaily[i_row, i_col] < 10:
+                            
+                            for class_index in range(self.wetness_days_class_rain.shape[0]):
+                                
+                                if self.LGP_agc[i_row, i_col] in range(self.wetness_days_class_rain[class_index][0], self.wetness_days_class_rain[class_index][1]+1):
+                                        
+                                    fc3_irr_wtout_e = self.fc3_rain_lt10[class_index]   
+                                    self.fc3[i_row, i_col] = np.minimum(fc3_irr_wtout_e, fc1_lgpt10)
                         
-                            if self.ann_meanTdaily[i_row, i_col] >= 20:
-                            
-                                for class_index in range(self.wetness_days_class_rain.shape[0]):
-                                
-                                    if self.LGP_agc[i_row, i_col] in range(self.wetness_days_class_rain[class_index][0], self.wetness_days_class_rain[class_index][1]):
-                                        
-                                        fc3_irr_wtout_e = self.fc3_rain_gte20[class_index]
-                                        
-                                        self.fc3[i_row, i_col] = min(fc3_irr_wtout_e, fc1_lgpt10)
-                                        
-                                
-                            elif self.ann_meanTdaily[i_row, i_col] < 10:
-                            
-                                for class_index in range(self.wetness_days_class_rain.shape[0]):
-                                
-                                    if self.LGP_agc[i_row, i_col] in range(self.wetness_days_class_rain[class_index][0], self.wetness_days_class_rain[class_index][1]):
-                                        
-                                        fc3_irr_wtout_e = self.fc3_rain_lt10[class_index]
-                                        
-                                        self.fc3[i_row, i_col] = np.min(fc3_irr_wtout_e, fc1_lgpt10)
-                                        
+                        else:
+                            self.fc3[i_row, i_col]=1                
                     self.clim_adj_yield[i_row, i_col] = original_yield[i_row, i_col] * self.fc3[i_row, i_col]
                                     
 

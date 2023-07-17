@@ -26,7 +26,7 @@ class CropSimulation(object):
         self.set_Tsum_screening = False
         self.set_Permafrost_screening = False  
         self.set_adjustment = False 
-        self.setTypeBConstraint = True
+        self.setTypeBConstraint = False # JoelFerg bug fix
 
     def setMonthlyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity):
         """Load MONTHLY climate data into the Class and calculate the Reference Evapotranspiration (ETo)
@@ -246,8 +246,8 @@ class CropSimulation(object):
         self.LAi = LAI  # leaf area index
         self.HI = HI  # harvest index
         self.legume = legume  # binary value
-        self.adaptability = adaptability  # one of [1,2,3,4] classes
-        self.cycle_len = cycle_len  # length of growing period
+        self.adaptability = int(adaptability)  # one of [1,2,3,4] classes
+        self.cycle_len = int(cycle_len)  # length of growing period
         self.D1 = D1  # rooting depth 1 (m)
         self.D2 = D2  # rooting depth 2 (m)
         self.min_temp = min_temp  # minimum temperature
@@ -807,7 +807,7 @@ class CropSimulation(object):
 
                         if self.LGPT5[i_row, i_col] < self.cycle_len:
 
-                            self.cycle_len_irr = self.LGPT5[i_row, i_col].copy()
+                            self.cycle_len_irr = int(self.LGPT5[i_row, i_col].copy())
                             self.adjustForPerennialCrop(
                                 self.cycle_len_irr, aLAI=self.aLAI, bLAI=self.bLAI, aHI=self.aHI, bHI=self.bHI, rain_or_irr='irr')
 
@@ -822,8 +822,8 @@ class CropSimulation(object):
 
                         if self.LGPT10[i_row, i_col] < self.cycle_len:
 
-                            self.cycle_len_irr = (
-                                self.LGPT10[i_row, i_col]).copy()
+                            self.cycle_len_irr = int((
+                                self.LGPT10[i_row, i_col]).copy())
                             self.adjustForPerennialCrop(
                                 self.cycle_len_irr, aLAI=self.aLAI, bLAI=self.bLAI, aHI=self.aHI, bHI=self.bHI, rain_or_irr='irr')
 
@@ -836,7 +836,7 @@ class CropSimulation(object):
 
                 """ Calculation of each individual day's yield for rainfed and irrigated conditions"""
 
-                for i_cycle in range(start_doy, end_doy+1, step_doy):
+                for i_cycle in range(start_doy-1, end_doy+1, step_doy):
 
                     """Repeat the climate data two times and concatenate for computational convenience. If perennial, the cycle length
                     will be different for separate conditions"""

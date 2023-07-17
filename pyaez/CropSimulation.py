@@ -26,7 +26,7 @@ class CropSimulation(object):
         self.set_Tsum_screening = False
         self.set_Permafrost_screening = False  
         self.set_adjustment = False 
-        self.setTypeBConstraint = True
+        self.setTypeBConstraint = False
 
     def setMonthlyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity):
         """Load MONTHLY climate data into the Class and calculate the Reference Evapotranspiration (ETo)
@@ -1020,11 +1020,11 @@ class CropSimulation(object):
                                 self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO)
 
                         # Can remove this function (Updated new function goes to setupTypeBConstraint)
-                        # if self.set_Tprofile_screening:
+                        #if self.set_Tprofile_screening:
                         #     obj_screening.setTProfileScreening(self.no_Tprofile, self.optm_Tprofile)
                         if self.setTypeBConstraint:
                             obj_screening.applyTypeBConstraint(
-                                data=self.data, input_temp_profile=obj_screening.tprofile, perennial_flag=False)
+                                data=self.data, input_temp_profile=obj_screening.tprofile,     perennial_flag=False)
 
                         fc = 1
 

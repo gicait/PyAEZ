@@ -490,7 +490,8 @@ class CropSimulation(object):
                 islgp = LGPCalc.islgpt(self.meanT_daily[i_row, i_col, :])
                 xx = LGPCalc.val10day(Eta365X)
                 yy = LGPCalc.val10day(Etm365X)
-                lgp_whole = xx[:365]/yy[:365]
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    lgp_whole = xx[:365]/yy[:365]
                 count = 0
                 for i in range(len(lgp_whole)):
                     if islgp[i] == 1 and lgp_whole[i] >= 0.4:
@@ -1218,7 +1219,8 @@ class CropSimulation(object):
         meanT_le_0[meanT_gt_0 > 0] = 0
         ddt = np.sum(meanT_gt_0, axis=2)
         ddf = - np.sum(meanT_le_0, axis=2)
-        fi = np.sqrt(ddf)/(np.sqrt(ddf) + np.sqrt(ddt))
+        with np.errstate(divide='ignore', invalid='ignore'):
+            fi = np.sqrt(ddf)/(np.sqrt(ddf) + np.sqrt(ddt))
         # now, we will classify the permafrost zones (Reference: GAEZ v4 model documentation: Pg35 -37)
         for i_row in range(self.im_height):
             for i_col in range(self.im_width):

@@ -44,7 +44,8 @@ class BioMassCalc(object):
         # self.avgSD = np.mean(sd)
 
         ## convert radiation values from W/m^2 to cal/cm2/day1 
-        self.shortRad_daily = ((self.shortRad_daily / 4.1868) * (60*60*24)) / (100*100); # corrected (7/9/2023)
+        # self.shortRad_daily = ((self.shortRad_daily / 4.1868) * (60*60*24)) / (100*100); # corrected (7/9/2023)
+        self.shortRad_daily = self.shortRad_daily * 2.06362854686156 # corrected (5/10/2023)
 
         '''Calculate Mean T and dT'''
 

@@ -7,6 +7,7 @@ Thermal Screening
 Modification:
 1. Removing time slicing with start date and cycle length.
 2. Removing getSuitability function.
+3. TSUM threhold values are rounded as integers for overcoming inconsistent data types.
 
 """
 
@@ -126,13 +127,14 @@ class ThermalScreening(object):
         self.set_lgpt_screening = True
 
     # 2. Modification (SWH)
+    # 3. Modification (SWH)
     def setTSumScreening(self, LnS, LsO, LO, HnS, HsO, HO):
-        self.LnS = LnS
-        self.LsO = LsO
-        self.LO = LO
-        self.HnS = HnS
-        self.HsO = HsO
-        self.HO = HO
+        self.LnS = round(LnS)
+        self.LsO = round(LsO)
+        self.LO = round(LO)
+        self.HnS = round(HnS)
+        self.HsO = round(HsO)
+        self.HO = round(HO)
         self.set_Tsum_screening = True
 
     def setTProfileScreening(self, no_Tprofile, optm_Tprofile):

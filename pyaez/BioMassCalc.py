@@ -222,8 +222,9 @@ class BioMassCalc(object):
     def calculateBioMass(self):
         self.Bn =  BioMassCalc.calculateBioMassNumba(self.cycle_begin, self.cycle_end, self.cycle_len, self.lat, self.lat_index1, self.lat_index2, self.minT_daily, self.maxT_daily, self.shortRad_daily, self.meanT_daily, self.dT_daily, self.LAi, self.HI, self.legume, self.adaptability)
 
+    # 
     def calculateYield(self):
-        self.PYield = self.Bn * self.HI;
+        self.PYield = np.round(self.Bn * self.HI, 0).astype(int);
         return self.PYield
     
     @staticmethod

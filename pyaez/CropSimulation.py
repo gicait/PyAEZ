@@ -694,7 +694,7 @@ class CropSimulation(object):
 
             for i_col in range(self.im_width):
 
-                
+                print('\nrow col: {}_{}'.format(i_row, i_col))
 
                 # check current location (pixel) is outside of study area or not. if it's outside of study area goes to next location (pixel)
                 # Those unsuitable
@@ -856,7 +856,7 @@ class CropSimulation(object):
 
                     """Repeat the climate data two times and concatenate for computational convenience. If perennial, the cycle length
                     will be different for separate conditions"""
-                    # print('Cycle No.{}'.format(i_cycle), end = '\n')
+                    print('Cycle No.{}'.format(i_cycle), end = '\n')
 
                     minT_daily_2year = np.tile(minT_daily_point, 2)
                     maxT_daily_2year = np.tile(maxT_daily_point, 2)

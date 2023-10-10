@@ -2,7 +2,12 @@
 PyAEZ version 2.1.0 (June 2023)
 Crop Water Calculation
 2020: N. Lakmal Deshapriya and Thaileng Thol
+2023: Swun Wunna Htet
 Reference: http://oar.icrisat.org/198/1/316_2009_GTAE_55_Poten_obt_yield_in_SAT.pdf
+
+Modifications
+1. Fixed the issue of division by zero when crop potential evapotranspiration (PETC) for each
+    individual growth stage returns zero.
 """
 
 import numpy as np
@@ -121,10 +126,12 @@ class CropWatCalc(object):
         petc_d3 = np.sum( petc_stage[d_days[1]:d_days[2]] )
         petc_d4 = np.sum( petc_stage[d_days[2]:d_days[3]] )
 
-        f1_d1 = 1 - self.yloss_f[0] * ( 1 - (peta_d1/petc_d1) )
-        f1_d2 = 1 - self.yloss_f[1] * ( 1 - (peta_d2/petc_d2) )
-        f1_d3 = 1 - self.yloss_f[2] * ( 1 - (peta_d3/petc_d3) )
-        f1_d4 = 1 - self.yloss_f[3] * ( 1 - (peta_d4/petc_d4) )
+        # 1. Modification (SWH)
+        # Avoiding division by zero
+        f1_d1 = 1 - self.yloss_f[0] if petc_d1==0 else 1 - self.yloss_f[0] * (1 - (peta_d1/petc_d1))
+        f1_d2 = 1 - self.yloss_f[1] if petc_d2==0 else 1 - self.yloss_f[1] * (1 - (peta_d2/petc_d2))
+        f1_d3 = 1 - self.yloss_f[2] if petc_d3==0 else 1 - self.yloss_f[2] * (1 - (peta_d3/petc_d3))
+        f1_d4 = 1 - self.yloss_f[3] if petc_d4==0 else 1 - self.yloss_f[3] * (1 - (peta_d4/petc_d4))
 
         f1 = np.min([f1_d1,f1_d2,f1_d3,f1_d4]) # some references use product, some use minimum. here we use minimum as in Thailand report
 
@@ -241,10 +248,12 @@ class CropWatCalc(object):
         petc_d3 = np.sum( petc_stage[ddays[1]:ddays[2]] )
         petc_d4 = np.sum( petc_stage[ddays[2]:ddays[3]] )
 
-        f1_d1 = 1 - yloss_f[0] * ( 1 - (peta_d1/petc_d1) )
-        f1_d2 = 1 - yloss_f[1] * ( 1 - (peta_d2/petc_d2) )
-        f1_d3 = 1 - yloss_f[2] * ( 1 - (peta_d3/petc_d3) )
-        f1_d4 = 1 - yloss_f[3] * ( 1 - (peta_d4/petc_d4) )
+        # 1. Modification (SWH)
+        # Avoiding division by zero
+        f1_d1 = 1 - yloss_f[0] if petc_d1==0 else 1 - yloss_f[0] * (1 - (peta_d1/petc_d1))
+        f1_d2 = 1 - yloss_f[1] if petc_d2==0 else 1 - yloss_f[1] * (1 - (peta_d2/petc_d2))
+        f1_d3 = 1 - yloss_f[2] if petc_d3==0 else 1 - yloss_f[2] * (1 - (peta_d3/petc_d3))
+        f1_d4 = 1 - yloss_f[3] if petc_d4==0 else 1 - yloss_f[3] * (1 - (peta_d4/petc_d4))
 
         f1 = min(f1_d1,f1_d2,f1_d3,f1_d4) # some references use product, some use minimum. here we use minimum as in Thailand report
 

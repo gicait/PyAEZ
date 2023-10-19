@@ -694,7 +694,9 @@ class CropSimulation(object):
 
             for i_col in range(self.im_width):
 
-                print('\nrow col: {}_{}'.format(i_row, i_col))
+                # print('\nrow_col= {}_{}'.format(i_row, i_col))
+
+                
 
                 # check current location (pixel) is outside of study area or not. if it's outside of study area goes to next location (pixel)
                 # Those unsuitable
@@ -724,7 +726,7 @@ class CropSimulation(object):
                         continue
                 
                 # Minimum temperature requirement Checking
-                if np.mean(self.meanT_daily[i_row, i_col,:]) < self.min_temp:
+                if np.round(np.mean(self.meanT_daily[i_row, i_col,:]), 0) < self.min_temp:
                     count_pixel_completed = count_pixel_completed + 1
                         
                     print('\rDone %: ' + str(round(count_pixel_completed /

@@ -15,10 +15,11 @@ import numba as nb
 
 class CropWatCalc(object):
 
-    def __init__(self, cycle_begin, cycle_end):
+    def __init__(self, cycle_begin, cycle_end, perennial_flag = False):
         self.cycle_begin = cycle_begin
         self.cycle_end = cycle_end
         self.cycle_len = cycle_end - cycle_begin +1
+        self.perennial_flag = perennial_flag
 
     def setClimateData(self, pet, precipitation):
         self.peto = pet
@@ -92,7 +93,7 @@ class CropWatCalc(object):
             W = np.min([W+self.Prec[ii]-peta_stage[ii], self.Sa*D[ii]])
             if W<0: W=0
 
-        ## entire gorwing season
+        ## entire growing season
         W = self.Sa*D[0] 
         for ii in range(self.cycle_len-1):
 
@@ -111,29 +112,33 @@ class CropWatCalc(object):
 
         peta_all_sum = np.sum( peta_all )
         petc_all_sum = np.sum( petc_all )
+        
 
         f0 = 1 - self.yloss_f_all * ( 1 - (peta_all_sum/petc_all_sum) )
 
         '''Assess Yield Loss in individual growth stages separately'''
+        if self.perennial_flag:
+            f1 = 1.
+        else:
 
-        peta_d1 = np.sum( peta_stage[0:d_days[0]] )
-        peta_d2 = np.sum( peta_stage[d_days[0]:d_days[1]] )
-        peta_d3 = np.sum( peta_stage[d_days[1]:d_days[2]] )
-        peta_d4 = np.sum( peta_stage[d_days[2]:d_days[3]] )
+            peta_d1 = np.sum( peta_stage[0:d_days[0]] )
+            peta_d2 = np.sum( peta_stage[d_days[0]:d_days[1]] )
+            peta_d3 = np.sum( peta_stage[d_days[1]:d_days[2]] )
+            peta_d4 = np.sum( peta_stage[d_days[2]:d_days[3]] )
 
-        petc_d1 = np.sum( petc_stage[0:d_days[0]] )
-        petc_d2 = np.sum( petc_stage[d_days[0]:d_days[1]] )
-        petc_d3 = np.sum( petc_stage[d_days[1]:d_days[2]] )
-        petc_d4 = np.sum( petc_stage[d_days[2]:d_days[3]] )
+            petc_d1 = np.sum( petc_stage[0:d_days[0]] )
+            petc_d2 = np.sum( petc_stage[d_days[0]:d_days[1]] )
+            petc_d3 = np.sum( petc_stage[d_days[1]:d_days[2]] )
+            petc_d4 = np.sum( petc_stage[d_days[2]:d_days[3]] )
 
-        # 1. Modification (SWH)
-        # Avoiding division by zero
-        f1_d1 = 1 - self.yloss_f[0] if petc_d1==0 else 1 - self.yloss_f[0] * (1 - (peta_d1/petc_d1))
-        f1_d2 = 1 - self.yloss_f[1] if petc_d2==0 else 1 - self.yloss_f[1] * (1 - (peta_d2/petc_d2))
-        f1_d3 = 1 - self.yloss_f[2] if petc_d3==0 else 1 - self.yloss_f[2] * (1 - (peta_d3/petc_d3))
-        f1_d4 = 1 - self.yloss_f[3] if petc_d4==0 else 1 - self.yloss_f[3] * (1 - (peta_d4/petc_d4))
+            # 1. Modification (SWH)
+            # Avoiding division by zero
+            f1_d1 = 1 - self.yloss_f[0] if petc_d1==0 else 1 - self.yloss_f[0] * (1 - (peta_d1/petc_d1));
+            f1_d2 = 1 - self.yloss_f[1] if petc_d2==0 else 1 - self.yloss_f[1] * (1 - (peta_d2/petc_d2));
+            f1_d3 = 1 - self.yloss_f[2] if petc_d3==0 else 1 - self.yloss_f[2] * (1 - (peta_d3/petc_d3));
+            f1_d4 = 1 - self.yloss_f[3] if petc_d4==0 else 1 - self.yloss_f[3] * (1 - (peta_d4/petc_d4));
 
-        f1 = np.min([f1_d1,f1_d2,f1_d3,f1_d4]) # some references use product, some use minimum. here we use minimum as in Thailand report
+            f1 = np.min([f1_d1,f1_d2,f1_d3,f1_d4]) # some references use product, some use minimum. here we use minimum as in Thailand report
 
         '''Use more severe of above two conditions determines final yield'''
 
@@ -154,7 +159,7 @@ class CropWatCalc(object):
     
     @staticmethod
     @nb.jit(nopython=True)
-    def calculateMoistureLimitedYieldNumba(length, d_per, peto, D2, D1, kc, kc_all, yloss_f, yloss_f_all, Sa, pc, Prec, y_potential):
+    def calculateMoistureLimitedYieldNumba(length, d_per, peto, D2, D1, kc, kc_all, yloss_f, yloss_f_all, Sa, pc, Prec, y_potential, perennial_flag):
 
         '''Convert Percentage of stage in the crop cycle to cumulative number of days'''
 
@@ -237,25 +242,28 @@ class CropWatCalc(object):
         f0 = 1 - yloss_f_all * ( 1 - (peta_all_sum/petc_all_sum) )
 
         '''Assess Yield Loss in individual growth stages separately'''
+        if perennial_flag:
+            f1 = 1.
+        else:
 
-        peta_d1 = np.sum( peta_stage[0:ddays[0]] )
-        peta_d2 = np.sum( peta_stage[ddays[0]:ddays[1]] )
-        peta_d3 = np.sum( peta_stage[ddays[1]:ddays[2]] )
-        peta_d4 = np.sum( peta_stage[ddays[2]:ddays[3]] )
+            peta_d1 = np.sum( peta_stage[0:ddays[0]] )
+            peta_d2 = np.sum( peta_stage[ddays[0]:ddays[1]] )
+            peta_d3 = np.sum( peta_stage[ddays[1]:ddays[2]] )
+            peta_d4 = np.sum( peta_stage[ddays[2]:ddays[3]] )
 
-        petc_d1 = np.sum( petc_stage[0:ddays[0]] )
-        petc_d2 = np.sum( petc_stage[ddays[0]:ddays[1]] )
-        petc_d3 = np.sum( petc_stage[ddays[1]:ddays[2]] )
-        petc_d4 = np.sum( petc_stage[ddays[2]:ddays[3]] )
+            petc_d1 = np.sum( petc_stage[0:ddays[0]] )
+            petc_d2 = np.sum( petc_stage[ddays[0]:ddays[1]] )
+            petc_d3 = np.sum( petc_stage[ddays[1]:ddays[2]] )
+            petc_d4 = np.sum( petc_stage[ddays[2]:ddays[3]] )
 
-        # 1. Modification (SWH)
-        # Avoiding division by zero
-        f1_d1 = 1 - yloss_f[0] if petc_d1==0 else 1 - yloss_f[0] * (1 - (peta_d1/petc_d1))
-        f1_d2 = 1 - yloss_f[1] if petc_d2==0 else 1 - yloss_f[1] * (1 - (peta_d2/petc_d2))
-        f1_d3 = 1 - yloss_f[2] if petc_d3==0 else 1 - yloss_f[2] * (1 - (peta_d3/petc_d3))
-        f1_d4 = 1 - yloss_f[3] if petc_d4==0 else 1 - yloss_f[3] * (1 - (peta_d4/petc_d4))
+            # 1. Modification (SWH)
+            # Avoiding division by zero
+            f1_d1 = 1 - yloss_f[0] if petc_d1==0 else 1 - yloss_f[0] * (1 - (peta_d1/petc_d1))
+            f1_d2 = 1 - yloss_f[1] if petc_d2==0 else 1 - yloss_f[1] * (1 - (peta_d2/petc_d2))
+            f1_d3 = 1 - yloss_f[2] if petc_d3==0 else 1 - yloss_f[2] * (1 - (peta_d3/petc_d3))
+            f1_d4 = 1 - yloss_f[3] if petc_d4==0 else 1 - yloss_f[3] * (1 - (peta_d4/petc_d4))
 
-        f1 = min(f1_d1,f1_d2,f1_d3,f1_d4) # some references use product, some use minimum. here we use minimum as in Thailand report
+            f1 = min(f1_d1,f1_d2,f1_d3,f1_d4) # some references use product, some use minimum. here we use minimum as in Thailand report
 
         '''Use more severe of above two conditions determines final yield'''
 
@@ -272,5 +280,6 @@ class CropWatCalc(object):
         return [y_water_limited, f_final]
     
     def getMoistureYieldNumba(self):
-        result = self.calculateMoistureLimitedYieldNumba(self.cycle_len, self.d_per, self.peto, self.D2, self.D1, self.kc, self.kc_all, self.yloss_f, self.yloss_f_all, self.Sa, self.pc, self.Prec, self.y_potential)
+        result = self.calculateMoistureLimitedYieldNumba(self.cycle_len, self.d_per, self.peto, self.D2, self.D1, self.kc, self.kc_all, self.yloss_f, 
+                                                         self.yloss_f_all, self.Sa, self.pc, self.Prec, self.y_potential, self.perennial_flag)
         return result

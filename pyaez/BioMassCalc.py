@@ -11,10 +11,12 @@ Modification:
 2. Revised cycle start, end and cycle length determination.
 3. Minor solar radiation conversion factor revision from 4.189 to 4.1868.
 4. Day time temperature calculation corrected to respective day of year interval.
+5. Numba incorporation are removed due to lack of support for scipy interpolation.
 """
 
 import numpy as np
-import numba as nb
+# import numba as nb
+from scipy.interpolate import CubicSpline
 
 class BioMassCalc(object):
 
@@ -24,8 +26,10 @@ class BioMassCalc(object):
         self.cycle_len = cycle_end - cycle_begin +1
 
         self.lat = np.abs(latitude)
-        self.lat_index1 = np.floor(np.abs(latitude)/10);
-        self.lat_index2 = np.ceil(np.abs(latitude)/10);
+        self.lat_index1 = int(np.floor(np.abs(latitude)/10));
+        self.lat_index2 = int(np.ceil(np.abs(latitude)/10));
+        self.lat_t = self.lat_index1 * 10;
+        self.lat_b = self.lat_index2 * 10;
     
     # by FORTRAN routine, I added sunshine hour. But it's still not confirmed whether it's correct
     def setClimateData(self, min_temp, max_temp, short_rad):
@@ -99,9 +103,9 @@ class BioMassCalc(object):
         self.legume = legume # binary value
         self.adaptability = adaptability-1  #one of [1,2,3,4] classes
 
-    @staticmethod
-    @nb.jit(nopython=True)
-    def calculateBioMassNumba(cycle_begin, cycle_end, cycle_len, lat, lat_index1, lat_index2, minT_daily, maxT_daily, shortRad_daily, meanT_daily, dT_daily, LAi, HI, legume, adaptability):
+    # @staticmethod
+    # @nb.jit(nopython=True)
+    def calculateBioMassNumba(cycle_begin, cycle_end, cycle_len, lat, lat_index1, lat_index2, lat_t, lat_b, minT_daily, maxT_daily, shortRad_daily, meanT_daily, dT_daily, LAi, HI, legume, adaptability):
 
         '''Max Radiation'''
         Ac = np.array([[343,360,369,364,349,337,342,357,368,365,349,337],# correct
@@ -148,22 +152,58 @@ class BioMassCalc(object):
 
         ''' Calculate average values of Ac, bc, bo, meanT, dT  in the season '''
 
-        doy_middle_of_month = np.arange(0,12)*30 + 15 # Calculate doy of middle of month
+        # doy_middle_of_month = np.arange(0,12)*30 + 15 # Calculate doy of middle of month
 
-        Ac_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, Ac[int(lat_index1),:])
-        bc_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bc[int(lat_index1),:])
-        bo_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bo[int(lat_index1),:])
-        Ac_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, Ac[int(lat_index2),:])
-        bc_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bc[int(lat_index2),:])
-        bo_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bo[int(lat_index2),:])
+        # Linear Interpolation is applied at a designated latitude for all Middle Day of Months
+        Ac_interp1 = np.zeros(12);
+        for i in range(Ac_interp1.shape[0]):
+            Ac_interp1[i] = np.interp(lat, [lat_t, lat_b], [Ac[lat_index1,:][i], Ac[lat_index2,:][i]]);
+        
+        Bc_interp1 = np.zeros(12);
+        for i in range(Bc_interp1.shape[0]):
+            Bc_interp1[i] = np.interp(lat, [lat_t, lat_b], [bc[lat_index1,:][i], bc[lat_index2,:][i]]);
+        
+        Bo_interp1 = np.zeros(12);
+        for i in range(Bo_interp1.shape[0]):
+            Bo_interp1[i] = np.interp(lat, [lat_t, lat_b], [bo[lat_index1,:][i], bo[lat_index2,:][i]]);
+        
+        # New Middle DOY, 1 additional addded at DOY 15's front and two added after DOY 345 
+        new_doy = np.arange(-15, 410, 30);
 
-        Ac_interp = Ac_interp1 + (int(lat)-int(lat_index1)*10)*((Ac_interp2-Ac_interp1)/10)
-        bc_interp = bc_interp1 + (int(lat)-int(lat_index1)*10)*((bc_interp2-bc_interp1)/10)
-        bo_interp = bo_interp1 + (int(lat)-int(lat_index1)*10)*((bo_interp2-bo_interp1)/10)
+        # new concatenated interpolated Ac, Bc and Bo
+        new_Ac_interp1 = np.concatenate(([Ac_interp1[-1]],  Ac_interp1, [Ac_interp1[0]], [Ac_interp1[1]]));
+        new_Bc_interp1 = np.concatenate(([Bc_interp1[-1]],  Bc_interp1, [Bc_interp1[0]], [Bc_interp1[1]]));
+        new_Bo_interp1 = np.concatenate(([Bo_interp1[-1]],  Bo_interp1, [Bo_interp1[0]], [Bo_interp1[1]]));
+
+        # Cubin Spline interpolation classes created for Ac, Bc and Bo
+        cbl_ac = CubicSpline(new_doy, new_Ac_interp1, extrapolate= True);
+        cbl_bc = CubicSpline(new_doy, new_Bc_interp1, extrapolate= True);
+        cbl_bo = CubicSpline(new_doy, new_Bo_interp1, extrapolate= True);
+
+        # Cubic Spline interpolation for individual DOY within the cycle length for Ac, Bc and Bo
+
+        Ac_interp = cbl_ac(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
+        Bc_interp = cbl_bc(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
+        Bo_interp = cbl_bo(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
+
+
+
+        # Old routine
+
+        # Ac_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, Ac[int(lat_index1),:])
+        # bc_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bc[int(lat_index1),:])
+        # bo_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bo[int(lat_index1),:])
+        # Ac_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, Ac[int(lat_index2),:])
+        # bc_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bc[int(lat_index2),:])
+        # bo_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bo[int(lat_index2),:])
+
+        # Ac_interp = Ac_interp1 + (int(lat)-int(lat_index1)*10)*((Ac_interp2-Ac_interp1)/10)
+        # bc_interp = bc_interp1 + (int(lat)-int(lat_index1)*10)*((bc_interp2-bc_interp1)/10)
+        # bo_interp = bo_interp1 + (int(lat)-int(lat_index1)*10)*((bo_interp2-bo_interp1)/10)
 
         Ac_mean = np.mean( Ac_interp );
-        bc_mean = np.mean( bc_interp );
-        bo_mean = np.mean( bo_interp );
+        bc_mean = np.mean( Bc_interp );
+        bo_mean = np.mean( Bo_interp );
 
         meanT_mean = np.mean( meanT_daily );
         dT_mean = np.mean( dT_daily );
@@ -186,7 +226,7 @@ class BioMassCalc(object):
             c = 0.0108;
 
         # Fortran => Ct c * (0.044 + 0.0019 * meanT_mean + 0.0010 * np.power(meanT_mean,2)) (Changed)
-        Ct = c*(0.0044 + 0.0019*meanT_mean + 0.0010*np.power(meanT_mean,2));
+        Ct = c*(0.0044 + (0.0019*meanT_mean) + (0.0010*np.power(meanT_mean,2)));
 
         if(1 <= LAi and LAi < 2):
             l = 0.4;
@@ -205,16 +245,16 @@ class BioMassCalc(object):
         '''Maximum Rate of Gross Biomass Production''' # Minor change
 
         if iPm > 20:
-            bgm = f_day_clouded * (.8 + 0.01 * iPm) * bo_mean + (1-f_day_clouded) * (.5 + .025 * iPm) * bc_mean;
+            bgm = (f_day_clouded * (.8 + (0.01 * iPm)) * bo_mean) + ((1-f_day_clouded) * (.5 + (.025 * iPm)) * bc_mean);
         elif iPm < 20:
-            bgm = f_day_clouded * (.5 + .025 * iPm) * bo_mean + (1-f_day_clouded) * (.05 * iPm) * bc_mean;
+            bgm = (f_day_clouded * (.5 + (.025 * iPm)) * bo_mean) + ((1-f_day_clouded) * .05 * iPm * bc_mean);
         # 
         elif iPm == 20:
-            bgm = f_day_clouded*bo_mean + (1 - f_day_clouded)*bc_mean;
+            bgm = (f_day_clouded*bo_mean) + ((1 - f_day_clouded)*bc_mean);
 
         '''net biomass production '''
 
-        Bn = (0.36 * bgm * l) / ( (1/cycle_len) + 0.25*Ct );
+        Bn = (0.36 * bgm * l) / ( (1/cycle_len) + (0.25*Ct) );
 
         return Bn
 
@@ -227,9 +267,9 @@ class BioMassCalc(object):
         self.PYield = np.round(self.Bn * self.HI, 0).astype(int);
         return self.PYield
     
-    @staticmethod
-    @nb.jit(nopython=True)
-    def calculateBioMassinterNumba(cycle_begin, cycle_end, cycle_len, lat, lat_index1, lat_index2, minT_daily, maxT_daily, shortRad_daily, meanT_daily, dT_daily, LAi, HI, legume, adaptability):
+    # @staticmethod
+    # @nb.jit(nopython=True)
+    def calculateBioMassinterNumba(self, cycle_begin, cycle_end, cycle_len, lat, lat_index1, lat_index2, lat_t, lat_b,  minT_daily, maxT_daily, shortRad_daily, meanT_daily, dT_daily, LAi, HI, legume, adaptability):
 
         '''Max Radiation'''
         Ac = np.array([[343,360,369,364,349,337,342,357,368,365,349,337],# correct
@@ -276,22 +316,54 @@ class BioMassCalc(object):
 
         ''' Calculate average values of Ac, bc, bo, meanT, dT  in the season '''
 
-        doy_middle_of_month = np.arange(0,12)*30 + 15 # Calculate doy of middle of month
+        # doy_middle_of_month = np.arange(0,12)*30 + 15 # Calculate doy of middle of month
 
-        Ac_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, Ac[int(lat_index1),:])
-        bc_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bc[int(lat_index1),:])
-        bo_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bo[int(lat_index1),:])
-        Ac_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, Ac[int(lat_index2),:])
-        bc_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bc[int(lat_index2),:])
-        bo_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bo[int(lat_index2),:])
+        # Linear Interpolation is applied at a designated latitude for all Middle Day of Months
+        Ac_interp1 = np.zeros(12);
+        for i in range(Ac_interp1.shape[0]):
+            Ac_interp1[i] = np.interp(lat, [lat_t, lat_b], [Ac[lat_index1,:][i], Ac[lat_index2,:][i]]);
+        
+        Bc_interp1 = np.zeros(12);
+        for i in range(Bc_interp1.shape[0]):
+            Bc_interp1[i] = np.interp(lat, [lat_t, lat_b], [bc[lat_index1,:][i], bc[lat_index2,:][i]]);
+        
+        Bo_interp1 = np.zeros(12);
+        for i in range(Bo_interp1.shape[0]):
+            Bo_interp1[i] = np.interp(lat, [lat_t, lat_b], [bo[lat_index1,:][i], bo[lat_index2,:][i]]);
+        
+        # New Middle DOY, 1 additional addded at DOY 15's front and two added after DOY 345 
+        new_doy = np.arange(-15, 410, 30);
 
-        Ac_interp = Ac_interp1 + (int(lat)-int(lat_index1)*10)*((Ac_interp2-Ac_interp1)/10)
-        bc_interp = bc_interp1 + (int(lat)-int(lat_index1)*10)*((bc_interp2-bc_interp1)/10)
-        bo_interp = bo_interp1 + (int(lat)-int(lat_index1)*10)*((bo_interp2-bo_interp1)/10)
+        # new concatenated interpolated Ac, Bc and Bo
+        new_Ac_interp1 = np.concatenate(([Ac_interp1[-1]],  Ac_interp1, [Ac_interp1[0]], [Ac_interp1[1]]));
+        new_Bc_interp1 = np.concatenate(([Bc_interp1[-1]],  Bc_interp1, [Bc_interp1[0]], [Bc_interp1[1]]));
+        new_Bo_interp1 = np.concatenate(([Bo_interp1[-1]],  Bo_interp1, [Bo_interp1[0]], [Bo_interp1[1]]));
+
+        # Cubin Spline interpolation classes created for Ac, Bc and Bo
+        cbl_ac = CubicSpline(new_doy, new_Ac_interp1, extrapolate= True);
+        cbl_bc = CubicSpline(new_doy, new_Bc_interp1, extrapolate= True);
+        cbl_bo = CubicSpline(new_doy, new_Bo_interp1, extrapolate= True);
+
+        # Cubic Spline interpolation for individual DOY within the cycle length for Ac, Bc and Bo
+
+        Ac_interp = cbl_ac(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
+        Bc_interp = cbl_bc(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
+        Bo_interp = cbl_bo(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
+
+        # Ac_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, Ac[int(lat_index1),:])
+        # bc_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bc[int(lat_index1),:])
+        # bo_interp1 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bo[int(lat_index1),:])
+        # Ac_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, Ac[int(lat_index2),:])
+        # bc_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bc[int(lat_index2),:])
+        # bo_interp2 = np.interp(np.arange(cycle_begin, cycle_end+1), doy_middle_of_month, bo[int(lat_index2),:])
+
+        # Ac_interp = Ac_interp1 + (int(lat)-int(lat_index1)*10)*((Ac_interp2-Ac_interp1)/10)
+        # bc_interp = bc_interp1 + (int(lat)-int(lat_index1)*10)*((bc_interp2-bc_interp1)/10)
+        # bo_interp = bo_interp1 + (int(lat)-int(lat_index1)*10)*((bo_interp2-bo_interp1)/10)
 
         Ac_mean = np.mean( Ac_interp );
-        bc_mean = np.mean( bc_interp );
-        bo_mean = np.mean( bo_interp );
+        bc_mean = np.mean( Bc_interp );
+        bo_mean = np.mean( Bo_interp );
 
         meanT_mean = np.mean( meanT_daily );
         dT_mean = np.mean( dT_daily );
@@ -323,7 +395,7 @@ class BioMassCalc(object):
             c = 0.0108;
 
         # Fortran => Ct c * (0.044 + 0.0019 * meanT_mean + 0.0010 * np.power(meanT_mean,2)) (Changed)
-        Ct = c*(0.0044 + 0.0019*meanT_mean + 0.0010*np.power(meanT_mean,2));
+        Ct = c*(0.0044 + (0.0019*meanT_mean) + (0.0010*np.power(meanT_mean,2)));
 
         if(1 <= LAi and LAi < 2):
             l = 0.4;
@@ -342,12 +414,12 @@ class BioMassCalc(object):
         '''Maximum Rate of Gross Biomass Production''' # Minor change
 
         if iPm > 20:
-            bgm = f_day_clouded * (.8 + 0.01 * iPm) * bo_mean + (1-f_day_clouded) * (.5 + .025 * iPm) * bc_mean;
+            bgm = (f_day_clouded * (.8 + (0.01 * iPm)) * bo_mean) + ((1-f_day_clouded) * (.5 + (.025 * iPm)) * bc_mean);
         elif iPm < 20:
-            bgm = f_day_clouded * (.5 + .025 * iPm) * bo_mean + (1-f_day_clouded) * (.05 * iPm) * bc_mean;
+            bgm = (f_day_clouded * (.5 + (.025 * iPm)) * bo_mean) + ((1-f_day_clouded) * (.05 * iPm) * bc_mean);
         # 
         elif iPm == 20:
-            bgm = f_day_clouded*bo_mean + (1 - f_day_clouded)*bc_mean;
+            bgm = (f_day_clouded*bo_mean) + ((1 - f_day_clouded)*bc_mean);
 
         '''net biomass production '''
 
@@ -356,6 +428,6 @@ class BioMassCalc(object):
         return np.array([Ac_mean, bc_mean, bo_mean, meanT_mean, dT_mean, Rg, f_day_clouded, iPm, c, Ct, l, bgm, Bn])
     
     def biomassinter(self):
-        return self.calculateBioMassinterNumba(self.cycle_begin, self.cycle_end, self.cycle_len, self.lat, self.lat_index1, self.lat_index2, self.minT_daily, self.maxT_daily, 
-                                          self.shortRad_daily, self.meanT_daily, self.dT_daily, self.LAi, self.HI, self.legume, self.adaptability)
+        return self.calculateBioMassinterNumba(self.cycle_begin, self.cycle_end, self.cycle_len, self.lat, self.lat_index1, self.lat_index2, self.lat_t, self.lat_b,  self.minT_daily, self.maxT_daily, 
+                                               self.shortRad_daily, self.meanT_daily, self.dT_daily, self.LAi, self.HI, self.legume, self.adaptability)
 

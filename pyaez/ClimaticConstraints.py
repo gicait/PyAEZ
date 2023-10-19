@@ -60,7 +60,16 @@ class ClimaticConstraints(object):
 
         """
         mean_temp = (min_temp + max_temp)/2
-        self.ann_mean = np.mean(mean_temp, 2)
+        
+        # self.ann_mean = np.mean(mean_temp, 2) # minimum temp of monthly mean temperature it should be
+        self.min_T = np.zeros((self.im_height, self.im_width))
+
+        # The minimum temperature of the 12 monthly mean temperatures
+        for i in range(self.im_height):
+            for j in range(self.im_width):
+                month12_temp = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(mean_temp[i,j,:])
+                self.min_T[i,j] = np.min(month12_temp)
+
 
         rel_humidity[rel_humidity > 0.99] = 0.99
         rel_humidity[rel_humidity < 0.05] = 0.05
@@ -195,13 +204,13 @@ class ClimaticConstraints(object):
                 # Annual mean temperature will select the relevant look-up table
                 
                 # Case I: ann_mean >= 20
-                if self.ann_mean[i,j] >= 20:
+                if self.min_T[i,j] >= 20:
                     B_row = 1 - (np.append(0, gte20[0,:]) / 100)
                     C_row = 1 - (np.append(0, gte20[1,:])/100)
                     D_row = 1 - (np.append(0, gte20[2,:])/100)
                 
                 # Case II: ann_mean <= 10:
-                elif self.ann_mean[i,j] <= 10:
+                elif self.min_T[i,j] <= 10:
                     B_row = 1 - (np.append(0, lt10[0,:])/100)
                     C_row = 1 - (np.append(0, lt10[1,:])/100)
                     D_row = 1 - (np.append(0, lt10[2,:])/100)
@@ -215,7 +224,7 @@ class ClimaticConstraints(object):
                     B_row = np.zeros(B_row_10.shape[0])
 
                     for e in range(B_row_10.shape[0]):
-                        B_row[e] = 1 - ((np.interp(self.ann_mean[i,j], [10,20], [B_row_10[e], B_row_20[e]]))/ 100)
+                        B_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [B_row_10[e], B_row_20[e]]))/ 100)
                     
                     
                     # 'C' constraint row interpolation
@@ -224,7 +233,7 @@ class ClimaticConstraints(object):
                     C_row = np.zeros(B_row_10.shape[0])
 
                     for e in range(C_row_10.shape[0]):
-                        C_row[e] = (1 - (np.interp(self.ann_mean[i,j], [10,20], [C_row_10[e], C_row_20[e]]))/100)
+                        C_row[e] = (1 - (np.interp(self.min_T[i,j], [10,20], [C_row_10[e], C_row_20[e]]))/100)
                     
 
                     # 'D' constraint row interpolation
@@ -233,7 +242,7 @@ class ClimaticConstraints(object):
                     D_row = np.zeros(B_row_10.shape[0])
 
                     for e in range(D_row_10.shape[0]):
-                        D_row[e] = 1 - ((np.interp(self.ann_mean[i,j], [10,20], [D_row_10[e], D_row_20[e]]))/100)
+                        D_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [D_row_10[e], D_row_20[e]]))/100)
                 
                 
                 # 'E' constraint row interpolation
@@ -309,13 +318,13 @@ class ClimaticConstraints(object):
         # Annual mean temperature will select the relevant look-up table
         
         # Case I: ann_mean >= 20
-        if self.ann_mean[i,j] >= 20:
+        if self.min_T[i,j] >= 20:
             B_row = 1 - (np.append(0, gte20[0,:]) / 100)
             C_row = 1 - (np.append(0, gte20[1,:])/100)
             D_row = 1 - (np.append(0, gte20[2,:])/100)
         
         # Case II: ann_mean <= 10:
-        elif self.ann_mean[i,j] <= 10:
+        elif self.min_T[i,j] <= 10:
             B_row = 1 - (np.append(0, lt10[0,:])/100)
             C_row = 1 - (np.append(0, lt10[1,:])/100)
             D_row = 1 - (np.append(0, lt10[2,:])/100)
@@ -329,7 +338,7 @@ class ClimaticConstraints(object):
             B_row = np.zeros(B_row_10.shape[0])
 
             for e in range(B_row_10.shape[0]):
-                B_row[e] = 1 - ((np.interp(self.ann_mean[i,j], [10,20], [B_row_10[e], B_row_20[e]]))/ 100)
+                B_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [B_row_10[e], B_row_20[e]]))/ 100)
             
             
             # 'C' constraint row interpolation
@@ -338,7 +347,7 @@ class ClimaticConstraints(object):
             C_row = np.zeros(B_row_10.shape[0])
 
             for e in range(C_row_10.shape[0]):
-                C_row[e] = (1 - (np.interp(self.ann_mean[i,j], [10,20], [C_row_10[e], C_row_20[e]]))/100)
+                C_row[e] = (1 - (np.interp(self.min_T[i,j], [10,20], [C_row_10[e], C_row_20[e]]))/100)
             
 
             # 'D' constraint row interpolation
@@ -347,7 +356,7 @@ class ClimaticConstraints(object):
             D_row = np.zeros(B_row_10.shape[0])
 
             for e in range(D_row_10.shape[0]):
-                D_row[e] = 1 - ((np.interp(self.ann_mean[i,j], [10,20], [D_row_10[e], D_row_20[e]]))/100)
+                D_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [D_row_10[e], D_row_20[e]]))/100)
         
         
         # 'E' constraint row interpolation
@@ -367,7 +376,7 @@ class ClimaticConstraints(object):
 
         adj_yld  = int(np.round(yield_input * fc3, 0))
 
-        return [self.latitude[i,j], self.elevation[i,j], self.months_P_gte_eto[i,j], self.ann_mean[i,j], test, B, C, D, E, fc3, adj_yld, mid_doy, B_row, C_row, D_row, E_row, lgp_agc]
+        return [self.latitude[i,j], self.elevation[i,j], self.months_P_gte_eto[i,j], self.min_T[i,j], test, B, C, D, E, fc3, adj_yld, mid_doy, B_row, C_row, D_row, E_row, lgp_agc]
 
 
     

@@ -694,7 +694,7 @@ class CropSimulation(object):
 
             for i_col in range(self.im_width):
 
-                # print('\nrow_col= {}_{}'.format(i_row, i_col))
+                print('\nrow_col= {}_{}'.format(i_row, i_col))
 
                 
 
@@ -904,15 +904,12 @@ class CropSimulation(object):
 
                     """Thermal Screening using each cycle length for rainfed and irrigated conditions"""
 
-                    """ For the perennial, the adjusted cycle length for rainfed and irrigated conditions will be used. For the rest,
-                        the user-specified cycle length will be applied"""
-
                     """Creating Thermal Screening object classes for perennial rainfed and irrigated conditions"""
                     obj_screening_rain = ThermalScreening.ThermalScreening()
                     obj_screening_irr = ThermalScreening.ThermalScreening()
 
-                    """For perennial thermal screening, 365 days of mininum and maximum temperature is used for fc1 calculation.
-                       For annual crops, crop-specific cycle duration window is used for fc1 calculation"""
+                    """ For Perennials, 365 days of climate data will be used for Thermal Screening.
+                        For Annuals, climate data within crop-specific cycle length will be used for Thermal Screening."""
                     if self.perennial:
                         obj_screening_rain.setClimateData(
                             minT_daily_2year[i_cycle: i_cycle+365-1], maxT_daily_2year[i_cycle: i_cycle+365-1])
@@ -931,31 +928,26 @@ class CropSimulation(object):
                         obj_screening_irr.setLGPTScreening(
                             no_lgpt=self.no_lgpt, optm_lgpt=self.optm_lgpt)
 
-                    # 5 Modification (SWH)
+                    # TSUM Screening
                     if self.set_Tsum_screening:
                         obj_screening_rain.setTSumScreening(
                             LnS=self.LnS, LsO=self.LsO, LO=self.LO, HnS=self.HnS, HsO=self.HsO, HO=self.HO)
                         obj_screening_irr.setTSumScreening(
                             LnS=self.LnS, LsO=self.LsO, LO=self.LO, HnS=self.HnS, HsO=self.HsO, HO=self.HO)
 
-                    # 8 Modification
+                    # Crop-Specific Rule Screening
                     if self.setTypeBConstraint:
+                        obj_screening_rain.applyTypeBConstraint(
+                            data=self.data, input_temp_profile=obj_screening_rain.tprofile, perennial_flag= self.perennial)
+                        obj_screening_irr.applyTypeBConstraint(
+                            data=self.data, input_temp_profile=obj_screening_irr.tprofile, perennial_flag= self.perennial)
 
-                        if self.perennial:
-                            obj_screening_rain.applyTypeBConstraint(
-                                data=self.data, input_temp_profile=obj_screening_rain.tprofile, perennial_flag=True)
-                            obj_screening_irr.applyTypeBConstraint(
-                                data=self.data, input_temp_profile=obj_screening_irr.tprofile, perennial_flag=True)
-                        else:
-                            obj_screening_rain.applyTypeBConstraint(
-                            data=self.data, input_temp_profile=obj_screening_rain.tprofile, perennial_flag=False)
-                            obj_screening_irr.applyTypeBConstraint(
-                            data=self.data, input_temp_profile=obj_screening_irr.tprofile, perennial_flag=False)
 
+                    # Initial set up value for fc1 (both rainfed and irrigated)
                     fc1_rain = 1.
                     fc1_irr = 1.
-                    # print('Original fc1_rain =', fc1_rain)
-                    # print('Original fc1_irr =', fc1_irr)
+                    print('Original fc1_rain =', fc1_rain)
+                    print('Original fc1_irr =', fc1_irr)
 
                     fc1_rain = obj_screening_rain.getReductionFactor2()  # fc1 for rainfed condition
                     fc1_irr = obj_screening_irr.getReductionFactor2()  # fc1 for irrigated condition
@@ -969,17 +961,16 @@ class CropSimulation(object):
                         raise Exception('Fc1 nan value returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
                     
                     # Appending individual cycle's fc1 for rainfed and irrigated condition
-                    # print('After fc1 irr=', fc1_irr)
-                    # print('After fc1 rain=', fc1_rain)
+                    print('After fc1 irr=', fc1_irr)
+                    print('After fc1 rain=', fc1_rain)
 
-                    # print('Thermal Screening calculation complete')
                     
                     fc1_irr_lst = np.append(fc1_irr_lst, fc1_irr)
                     fc1_rain_lst = np.append(fc1_rain_lst, fc1_rain)
 
 
-                    # print('fc1_irr_lst = ', fc1_irr_lst)
-                    # print('fc1_rain_lst = ', fc1_rain_lst)
+                    print('fc1_irr_lst = ', fc1_irr_lst)
+                    print('fc1_rain_lst = ', fc1_rain_lst)
 
                     if len(fc1_irr_lst) != i_cycle+1:
                         print('fc1_irr_lst = ', fc1_irr_lst)
@@ -989,89 +980,100 @@ class CropSimulation(object):
                         raise Exception('Fc1 rain not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
 
 
-                    """Biomass Calculation relevant to perennials and non-perennials for IRRIGATED conditions"""
-                    """IRRIGATED"""
-                    obj_maxyield_irr = BioMassCalc.BioMassCalc(
-                        i_cycle+1, i_cycle+1+self.cycle_len_irr-1, self.latitude[i_row, i_col])
-                    obj_maxyield_irr.setClimateData(
-                        minT_daily_season_irr, maxT_daily_season_irr, shortRad_daily_season_irr)
-                    obj_maxyield_irr.setCropParameters(
-                        self.LAi_irr, self.HI_irr, self.legume, self.adaptability)
-                    obj_maxyield_irr.calculateBioMass()
-                    est_yield_irrigated = obj_maxyield_irr.calculateYield()
 
-                    # reduce thermal screening factor
-                    est_yield_irrigated = est_yield_irrigated * fc1_irr
-
-                    if est_yield_irrigated == None or est_yield_irrigated == np.nan:
-                        raise Exception('Irrigated Yield not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
-
-
-                    """append current cycle yield to a list IRRIGATED"""
-                    yield_of_all_crop_cycles_irrig = np.append(yield_of_all_crop_cycles_irrig, est_yield_irrigated)
-
-                    if len(yield_of_all_crop_cycles_irrig) != i_cycle+1:
-                        raise Exception('Irr Yield cycles not appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
-
+                    """Cycle length  compared with LGPt5 (for irrigated)"""
                     
-
-                    """A separate biomass calculation RAINFED for Non-Perennials"""
-                    obj_maxyield_rain = BioMassCalc.BioMassCalc(
-                        i_cycle+1, i_cycle+1+self.cycle_len_rain-1, self.latitude[i_row, i_col])
-                    obj_maxyield_rain.setClimateData(
-                        minT_daily_season_rain, maxT_daily_season_rain, shortRad_daily_season_rain)
-                    obj_maxyield_rain.setCropParameters(
-                        self.LAi_rain, self.HI_rain, self.legume, self.adaptability)
-                    obj_maxyield_rain.calculateBioMass()
-                    est_yield_rainfed = obj_maxyield_rain.calculateYield()
-
-                    # reduce thermal screening factor
-                    est_yield_rainfed = est_yield_rainfed * fc1_rain
-
-                    if est_yield_rainfed == None or est_yield_rainfed == np.nan:
-                        raise Exception('Biomass Yield for rainfed not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
-
-
-
-                    """For RAINFED Perennials, fc2 will be zero (No Need for Crop Water Requirement calculation)"""
-                    """For perennials, crop water requirements are calculated, but yield loss due to water deficit, are not
-                    evaluated."""
-                    if self.perennial:
-                        obj_cropwat = CropWatCalc.CropWatCalc(
-                            i_cycle+1, i_cycle+1+self.cycle_len_rain-1, perennial_flag = True)
+                    # For irrigated conditon
+                    if self.cycle_len_irr < int(self.LGPT5[i_row, i_col]) or self.cycle_len_irr ==0 or int(self.LGPT5[i_row, i_col]) == 0:
+                        yield_of_all_crop_cycles_irrig = np.append(yield_of_all_crop_cycles_irrig, 0.)
                     else:
-                        obj_cropwat = CropWatCalc.CropWatCalc(
-                            i_cycle+1, i_cycle+1+self.cycle_len_rain-1, perennial_flag = False)
-                    
-                    
-                    obj_cropwat.setClimateData(
-                        pet_daily_season_rain, totalPrec_daily_season_rain)
-                    
-                    # check Sa is a raster or single value and extract Sa value accordingly
-                    if len(np.array(self.Sa).shape) == 2:
-                        Sa_temp = self.Sa[i_row, i_col]
+                        """Biomass Calculation relevant to perennials and non-perennials for IRRIGATED conditions"""
+                        """IRRIGATED"""
+                        obj_maxyield_irr = BioMassCalc.BioMassCalc(
+                            i_cycle+1, i_cycle+1+self.cycle_len_irr-1, self.latitude[i_row, i_col])
+                        obj_maxyield_irr.setClimateData(
+                            minT_daily_season_irr, maxT_daily_season_irr, shortRad_daily_season_irr)
+                        obj_maxyield_irr.setCropParameters(
+                            self.LAi_irr, self.HI_irr, self.legume, self.adaptability)
+                        obj_maxyield_irr.calculateBioMass()
+                        est_yield_irrigated = obj_maxyield_irr.calculateYield()
+
+                        # reduce thermal screening factor
+                        est_yield_irrigated = est_yield_irrigated * fc1_irr
+
+                        if est_yield_irrigated == None or est_yield_irrigated == np.nan:
+                            raise Exception('Irrigated Yield not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+
+
+                        """append current cycle yield to a list IRRIGATED"""
+                        yield_of_all_crop_cycles_irrig = np.append(yield_of_all_crop_cycles_irrig, est_yield_irrigated)
+
+                        if len(yield_of_all_crop_cycles_irrig) != i_cycle+1:
+                            raise Exception('Irr Yield cycles not appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+
+                   
+                    """Cycle length  compared with LGP (for rainfed)"""
+                    # For rainfed condition
+                    if self.cycle_len_rain < int(self.LGP[i_row, i_col]) or  self.cycle_len_rain ==0 or self.LGP[i_row,i_col]==0:
+                        fc2_lst = np.append(fc2_lst, 0.)
+                        yield_of_all_crop_cycles_rainfed = np.append(yield_of_all_crop_cycles_rainfed, 0.)
+                        print('fc1_rain_lst = ', fc1_rain_lst)
                     else:
-                        Sa_temp = self.Sa
-                    obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f,
-                                                    self.yloss_f_all, est_yield_rainfed, self.D1, self.D2, Sa_temp, self.pc)
-                    est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
+                        """A biomass calculation RAINFED"""
+                        obj_maxyield_rain = BioMassCalc.BioMassCalc(
+                            i_cycle+1, i_cycle+1+self.cycle_len_rain-1, self.latitude[i_row, i_col])
+                        obj_maxyield_rain.setClimateData(
+                            minT_daily_season_rain, maxT_daily_season_rain, shortRad_daily_season_rain)
+                        obj_maxyield_rain.setCropParameters(
+                            self.LAi_rain, self.HI_rain, self.legume, self.adaptability)
+                        obj_maxyield_rain.calculateBioMass()
+                        est_yield_rainfed = obj_maxyield_rain.calculateYield()
 
-                    if est_yield_moisture_limited == None or est_yield_moisture_limited == np.nan:
-                        raise Exception('Crop Water Yield not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+                        # reduce thermal screening factor
+                        est_yield_rainfed = est_yield_rainfed * fc1_rain
 
-                    fc2_value = obj_cropwat.getfc2factormap()
+                        if est_yield_rainfed == None or est_yield_rainfed == np.nan:
+                            raise Exception('Biomass Yield for rainfed not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
 
-                    if fc2_value == None or fc2_value == np.nan:
-                        raise Exception('fc2 value not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
 
-                    """append current cycle yield to a list RAINFED"""
-                    yield_of_all_crop_cycles_rainfed = np.append(yield_of_all_crop_cycles_rainfed, est_yield_moisture_limited)
-                    fc2_lst = np.append(fc2_lst, fc2_value)
+                        """ For Annual rainfed, crop water requirements are calculated in full procedures.
+                            For Perennial rainfed, procedures related with yield loss factors are omitted out.
+                            For Irrigated Annuals and Perennials, crop water requirements are not applied due to
+                            constant water supply."""
+                        
+                        fc2_value = 1.
+                        
+                        obj_cropwat = CropWatCalc.CropWatCalc(
+                            i_cycle+1, i_cycle+1+self.cycle_len_rain-1, perennial_flag = self.perennial)
+            
+                        obj_cropwat.setClimateData(
+                            pet_daily_season_rain, totalPrec_daily_season_rain)
+                        
+                        # check Sa is a raster or single value and extract Sa value accordingly
+                        if len(np.array(self.Sa).shape) == 2:
+                            Sa_temp = self.Sa[i_row, i_col]
+                        else:
+                            Sa_temp = self.Sa
+                        obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f,
+                                                        self.yloss_f_all, est_yield_rainfed, self.D1, self.D2, Sa_temp, self.pc)
+                        est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
 
-                    if len(yield_of_all_crop_cycles_rainfed) != i_cycle+1:
-                        raise Exception('Rainfed yield list not properly appended')
-                    elif len(fc2_lst) != i_cycle+1:
-                        raise Exception('Fc2 list not appended properly. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+                        if est_yield_moisture_limited == None or est_yield_moisture_limited == np.nan:
+                            raise Exception('Crop Water Yield not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+
+                        fc2_value = obj_cropwat.getfc2factormap()
+
+                        if fc2_value == None or fc2_value == np.nan:
+                            raise Exception('fc2 value not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+
+                        """append current cycle yield to a list RAINFED"""
+                        yield_of_all_crop_cycles_rainfed = np.append(yield_of_all_crop_cycles_rainfed, est_yield_moisture_limited)
+                        fc2_lst = np.append(fc2_lst, fc2_value)
+
+                        if len(yield_of_all_crop_cycles_rainfed) != i_cycle+1:
+                            raise Exception('Rainfed yield list not properly appended')
+                        elif len(fc2_lst) != i_cycle+1:
+                            raise Exception('Fc2 list not appended properly. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
 
 
                 """Getting Maximum Attainable Yield from the list for irrigated and rainfed conditions and the Crop Calendar"""

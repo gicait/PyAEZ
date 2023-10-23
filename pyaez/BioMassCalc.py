@@ -17,6 +17,7 @@ Modification:
 import numpy as np
 # import numba as nb
 from scipy.interpolate import CubicSpline
+# np.seterr(divide='ignore') # ignore "divide by zero" or "divide by NaN" warning
 
 class BioMassCalc(object):
 
@@ -105,7 +106,9 @@ class BioMassCalc(object):
 
     # @staticmethod
     # @nb.jit(nopython=True)
-    def calculateBioMassNumba(cycle_begin, cycle_end, cycle_len, lat, lat_index1, lat_index2, lat_t, lat_b, minT_daily, maxT_daily, shortRad_daily, meanT_daily, dT_daily, LAi, HI, legume, adaptability):
+    def calculateBioMassNumba(cycle_begin, cycle_end, cycle_len, lat, lat_index1, 
+                              lat_index2, lat_t, lat_b, minT_daily, maxT_daily, 
+                              shortRad_daily, meanT_daily, dT_daily, LAi, HI, legume, adaptability):
 
         '''Max Radiation'''
         Ac = np.array([[343,360,369,364,349,337,342,357,368,365,349,337],# correct
@@ -253,14 +256,14 @@ class BioMassCalc(object):
             bgm = (f_day_clouded*bo_mean) + ((1 - f_day_clouded)*bc_mean);
 
         '''net biomass production '''
-
-        Bn = (0.36 * bgm * l) / ( (1/cycle_len) + (0.25*Ct) );
+        Bn = (0.36 * bgm * l)/((1/cycle_len)+0.25*Ct)
 
         return Bn
 
     
     def calculateBioMass(self):
-        self.Bn =  BioMassCalc.calculateBioMassNumba(self.cycle_begin, self.cycle_end, self.cycle_len, self.lat, self.lat_index1, self.lat_index2, self.minT_daily, self.maxT_daily, self.shortRad_daily, self.meanT_daily, self.dT_daily, self.LAi, self.HI, self.legume, self.adaptability)
+        self.Bn =  BioMassCalc.calculateBioMassNumba(self.cycle_begin, self.cycle_end, self.cycle_len, self.lat, self.lat_index1, self.lat_index2, self.lat_t, self.lat_b,  self.minT_daily, self.maxT_daily, 
+                                               self.shortRad_daily, self.meanT_daily, self.dT_daily, self.LAi, self.HI, self.legume, self.adaptability)
 
     # 
     def calculateYield(self):
@@ -422,9 +425,8 @@ class BioMassCalc(object):
             bgm = (f_day_clouded*bo_mean) + ((1 - f_day_clouded)*bc_mean);
 
         '''net biomass production '''
-
-        Bn = (0.36 * bgm * l) / ( (1/cycle_len) + 0.25*Ct );
-
+        Bn = (0.36 * bgm * l)/((1/cycle_len)+0.25*Ct)
+        
         return np.array([Ac_mean, bc_mean, bo_mean, meanT_mean, dT_mean, Rg, f_day_clouded, iPm, c, Ct, l, bgm, Bn])
     
     def biomassinter(self):

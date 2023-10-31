@@ -141,15 +141,15 @@ class ClimaticConstraints(object):
         # Wetness indicator calculation logic referred to GAEZ v4 Model Documentation Pg. 72
 
         if lgp <= 120:
-            lgp_agc= min(120, max(lgp, lgp_equv))
+            lgp_agc= min(120, max(lgp, lgp_equv)) # correct
             return lgp_agc
         
         elif lgp in range(121,210+1):
-            lgp_agc = lgp
+            lgp_agc = lgp # correct
             return lgp_agc
             
         elif lgp > 210:
-            lgp_agc = max(210, min(lgp, lgp_equv))
+            lgp_agc = max(210, min(lgp, lgp_equv)) # correct
             return lgp_agc
     
     def applyClimaticConstraints(self, yield_input, lgp, lgp_equv, lgpt10):

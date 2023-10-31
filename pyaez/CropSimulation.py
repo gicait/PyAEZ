@@ -694,7 +694,7 @@ class CropSimulation(object):
 
             for i_col in range(self.im_width):
 
-                print('\nrow_col= {}_{}'.format(i_row, i_col))
+                # print('\nrow_col= {}_{}'.format(i_row, i_col))
 
                 
 
@@ -858,7 +858,7 @@ class CropSimulation(object):
 
                     """Repeat the climate data two times and concatenate for computational convenience. If perennial, the cycle length
                     will be different for separate conditions"""
-                    print('Cycle No.{}'.format(i_cycle), end = '\n')
+                    # print('Cycle No.{}'.format(i_cycle), end = '\n')
 
                     minT_daily_2year = np.tile(minT_daily_point, 2)
                     maxT_daily_2year = np.tile(maxT_daily_point, 2)
@@ -946,8 +946,8 @@ class CropSimulation(object):
                     # Initial set up value for fc1 (both rainfed and irrigated)
                     fc1_rain = 1.
                     fc1_irr = 1.
-                    print('Original fc1_rain =', fc1_rain)
-                    print('Original fc1_irr =', fc1_irr)
+                    # print('Original fc1_rain =', fc1_rain)
+                    # print('Original fc1_irr =', fc1_irr)
 
                     fc1_rain = obj_screening_rain.getReductionFactor2()  # fc1 for rainfed condition
                     fc1_irr = obj_screening_irr.getReductionFactor2()  # fc1 for irrigated condition
@@ -961,16 +961,16 @@ class CropSimulation(object):
                         raise Exception('Fc1 nan value returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
                     
                     # Appending individual cycle's fc1 for rainfed and irrigated condition
-                    print('After fc1 irr=', fc1_irr)
-                    print('After fc1 rain=', fc1_rain)
+                    # print('After fc1 irr=', fc1_irr)
+                    # print('After fc1 rain=', fc1_rain)
 
                     
                     fc1_irr_lst = np.append(fc1_irr_lst, fc1_irr)
                     fc1_rain_lst = np.append(fc1_rain_lst, fc1_rain)
 
 
-                    print('fc1_irr_lst = ', fc1_irr_lst)
-                    print('fc1_rain_lst = ', fc1_rain_lst)
+                    # print('fc1_irr_lst = ', fc1_irr_lst)
+                    # print('fc1_rain_lst = ', fc1_rain_lst)
 
                     if len(fc1_irr_lst) != i_cycle+1:
                         print('fc1_irr_lst = ', fc1_irr_lst)
@@ -1017,7 +1017,7 @@ class CropSimulation(object):
                     if self.cycle_len_rain < int(self.LGP[i_row, i_col]) or  self.cycle_len_rain ==0 or self.LGP[i_row,i_col]==0:
                         fc2_lst = np.append(fc2_lst, 0.)
                         yield_of_all_crop_cycles_rainfed = np.append(yield_of_all_crop_cycles_rainfed, 0.)
-                        print('fc1_rain_lst = ', fc1_rain_lst)
+                        # print('fc1_rain_lst = ', fc1_rain_lst)
                     else:
                         """A biomass calculation RAINFED"""
                         obj_maxyield_rain = BioMassCalc.BioMassCalc(

@@ -229,7 +229,8 @@ class BioMassCalc(object):
             c = 0.0108;
 
         # Fortran => Ct c * (0.044 + 0.0019 * meanT_mean + 0.0010 * np.power(meanT_mean,2)) (Changed)
-        Ct = c*(0.0044 + (0.0019*meanT_mean) + (0.0010*np.power(meanT_mean,2)));
+        # With Gunther's confirmation, coefficients for the squared term will be changed from 0.001 t0 0.00104289
+        Ct = c*(0.0044 + (0.0019*meanT_mean) + (0.00104289*np.power(meanT_mean,2)));
 
         if(1 <= LAi and LAi < 2):
             l = 0.4;

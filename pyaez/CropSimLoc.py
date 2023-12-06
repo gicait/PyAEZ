@@ -155,7 +155,8 @@ class CropSimLoc(object):
             np.tile(np.reshape(self.elevation/100*0.55,
                     (self.im_height, self.im_width, 1)), (1, 1, 365))
         # P over PET ratio (to eliminate nan in the result, nan is replaced with zero)
-        self.P_by_PET_daily = np.nan_to_num(self.totalPrec_daily / self.pet_daily)
+        self.P_by_PET_daily = np.divide(
+            self.totalPrec_daily, self.pet_daily, out=np.zeros_like(self.totalPrec_daily), where=(self.pet_daily != 0))
         self.set_monthly = False
 
     def setLocationTerrainData(self, lat_min, lat_max, elevation):

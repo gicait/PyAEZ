@@ -1,6 +1,7 @@
 """"
 PyAEZ version 2.1.0 (June 2023)
-2023: Swun Wunna Htet, Kittiphon Boonma
+2022- 2023: Swun Wunna Htet, Kittiphon Boonma
+2023 : Swun Wunna Htet
 
 Modification:
 
@@ -35,6 +36,8 @@ class ClimaticConstraints(object):
         self.lat_min = lat_min
         self.lat_max = lat_max
         self.elevation = elevation
+        self.set_daily = False
+        self.set_monthly = False
         
         self.im_height = elevation.shape[0]
         self.im_width = elevation.shape[1]
@@ -48,7 +51,7 @@ class ClimaticConstraints(object):
             self.set_mask = True
 
     def setClimateData(self, min_temp, max_temp, wind_speed, short_rad, rel_humidity, precip):
-        """Load the climatic data into Module III
+        """Load the DAILY or MONTHLY climatic data into Module III
         
         Args:
             min_temp (3D NumPy, float): Minimum temperature [Celsius]
@@ -59,7 +62,46 @@ class ClimaticConstraints(object):
             precipitation (3D Numpy, float): Precipitation [mm/day]
 
         """
-        mean_temp = (min_temp + max_temp)/2
+        rel_humidity[rel_humidity > 0.99] = 0.99
+        rel_humidity[rel_humidity < 0.05] = 0.05
+        short_rad[short_rad < 0] = 0
+        wind_speed[wind_speed < 0] = 0
+
+        if np.all(min_temp.shape[2] ==12 and max_temp.shape[2] ==12 and wind_speed.shape[2] ==12
+                           and short_rad.shape[2] ==12 and rel_humidity.shape[2] ==12 and precip.shape[2] ==12):
+
+            totalPrec_daily = np.zeros((self.im_height, self.im_width, 365))
+            minT_daily = np.zeros((self.im_height, self.im_width, 365))
+            maxT_daily = np.zeros((self.im_height, self.im_width, 365))
+            radiation_daily = np.zeros((self.im_height, self.im_width, 365))
+            rel_humidity_daily = np.zeros((self.im_height, self.im_width, 365))
+            wind_daily = np.zeros((self.im_height, self.im_width, 365))
+
+            for i_row in range(self.im_height):
+                for i_col in range(self.im_width):
+
+                    if self.set_mask:
+                        if self.mask[i_row, i_col] == self.no_mask_value:
+                            continue
+
+                    totalPrec_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(precip[i_row, i_col,:], 1, 365, no_minus_values=True)
+                    minT_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(min_temp[i_row, i_col,:], 1, 365)
+                    maxT_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(max_temp[i_row, i_col,:], 1, 365)
+                    radiation_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(short_rad[i_row, i_col,:], 1, 365, no_minus_values=True)
+                    wind_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(wind_speed[i_row, i_col,:], 1, 365, no_minus_values=True)
+                    rel_humidity_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(rel_humidity[i_row, i_col,:], 1, 365, no_minus_values=True)
+            
+        else:
+            totalPrec_daily = precip
+            minT_daily = min_temp
+            maxT_daily = max_temp
+            radiation_daily = (short_rad * 3600 * 24)/1000000 # conversion from W/m2 to MJ/m2/day
+            rel_humidity_daily = np.zeros((self.im_height, self.im_width, 365))
+            wind_daily = np.zeros((self.im_height, self.im_width, 365))
+
+
+            
+        mean_temp = (minT_daily + maxT_daily)/2
         
         # self.ann_mean = np.mean(mean_temp, 2) # minimum temp of monthly mean temperature it should be
         self.min_T = np.zeros((self.im_height, self.im_width))
@@ -71,19 +113,15 @@ class ClimaticConstraints(object):
                 self.min_T[i,j] = np.min(month12_temp)
 
 
-        rel_humidity[rel_humidity > 0.99] = 0.99
-        rel_humidity[rel_humidity < 0.05] = 0.05
-        short_rad[short_rad < 0] = 0
-        wind_speed[wind_speed < 0] = 0
 
-        shrt_MJ_m2_day = (short_rad * 3600 * 24)/1000000 # conversion from W/m2 to MJ/m2/day
+        shrt_MJ_m2_day = (radiation_daily * 3600 * 24)/1000000 # conversion from W/m2 to MJ/m2/day
 
         self.eto_daily = np.zeros((self.im_height, self.im_width, 365))
 
         for i in range(self.im_height):
             for j in range(self.im_width):
                 obj_eto = ETOCalc.ETOCalc(1, 365, self.latitude[i,j], self.elevation[i,j])
-                obj_eto.setClimateData(min_temp[i,j,:], max_temp[i,j,:], wind_speed[i,j,:], shrt_MJ_m2_day[i,j,:], rel_humidity[i,j,:])
+                obj_eto.setClimateData(minT_daily[i,j,:], maxT_daily[i,j,:], wind_daily[i,j,:], shrt_MJ_m2_day[i,j,:], rel_humidity_daily[i,j,:])
                 self.eto_daily[i,j,:] = obj_eto.calculateETO()
         
         monthly_precip = np.zeros((self.im_height, self.im_width, 12))
@@ -91,14 +129,15 @@ class ClimaticConstraints(object):
         
         for i in range(self.im_height):
             for j in range(self.im_width):
-                monthly_precip[i,j,:] = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(precip[i,j,:])
+                monthly_precip[i,j,:] = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(totalPrec_daily[i,j,:])
                 monthly_eto[i,j,:] = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(self.eto_daily[i,j,:])
         
         self.months_P_gte_eto = np.zeros((self.im_height, self.im_width), dtype = np.int8)
         self.months_P_gte_eto = np.sum(monthly_precip >= monthly_eto, axis = 2)
 
         # releasing memory
-        del(mean_temp, rel_humidity, short_rad, wind_speed, shrt_MJ_m2_day, obj_eto, monthly_precip, monthly_eto)
+        del(mean_temp, totalPrec_daily, minT_daily, maxT_daily, radiation_daily, rel_humidity_daily, wind_daily,
+             monthly_eto,shrt_MJ_m2_day, monthly_precip)
 
         
 
@@ -127,256 +166,261 @@ class ClimaticConstraints(object):
             del(main)
     
 
-    def calculateLGPagc(self, lgp, lgp_equv):
-        """ Calculation of adjustted LGP for agro-climatic constraints.
+    # def calculateLGPagc(self, lgp, lgp_equv):
+    #     """ Calculation of adjustted LGP for agro-climatic constraints.
         
-        Args:
-            lgp (Numerical): Length of Growing Period (Days)
-            lgp_equv (Numerical): Equivalent Length of Growing Periods (Days)
+    #     Args:
+    #         lgp (Numerical): Length of Growing Period (Days)
+    #         lgp_equv (Numerical): Equivalent Length of Growing Periods (Days)
 
-        Return:
-            lgp_agc (Numerical): Adjusted LGP for agro-climatic constraints. 
-        """
+    #     Return:
+    #         lgp_agc (Numerical): Adjusted LGP for agro-climatic constraints. 
+    #     """
 
-        # Wetness indicator calculation logic referred to GAEZ v4 Model Documentation Pg. 72
+    #     # Wetness indicator calculation logic referred to GAEZ v4 Model Documentation Pg. 72
 
-        if lgp <= 120:
-            lgp_agc= min(120, max(lgp, lgp_equv)) # correct
-            return lgp_agc
+    #     if lgp <= 120:
+    #         lgp_agc= min(120, max(lgp, lgp_equv)) # correct
+    #         return lgp_agc
         
-        elif lgp in range(121,210+1):
-            lgp_agc = lgp # correct
-            return lgp_agc
+    #     elif lgp in range(121,210+1):
+    #         lgp_agc = lgp # correct
+    #         return lgp_agc
             
-        elif lgp > 210:
-            lgp_agc = max(210, min(lgp, lgp_equv)) # correct
-            return lgp_agc
+    #     elif lgp > 210:
+    #         lgp_agc = max(210, min(lgp, lgp_equv)) # correct
+    #         return lgp_agc
     
-    def applyClimaticConstraints(self, yield_input, lgp, lgp_equv, lgpt10):
+    # def applyClimaticConstraints(self, yield_input, lgp, lgp_equv, lgpt10, omit_yld_0= False):
 
-        """
-        Args:
-        ----------
-        yield_input (2D NumPy, int or float): Yield map to apply agro-climatic constraint factor.
-        lgp (2D NumPy, int): Length of Growing Period (Days)
-        lgp_equv (2D NumPy, int): Equivalent Length of Growing Periods (Days)
-        lgpt10 (2D NumPy, int): Thermal Growing Periods at 10 degrees (Days)
+    #     """
+    #     Args:
+    #     ----------
+    #     yield_input (2D NumPy, int or float): Yield map to apply agro-climatic constraint factor.
+    #     lgp (2D NumPy, int): Length of Growing Period (Days)
+    #     lgp_equv (2D NumPy, int): Equivalent Length of Growing Periods (Days)
+    #     lgpt10 (2D NumPy, int): Thermal Growing Periods at 10 degrees (Days)
+    #     omit_yld_0 (Boolean): Any zero yield areas will not be calculated. Default is False.
 
 
-        Returns
-        -------
-        None.
-        """
+    #     Returns
+    #     -------
+    #     None.
+    #     """
 
-        self.adj_yield = np.zeros((self.im_height, self.im_width), dtype = int)
-        original_yld = np.copy(yield_input)
-        self.lgp_agc = np.zeros((self.im_height, self.im_width), dtype = int)
-        self.fc3 = np.zeros((self.im_height, self.im_width), dtype = np.float16)
+    #     self.adj_yield = np.zeros((self.im_height, self.im_width), dtype = int)
+    #     original_yld = np.copy(yield_input)
+    #     self.lgp_agc = np.zeros((self.im_height, self.im_width), dtype = int)
+    #     self.fc3 = np.zeros((self.im_height, self.im_width), dtype = np.float16)
 
-        # Middle day of year for each agro-climatic constraints (used for linear interpolation purposes)
-        mid_doy = np.array([0, 15,  45,  75, 105, 135, 165, 195, 225, 255, 285, 315, 345, 365]) # total 14 interval points
+    #     # Middle day of year for each agro-climatic constraints (used for linear interpolation purposes)
+    #     mid_doy = np.array([0, 15,  45,  75, 105, 135, 165, 195, 225, 255, 285, 315, 345, 365]) # total 14 interval points
 
-        for i in range(self.im_height):
-            for j in range(self.im_width):
+    #     for i in range(self.im_height):
+    #         for j in range(self.im_width):
 
-                if self.set_mask:
-                    if self.mask[i,j] == self.no_mask_value:
-                        continue
+    #             if self.set_mask:
+    #                 if self.mask[i,j] == self.no_mask_value:
+    #                     continue
+                
+    #             if omit_yld_0:
+
+    #                 if original_yld[i,j] == 0:
+    #                     continue
+
+    #             # for LPG having 365 or 366, either 365+ or 365- will be selected
+
+    #             self.lgp_agc[i,j] = self.calculateLGPagc(lgp[i,j], lgp_equv[i,j])
+
+    #             if self.lgp_agc[i,j] >=365 and self.months_P_gte_eto[i,j] == 12:
+    #                 gte20 = (self.gte20.drop(columns = ['365-', 'type'])).to_numpy()
+    #                 lt10 = (self.lt10.drop(columns=['365-', 'type'])).to_numpy()
+
+    #             else:
+    #                 gte20 = (self.gte20.drop(columns = ['365+', 'type'])).to_numpy()
+    #                 lt10 = (self.lt10.drop(columns=['365+', 'type'])).to_numpy()
                 
 
-                # for LPG having 365 or 366, either 365+ or 365- will be selected
-
-                self.lgp_agc[i,j] = self.calculateLGPagc(lgp[i,j], lgp_equv[i,j])
-
-                if self.lgp_agc[i,j] >=365 and self.months_P_gte_eto[i,j] == 12:
-                    gte20 = (self.gte20.drop(columns = ['365-', 'type'])).to_numpy()
-                    lt10 = (self.lt10.drop(columns=['365-', 'type'])).to_numpy()
-
-                else:
-                    gte20 = (self.gte20.drop(columns = ['365+', 'type'])).to_numpy()
-                    lt10 = (self.lt10.drop(columns=['365+', 'type'])).to_numpy()
+    #             # Appending zero reduction factor for zero LGPagc
+    #             # gte20 = np.append(0,gte20)
+    #             # lt10 = np.append(0,lt10)
                 
+    #             # Annual mean temperature will select the relevant look-up table
+                
+    #             # Case I: ann_mean >= 20
+    #             if self.min_T[i,j] >= 20:
+    #                 B_row = 1 - (np.append(0, gte20[0,:]) / 100)
+    #                 C_row = 1 - (np.append(0, gte20[1,:])/100)
+    #                 D_row = 1 - (np.append(0, gte20[2,:])/100)
+                
+    #             # Case II: ann_mean <= 10:
+    #             elif self.min_T[i,j] <= 10:
+    #                 B_row = 1 - (np.append(0, lt10[0,:])/100)
+    #                 C_row = 1 - (np.append(0, lt10[1,:])/100)
+    #                 D_row = 1 - (np.append(0, lt10[2,:])/100)
+                
+    #             # Case III: ann_mean between 10 and 20. Linear interpolation is applied.
+    #             else:
 
-                # Appending zero reduction factor for zero LGPagc
-                # gte20 = np.append(0,gte20)
-                # lt10 = np.append(0,lt10)
-                
-                # Annual mean temperature will select the relevant look-up table
-                
-                # Case I: ann_mean >= 20
-                if self.min_T[i,j] >= 20:
-                    B_row = 1 - (np.append(0, gte20[0,:]) / 100)
-                    C_row = 1 - (np.append(0, gte20[1,:])/100)
-                    D_row = 1 - (np.append(0, gte20[2,:])/100)
-                
-                # Case II: ann_mean <= 10:
-                elif self.min_T[i,j] <= 10:
-                    B_row = 1 - (np.append(0, lt10[0,:])/100)
-                    C_row = 1 - (np.append(0, lt10[1,:])/100)
-                    D_row = 1 - (np.append(0, lt10[2,:])/100)
-                
-                # Case III: ann_mean between 10 and 20. Linear interpolation is applied.
-                else:
+    #                 # 'B' constraint row interpolation
+    #                 B_row_10 = np.append(0, lt10[0,:])
+    #                 B_row_20 = np.append(0, gte20[0,:])
+    #                 B_row = np.zeros(B_row_10.shape[0])
 
-                    # 'B' constraint row interpolation
-                    B_row_10 = np.append(0, lt10[0,:])
-                    B_row_20 = np.append(0, gte20[0,:])
-                    B_row = np.zeros(B_row_10.shape[0])
-
-                    for e in range(B_row_10.shape[0]):
-                        B_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [B_row_10[e], B_row_20[e]]))/ 100)
+    #                 for e in range(B_row_10.shape[0]):
+    #                     B_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [B_row_10[e], B_row_20[e]]))/ 100)
                     
                     
-                    # 'C' constraint row interpolation
-                    C_row_10 = np.append(0, lt10[1,:])
-                    C_row_20 = np.append(0, gte20[1,:])
-                    C_row = np.zeros(B_row_10.shape[0])
+    #                 # 'C' constraint row interpolation
+    #                 C_row_10 = np.append(0, lt10[1,:])
+    #                 C_row_20 = np.append(0, gte20[1,:])
+    #                 C_row = np.zeros(B_row_10.shape[0])
 
-                    for e in range(C_row_10.shape[0]):
-                        C_row[e] = (1 - (np.interp(self.min_T[i,j], [10,20], [C_row_10[e], C_row_20[e]]))/100)
+    #                 for e in range(C_row_10.shape[0]):
+    #                     C_row[e] = (1 - (np.interp(self.min_T[i,j], [10,20], [C_row_10[e], C_row_20[e]]))/100)
                     
 
-                    # 'D' constraint row interpolation
-                    D_row_10 = np.append(0, lt10[2,:])
-                    D_row_20 = np.append(0, gte20[2,:])
-                    D_row = np.zeros(B_row_10.shape[0])
+    #                 # 'D' constraint row interpolation
+    #                 D_row_10 = np.append(0, lt10[2,:])
+    #                 D_row_20 = np.append(0, gte20[2,:])
+    #                 D_row = np.zeros(B_row_10.shape[0])
 
-                    for e in range(D_row_10.shape[0]):
-                        D_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [D_row_10[e], D_row_20[e]]))/100)
+    #                 for e in range(D_row_10.shape[0]):
+    #                     D_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [D_row_10[e], D_row_20[e]]))/100)
                 
                 
-                # 'E' constraint row interpolation
-                E_row = np.append(0, self.lgpt10.drop(columns= 'type').iloc[0].to_numpy())
-                E_row = 1 - (E_row/100)
+    #             # 'E' constraint row interpolation
+    #             E_row = np.append(0, self.lgpt10.drop(columns= 'type').iloc[0].to_numpy())
+    #             E_row = 1 - (E_row/100)
 
-                # Start calculation of agro-climatic constraints
-                # 1: find agro-climatic factors of its corresponding interval of wetness days 
-                # 2: select the most limiting factor amongst 'b', 'c', 'd' and 'e' constraints
+    #             # Start calculation of agro-climatic constraints
+    #             # 1: find agro-climatic factors of its corresponding interval of wetness days 
+    #             # 2: select the most limiting factor amongst 'b', 'c', 'd' and 'e' constraints
 
-                B = np.interp(self.lgp_agc[i,j], mid_doy, B_row)
-                C = np.interp(self.lgp_agc[i,j], mid_doy, C_row)
-                D = np.interp(self.lgp_agc[i,j], mid_doy, D_row)
-                E = np.interp(lgpt10[i,j], mid_doy, E_row)
+    #             B = np.interp(self.lgp_agc[i,j], mid_doy, B_row)
+    #             C = np.interp(self.lgp_agc[i,j], mid_doy, C_row)
+    #             D = np.interp(self.lgp_agc[i,j], mid_doy, D_row)
+    #             E = np.interp(lgpt10[i,j], mid_doy, E_row)
 
-                self.fc3[i,j] = np.round(np.min([B*C*D, E]), 2)
+    #             self.fc3[i,j] = np.round(np.min([B*C*D, E]), 2)
 
-                self.adj_yield[i,j] = int(np.round(original_yld[i,j] * self.fc3[i,j], 0))
+    #             self.adj_yield[i,j] = int(np.round(original_yld[i,j] * self.fc3[i,j], 0))
 
 
-    def getClimateAdjustedYield(self):
-        """
-        Generate yield map adjusted with agro-climatic constraints.
+    # def getClimateAdjustedYield(self):
+    #     """
+    #     Generate yield map adjusted with agro-climatic constraints.
 
-        Returns
-        -------
-        TYPE: 2-D numpy array.
-            Agro-climatic constraint applied yield.
+    #     Returns
+    #     -------
+    #     TYPE: 2-D numpy array.
+    #         Agro-climatic constraint applied yield.
 
-        """
-        return self.adj_yield
+    #     """
+    #     return self.adj_yield
     
-    def getClimateReductionFactor(self):
-        """
-        Generates agro-climatic constraint map (fc3) applied to unconstrainted 
-        yield.
+    # def getClimateReductionFactor(self):
+    #     """
+    #     Generates agro-climatic constraint map (fc3) applied to unconstrainted 
+    #     yield.
 
-        Returns
-        -------
-        TYPE : 2-D numpy array.
-            Agro-climatic constraint map (fc3).
+    #     Returns
+    #     -------
+    #     TYPE : 2-D numpy array.
+    #         Agro-climatic constraint map (fc3).
 
-        """
-        return self.fc3
+    #     """
+    #     return self.fc3
     
-    def getintermediate(self, i, j, yield_input, lgp, lgp_equv, lgpt10):
-        """
-        Generates intermediate values of Module III
+    # def getintermediate(self, i, j, yield_input, lgp, lgp_equv, lgpt10):
+    #     """
+    #     Generates intermediate values of Module III
 
-        Returns
-        -------
-        TYPE : a python list.
-            [].
+    #     Returns
+    #     -------
+    #     TYPE : a python list.
+    #         [].
 
-        """
-        lgp_agc = self.calculateLGPagc(lgp, lgp_equv)
+    #     """
+    #     lgp_agc = self.calculateLGPagc(lgp, lgp_equv)
 
-        # Middle day of year for each agro-climatic constraints (used for linear interpolation purposes)
-        mid_doy = np.array([0, 15,  45,  75, 105, 135, 165, 195, 225, 255, 285, 315, 345, 365]) # total 14 interval points
+    #     # Middle day of year for each agro-climatic constraints (used for linear interpolation purposes)
+    #     mid_doy = np.array([0, 15,  45,  75, 105, 135, 165, 195, 225, 255, 285, 315, 345, 365]) # total 14 interval points
 
 
-        if lgp_agc >=365 and self.months_P_gte_eto[i,j] == 12:
-            gte20 = (self.gte20.drop(columns = ['365-', 'type'])).to_numpy()
-            lt10 = (self.lt10.drop(columns=['365-', 'type'])).to_numpy()
-            test = '365+'
+    #     if lgp_agc >=365 and self.months_P_gte_eto[i,j] == 12:
+    #         gte20 = (self.gte20.drop(columns = ['365-', 'type'])).to_numpy()
+    #         lt10 = (self.lt10.drop(columns=['365-', 'type'])).to_numpy()
+    #         test = '365+'
 
-        else:
-            gte20 = (self.gte20.drop(columns = ['365+', 'type'])).to_numpy()
-            lt10 = (self.lt10.drop(columns=['365+', 'type'])).to_numpy()
-            test = '365-'
+    #     else:
+    #         gte20 = (self.gte20.drop(columns = ['365+', 'type'])).to_numpy()
+    #         lt10 = (self.lt10.drop(columns=['365+', 'type'])).to_numpy()
+    #         test = '365-'
         
         
-        # Annual mean temperature will select the relevant look-up table
+    #     # Annual mean temperature will select the relevant look-up table
         
-        # Case I: ann_mean >= 20
-        if self.min_T[i,j] >= 20:
-            B_row = 1 - (np.append(0, gte20[0,:]) / 100)
-            C_row = 1 - (np.append(0, gte20[1,:])/100)
-            D_row = 1 - (np.append(0, gte20[2,:])/100)
+    #     # Case I: ann_mean >= 20
+    #     if self.min_T[i,j] >= 20:
+    #         B_row = 1 - (np.append(0, gte20[0,:]) / 100)
+    #         C_row = 1 - (np.append(0, gte20[1,:])/100)
+    #         D_row = 1 - (np.append(0, gte20[2,:])/100)
         
-        # Case II: ann_mean <= 10:
-        elif self.min_T[i,j] <= 10:
-            B_row = 1 - (np.append(0, lt10[0,:])/100)
-            C_row = 1 - (np.append(0, lt10[1,:])/100)
-            D_row = 1 - (np.append(0, lt10[2,:])/100)
+    #     # Case II: ann_mean <= 10:
+    #     elif self.min_T[i,j] <= 10:
+    #         B_row = 1 - (np.append(0, lt10[0,:])/100)
+    #         C_row = 1 - (np.append(0, lt10[1,:])/100)
+    #         D_row = 1 - (np.append(0, lt10[2,:])/100)
         
-        # Case III: ann_mean between 10 and 20. Linear interpolation is applied.
-        else:
+    #     # Case III: ann_mean between 10 and 20. Linear interpolation is applied.
+    #     else:
 
-            # 'B' constraint row interpolation
-            B_row_10 = np.append(0, lt10[0,:])
-            B_row_20 = np.append(0, gte20[0,:])
-            B_row = np.zeros(B_row_10.shape[0])
+    #         # 'B' constraint row interpolation
+    #         B_row_10 = np.append(0, lt10[0,:])
+    #         B_row_20 = np.append(0, gte20[0,:])
+    #         B_row = np.zeros(B_row_10.shape[0])
 
-            for e in range(B_row_10.shape[0]):
-                B_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [B_row_10[e], B_row_20[e]]))/ 100)
+    #         for e in range(B_row_10.shape[0]):
+    #             B_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [B_row_10[e], B_row_20[e]]))/ 100)
             
             
-            # 'C' constraint row interpolation
-            C_row_10 = np.append(0, lt10[1,:])
-            C_row_20 = np.append(0, gte20[1,:])
-            C_row = np.zeros(B_row_10.shape[0])
+    #         # 'C' constraint row interpolation
+    #         C_row_10 = np.append(0, lt10[1,:])
+    #         C_row_20 = np.append(0, gte20[1,:])
+    #         C_row = np.zeros(B_row_10.shape[0])
 
-            for e in range(C_row_10.shape[0]):
-                C_row[e] = (1 - (np.interp(self.min_T[i,j], [10,20], [C_row_10[e], C_row_20[e]]))/100)
+    #         for e in range(C_row_10.shape[0]):
+    #             C_row[e] = (1 - (np.interp(self.min_T[i,j], [10,20], [C_row_10[e], C_row_20[e]]))/100)
             
 
-            # 'D' constraint row interpolation
-            D_row_10 = np.append(0, lt10[2,:])
-            D_row_20 = np.append(0, gte20[2,:])
-            D_row = np.zeros(B_row_10.shape[0])
+    #         # 'D' constraint row interpolation
+    #         D_row_10 = np.append(0, lt10[2,:])
+    #         D_row_20 = np.append(0, gte20[2,:])
+    #         D_row = np.zeros(B_row_10.shape[0])
 
-            for e in range(D_row_10.shape[0]):
-                D_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [D_row_10[e], D_row_20[e]]))/100)
+    #         for e in range(D_row_10.shape[0]):
+    #             D_row[e] = 1 - ((np.interp(self.min_T[i,j], [10,20], [D_row_10[e], D_row_20[e]]))/100)
         
         
-        # 'E' constraint row interpolation
-        E_row = np.append(0, self.lgpt10.drop(columns= 'type').iloc[0].to_numpy())
-        E_row = 1 - (E_row/100)
+    #     # 'E' constraint row interpolation
+    #     E_row = np.append(0, self.lgpt10.drop(columns= 'type').iloc[0].to_numpy())
+    #     E_row = 1 - (E_row/100)
 
-        # Start calculation of agro-climatic constraints
-        # 1: find agro-climatic factors of its corresponding interval of wetness days 
-        # 2: select the most limiting factor amongst 'b', 'c', 'd' and 'e' constraints
+    #     # Start calculation of agro-climatic constraints
+    #     # 1: find agro-climatic factors of its corresponding interval of wetness days 
+    #     # 2: select the most limiting factor amongst 'b', 'c', 'd' and 'e' constraints
 
-        B = np.interp(lgp_agc , mid_doy, B_row)
-        C = np.interp(lgp_agc , mid_doy, C_row)
-        D = np.interp(lgp_agc , mid_doy, D_row)
-        E = np.interp(lgp_agc , mid_doy, E_row)
+    #     B = np.interp(lgp_agc , mid_doy, B_row)
+    #     C = np.interp(lgp_agc , mid_doy, C_row)
+    #     D = np.interp(lgp_agc , mid_doy, D_row)
+    #     E = np.interp(lgp_agc , mid_doy, E_row)
 
-        fc3 = np.round(np.min([B*C*D, E]), 2)
+    #     fc3 = np.round(np.min([B*C*D, E]), 2)
 
-        adj_yld  = int(np.round(yield_input * fc3, 0))
+    #     adj_yld  = int(np.round(yield_input * fc3, 0))
 
-        return [self.latitude[i,j], self.elevation[i,j], self.months_P_gte_eto[i,j], self.min_T[i,j], test, B, C, D, E, fc3, adj_yld, mid_doy, B_row, C_row, D_row, E_row, lgp_agc]
+    #     return [self.latitude[i,j], self.elevation[i,j], self.months_P_gte_eto[i,j], self.min_T[i,j], test, B, C, D, E, fc3, adj_yld, mid_doy, B_row, C_row, D_row, E_row, lgp_agc]
 
 
     

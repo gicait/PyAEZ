@@ -1,6 +1,7 @@
 """
-PyAEZ version 2.1.0 (June 2023)
+PyAEZ version 2.2 (Dec 2023)
 2020: Thaileng Thol
+2023 (Dec): Swun Wunna Htet
 
 """
 
@@ -15,6 +16,22 @@ class EconomicSuitability(object):
         self.revenue_min_list = []
 
     def addACrop(self, crop_name, crop_cost, crop_yield, farm_price, yield_map):
+        """
+        Adding a LUT's crop economic data into the module for economic analysis.
+
+        Args:
+            crop_name (String): Unique name of crop (Will be used later to extract output)
+            crop_cost (1-D NumPy Array): Cost of production for each obtained yield in crop_yield variable. (Currency/ton or kg).
+            crop_yield (1-D NumPy Array): Yield obtained from the production. Must correspond to crop_cost variable (ton or kg).
+            farm_price (1-D NumPy Array): Historical crop price that farmers sell (Currency/ ton or kg).
+            yield_map (2-D NumPy Array): Yield map of the selected LUT/crop. (kg/ha or ton/ha)
+        
+            Note: In some cases, unit conversion adjustment will be required.
+        
+        Return:
+            None.
+
+        """
 
         slope, intercept, r_value1, p_value, std_err = stats.linregress(crop_yield, crop_cost)
 
@@ -33,9 +50,24 @@ class EconomicSuitability(object):
         return None
 
     def getNetRevenue(self, crop_name):
+
+        """
+        Obtaining the net revenue from the select crop name.
+        
+        Args:
+            crop_name (String): the crop name provided in previous function.
+        
+        Return:
+            Net Revenue (2-D NumPy Array): net revenue (Unit: revenue/hectare)
+        """
         return self.net_revenue_list[self.crop_name_list.index(crop_name)]
 
     def getClassifiedNetRevenue(self, crop_name):
+
+        """Obtain the classified output of Net Attainable Revenue Map
+        
+        Args:
+            crop_name (String): the crop name provided in previous function. """
 
         ''' Classification of Net Attainable Revenue map
         class 7 = very high = yields are more of the overall maximum yield,
@@ -78,6 +110,14 @@ class EconomicSuitability(object):
 
     def getNormalizedNetRevenue(self, crop_name):
 
+        """Getting the normalized net revenue of the provided crop_name.
+        
+        Args:
+            crop_name (String): the crop name provided in previous function.
+        
+        Return:
+            2-D NumPy Array: normalized net revenue (Value between 0= Not suitable and 1 = Suitable)"""
+
         net_revenue = self.net_revenue_list[self.crop_name_list.index(crop_name)]
         net_revenue_max =  np.max(np.array(self.net_revenue_list), axis=0)
 
@@ -95,3 +135,5 @@ class EconomicSuitability(object):
         net_revenue_norm_class[ np.all([0.8<net_revenue_norm, net_revenue_norm<=1.0], axis=0) ] = 5 # good
 
         return net_revenue_norm_class
+
+#-------------------------------------- End of Code-------------------------------------------------------

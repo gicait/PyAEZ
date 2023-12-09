@@ -1,9 +1,10 @@
 """
-PyAEZ version 2.1.0 (June 2023)
+PyAEZ version 2.2 (Dec 2023)
 ETOCalc.py calculates the reference evapotranspiration from 
 the climatic data provided by the PyAEZ user.
 2020: N. Lakmal Deshapriya, Thaileng Thol
 2022/2023: Kittiphon Boonma  (Numba)
+2023 (Dec): Swun Wunna Htet
 
 """
 import numpy as np
@@ -162,3 +163,5 @@ class ETOCalc(object):
 
     def calculateETO(self):
         return ETOCalc.calculateETONumba(self.cycle_begin, self.cycle_end, self.latitude, self.alt,  self.minT_daily, self.maxT_daily, self.windspeed_daily, self.shortRad_daily, self.rel_humidity)
+
+# ---------------------------------------------- End of Code ------------------------------------------------------------------- #

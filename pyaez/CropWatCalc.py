@@ -1,5 +1,5 @@
 """
-PyAEZ version 2.1.0 (June 2023)
+PyAEZ version 2.2 (Dec 2023)
 Crop Water Calculation
 2020: N. Lakmal Deshapriya and Thaileng Thol
 2023: Swun Wunna Htet
@@ -497,3 +497,5 @@ class CropWatCalc(object):
             
 
         return np.array([kc1, kc2, kc3])
+    
+#---------------------------------- END OF CODE----------------------------------------------------------#

@@ -1,8 +1,9 @@
 """
-PyAEZ version 2.1.0 (June 2023)
+PyAEZ version 2.2 (Dec 2023)
 Thermal Screening
 2020: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet
+2023 (Dec): Swun Wunna Htet
 
 Modification:
 1. Removing time slicing with start date and cycle length.
@@ -427,3 +428,5 @@ class ThermalScreening(object):
                                 [f1, thermal_screening_f])
 
         return thermal_screening_f
+
+# ---------------------------------------- End of Code ------------------------------------------------------- #

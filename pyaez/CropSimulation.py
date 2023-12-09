@@ -1,14 +1,14 @@
 """
-PyAEZ version 2.2.0 (Dec 2023)
+PyAEZ version 2.2 (Dec 2023)
 This CropSimulation Class simulates all the possible crop cycles to find 
 the best crop cycle that produces maximum yield for a particular grid
 2020: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet, Kittiphon Boonma
-2023: Swun Wunna Htet
+2023 (Dec): Swun Wunna Htet
 
 Modifications
 1.  Minimum cycle length checking logic added to crop simulation.
-2.  New crop parameters: minimum cycle length, maximum cycle length, plant height is added.
+2.  New crop parameters: minimum cycle length, maximum cycle length, plant height is added logic added.
 """
 
 import numpy as np

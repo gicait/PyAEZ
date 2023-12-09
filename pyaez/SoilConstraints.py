@@ -317,103 +317,144 @@ class SoilConstraints(object):
     
 
     def calculateSoilQualities(self, irr_or_rain, topsoil_path, subsoil_path):
+
+        """
+        Calculate the Soil Qualities for each SMU in soil map using soil characteristics
+        from top-soil and sub-soil layer (each with 7 sub-divisions).
+        
+        Args:
+            irr_or_rain (String): I for Irrigated, R for Rainfed
+            topsoil_path (String): file-path of top-soil characteristics excel sheet(xlsx format)
+            subsoil_paht (String): file-path of sub-soil characteristics excel sheet (xlsx format)
+        
+        Return:
+            None."""
         
         # reading soil properties from excel sheet
-        topsoil_df = pd.read_excel(topsoil_path)
-        subsoil_df = pd.read_excel(subsoil_path)
+        topsoil_df = pd.read_excel(topsoil_path,sheet_name= None)
+        subsoil_df = pd.read_excel(subsoil_path, sheet_name= None)
 
         # check if two dataframes have same number of SMUs, if not raise error.
-        if topsoil_df.shape != subsoil_df.shape:
+        if topsoil_df['D1'].shape != subsoil_df['D1'].shape:
             raise Exception(r'Please recheck the number of entries of top-soil and sub soil excel sheets')
 
-        SMU = topsoil_df.CODE
-        # zero array of all individual soil qualities for each SMU
-        self.SQ_array = np.zeros((SMU.shape[0],8))
-        self.SQ_array[:,0] = SMU
+        self.SMU = topsoil_df['D1'].CODE
+        # zero array of all individual soil qualities for each self.SMU
+        
+        # 1st =  7 for 7 soil layers to evaluate, 2nd = self.SMUs, 3rd = Soil Qualities
+        SQ_7lyr = np.zeros((7, self.SMU.shape[0] ,7))
 
-        for i in range(SMU.shape[0]):
-            t_code = topsoil_df.loc[topsoil_df['CODE'] == SMU[i]]
-            s_code = subsoil_df.loc[subsoil_df['CODE'] == SMU[i]]
+        # Representing seven layers
+        layer_lst = np.array(['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'])
 
-            # SQ1 calculation
-            # top-soil
-            SQ1_t = self.soil_qty_1(TXT_val= t_code['TXT'].iloc[0], OC_val = t_code['OC'].iloc[0], pH_val=t_code['pH'].iloc[0],
-                                    TEB_val= t_code['TEB'].iloc[0], condition= irr_or_rain, top_sub= 'top')
-            # sub-soil
-            SQ1_s = self.soil_qty_1(TXT_val= s_code['TXT'].iloc[0], OC_val = s_code['OC'].iloc[0], pH_val=s_code['pH'].iloc[0],
-                                    TEB_val= s_code['TEB'].iloc[0], condition= irr_or_rain, top_sub= 'sub')
+
+        self.SQ_array = np.zeros((self.SMU.shape[0],8))
+        self.SQ_array[:,0] = self.SMU
+        
+        for i in range(layer_lst.shape[0]):
+
+            topdf = topsoil_df[layer_lst[i]]
+            subdf = subsoil_df[layer_lst[i]]
+
+            SQ_array = np.zeros((self.SMU.shape[0], 7))
+
+            for j in range(self.SMU.shape[0]):
+
+                t_code = topdf.loc[topdf['CODE'] == self.SMU[j]]
+                s_code = subdf.loc[subdf['CODE'] == self.SMU[j]]
+
+                # SQ1 calculation
+                # top-soil
+                SQ1_t = self.soil_qty_1(TXT_val= t_code['TXT'].iloc[0], OC_val = t_code['OC'].iloc[0], pH_val=t_code['pH'].iloc[0],
+                                        TEB_val= t_code['TEB'].iloc[0], condition= irr_or_rain, top_sub= 'top')
+                # sub-soil
+                SQ1_s = self.soil_qty_1(TXT_val= s_code['TXT'].iloc[0], OC_val = s_code['OC'].iloc[0], pH_val=s_code['pH'].iloc[0],
+                                        TEB_val= s_code['TEB'].iloc[0], condition= irr_or_rain, top_sub= 'sub')
+                
+                SQ1 = (SQ1_t + SQ1_s)/2
+                SQ_array[j,0] = SQ1
+
+                # SQ2 calculation
+                # top-soil
+                SQ2_t = self.soil_qty_2(TXT_val= t_code['TXT'].iloc[0], BS_val=t_code['BS'].iloc[0], CECclay_val=t_code['CEC_clay'].iloc[0], 
+                                        CECsoil_val= t_code['CEC_soil'].iloc[0], pH_val=t_code['pH'].iloc[0], condition = irr_or_rain, top_sub= 'top')
+                
+                # sub-soil
+                SQ2_s = self.soil_qty_2(TXT_val= s_code['TXT'].iloc[0], BS_val=s_code['BS'].iloc[0], CECclay_val=s_code['CEC_clay'].iloc[0], 
+                            CECsoil_val= s_code['CEC_soil'].iloc[0], pH_val=s_code['pH'].iloc[0], condition = irr_or_rain, top_sub= 'sub')
+                
+                SQ2 = (SQ2_t + SQ2_s)/2
+                SQ_array[j,1] = SQ2
+
+                # SQ3 calculation
+                # top-soil
+                SQ3_t = self.soil_qty_3(RSD_val=t_code['RSD'].iloc[0], SPR_val=t_code['SPR'].iloc[0], SPH_val=t_code['SPH'].iloc[0], 
+                                        OSD_val=t_code['OSD'].iloc[0], condition= irr_or_rain)
+
+                SQ3_s = self.soil_qty_3(RSD_val=s_code['RSD'].iloc[0], SPR_val=s_code['SPR'].iloc[0], SPH_val=s_code['SPH'].iloc[0], 
+                            OSD_val=s_code['OSD'].iloc[0], condition= irr_or_rain)
+                
+                SQ3 = (SQ3_t + SQ3_s)/2
+
+                SQ_array[j,2] = SQ3
+
+                # SQ4 calculation
+                # top-soil
+                SQ4_t = self.soil_qty_4(DRG_val= t_code['DRG'].iloc[0], SPH_val=t_code['SPH'].iloc[0], condition= irr_or_rain)
+
+                # sub-soil
+                SQ4_s = self.soil_qty_4(DRG_val= s_code['DRG'].iloc[0], SPH_val=s_code['SPH'].iloc[0], condition= irr_or_rain)
+
+                SQ4 = (SQ4_t + SQ4_s)/2
+
+                SQ_array[j,3] = SQ4
+
+                # SQ5 calculation
+                # top-soil
+                SQ5_t = self.soil_qty_5(ESP_val=t_code['ESP'].iloc[0], EC_val=t_code['EC'].iloc[0], SPH_val=t_code['SPH'].iloc[0], condition = irr_or_rain)
+                # sub-soil
+                SQ5_s = self.soil_qty_5(ESP_val=s_code['ESP'].iloc[0], EC_val=s_code['EC'].iloc[0], SPH_val=s_code['SPH'].iloc[0], condition = irr_or_rain)
+
+                SQ5 = (SQ5_t + SQ5_s)/2
+
+                SQ_array[j,4] = SQ5
+
+                # SQ6 calculation
+                # top-soil
+                SQ6_t = self.soil_qty_6(CCB_val=t_code['CCB'].iloc[0], GYP_val=t_code['GYP'].iloc[0], SPH_val=t_code['SPH'].iloc[0], condition=irr_or_rain)
+                
+                # sub-soil
+                SQ6_s = self.soil_qty_6(CCB_val=s_code['CCB'].iloc[0], GYP_val=s_code['GYP'].iloc[0], SPH_val=s_code['SPH'].iloc[0], condition=irr_or_rain)
+
+                SQ6 = (SQ6_t + SQ6_s)/2
+
+                SQ_array[j,5] = SQ6
+
+                # SQ7 calculation
+                # top-soil
+                SQ7_t = self.soil_qty_7(RSD_val=t_code['RSD'].iloc[0], GRC_val=t_code['GRC'].iloc[0], SPH_val=t_code['SPH'].iloc[0], TXT_val=t_code['TXT'].iloc[0], 
+                                        VSP_val=t_code['VSP'].iloc[0], condition = irr_or_rain)
+                # sub-soil
+                SQ7_s = self.soil_qty_7(RSD_val=s_code['RSD'].iloc[0], GRC_val=s_code['GRC'].iloc[0], SPH_val=s_code['SPH'].iloc[0], TXT_val=s_code['TXT'].iloc[0], 
+                            VSP_val=s_code['VSP'].iloc[0], condition = irr_or_rain)
+                
+                SQ7 = (SQ7_t + SQ7_s)/2
+
+                SQ_array[j,6] = SQ7
             
-            SQ1 = (SQ1_t + SQ1_s)/2
-            self.SQ_array[i,1] = SQ1
+            SQ_7lyr[i,:,:] = SQ_array
+        
+        self.SQ_array = np.mean(SQ_7lyr, axis = 0) # SQ1 mean
 
-            # SQ2 calculation
-            # top-soil
-            SQ2_t = self.soil_qty_2(TXT_val= t_code['TXT'].iloc[0], BS_val=t_code['BS'].iloc[0], CECclay_val=t_code['CEC_clay'].iloc[0], 
-                                    CECsoil_val= t_code['CEC_soil'].iloc[0], pH_val=t_code['pH'].iloc[0], condition = irr_or_rain, top_sub= 'top')
-            
-            # sub-soil
-            SQ2_s = self.soil_qty_2(TXT_val= s_code['TXT'].iloc[0], BS_val=s_code['BS'].iloc[0], CECclay_val=s_code['CEC_clay'].iloc[0], 
-                        CECsoil_val= s_code['CEC_soil'].iloc[0], pH_val=s_code['pH'].iloc[0], condition = irr_or_rain, top_sub= 'sub')
-            
-            SQ2 = (SQ2_t + SQ2_s)/2
-            self.SQ_array[i,2] = SQ2
+        self.SQ_array_pd = pd.DataFrame({'SMU': self.SMU, 
+                                         'SQ1':self.SQ_array[:,0],
+                                         'SQ2':self.SQ_array[:,1],
+                                         'SQ3':self.SQ_array[:,2],
+                                         'SQ4':self.SQ_array[:,3],
+                                         'SQ5':self.SQ_array[:,4],
+                                         'SQ6':self.SQ_array[:,5],
+                                         'SQ7':self.SQ_array[:,6]})
 
-            # SQ3 calculation
-            # top-soil
-            SQ3_t = self.soil_qty_3(RSD_val=t_code['RSD'].iloc[0], SPR_val=t_code['SPR'].iloc[0], SPH_val=t_code['SPH'].iloc[0], 
-                                    OSD_val=t_code['OSD'].iloc[0], condition= irr_or_rain)
-
-            SQ3_s = self.soil_qty_3(RSD_val=s_code['RSD'].iloc[0], SPR_val=s_code['SPR'].iloc[0], SPH_val=s_code['SPH'].iloc[0], 
-                        OSD_val=s_code['OSD'].iloc[0], condition= irr_or_rain)
-            
-            SQ3 = (SQ3_t + SQ3_s)/2
-
-            self.SQ_array[i,3] = SQ3
-
-            # SQ4 calculation
-            # top-soil
-            SQ4_t = self.soil_qty_4(DRG_val= t_code['DRG'].iloc[0], SPH_val=t_code['SPH'].iloc[0], condition= irr_or_rain)
-
-            # sub-soil
-            SQ4_s = self.soil_qty_4(DRG_val= s_code['DRG'].iloc[0], SPH_val=s_code['SPH'].iloc[0], condition= irr_or_rain)
-
-            SQ4 = (SQ4_t + SQ4_s)/2
-
-            self.SQ_array[i,4] = SQ4
-
-            # SQ5 calculation
-            # top-soil
-            SQ5_t = self.soil_qty_5(ESP_val=t_code['ESP'].iloc[0], EC_val=t_code['EC'].iloc[0], SPH_val=t_code['SPH'].iloc[0], condition = irr_or_rain)
-            # sub-soil
-            SQ5_s = self.soil_qty_5(ESP_val=s_code['ESP'].iloc[0], EC_val=s_code['EC'].iloc[0], SPH_val=s_code['SPH'].iloc[0], condition = irr_or_rain)
-
-            SQ5 = (SQ5_t + SQ5_s)/2
-
-            self.SQ_array[i,5] = SQ5
-
-            # SQ6 calculation
-            # top-soil
-            SQ6_t = self.soil_qty_6(CCB_val=t_code['CCB'].iloc[0], GYP_val=t_code['GYP'].iloc[0], SPH_val=t_code['SPH'].iloc[0], condition=irr_or_rain)
-            
-            # sub-soil
-            SQ6_s = self.soil_qty_6(CCB_val=s_code['CCB'].iloc[0], GYP_val=s_code['GYP'].iloc[0], SPH_val=s_code['SPH'].iloc[0], condition=irr_or_rain)
-
-            SQ6 = (SQ6_t + SQ6_s)/2
-
-            self.SQ_array[i,6] = SQ6
-
-            # SQ7 calculation
-            # top-soil
-            SQ7_t = self.soil_qty_7(RSD_val=t_code['RSD'].iloc[0], GRC_val=t_code['GRC'].iloc[0], SPH_val=t_code['SPH'].iloc[0], TXT_val=t_code['TXT'].iloc[0], 
-                                    VSP_val=t_code['VSP'].iloc[0], condition = irr_or_rain)
-            # sub-soil
-            SQ7_s = self.soil_qty_7(RSD_val=s_code['RSD'].iloc[0], GRC_val=s_code['GRC'].iloc[0], SPH_val=s_code['SPH'].iloc[0], TXT_val=s_code['TXT'].iloc[0], 
-                        VSP_val=s_code['VSP'].iloc[0], condition = irr_or_rain)
-            
-            SQ7 = (SQ7_t + SQ7_s)/2
-
-            self.SQ_array[i,7] = SQ7
-    
     def calculateSoilRatings(self, input_level):
         """
         Calculate the soil suitability rating factors based on soil qualities and
@@ -429,36 +470,45 @@ class SoilConstraints(object):
             None.
         """
 
-        self.SR = np.zeros((self.SQ_array.shape[0],2)) # first column for soil unit code and other column for SR
-        self.SR[:,0] = self.SQ_array[:,0] # adding soil unit code
+        self.SR = np.zeros((self.SMU.shape[0])) # first column for soil unit code and other column for SR
 
-        for i in range(0, self.SQ_array.shape[0]):
+        for i in range(0, self.SR.shape[0]):
 
             if input_level == 'L':
-                min_factor = np.min([self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6], self.SQ_array[i,7]])
-                fsq = (min_factor + (np.sum([self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6], self.SQ_array[i,7]]) - min_factor)/3)/2
-                self.SR[i,1] = self.SQ_array[i,1] * self.SQ_array[i,3] * fsq
+                min_factor = np.min([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])
+
+                # fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor)/3)/2
+                fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])/3))/2
+
+                self.SR[i] = self.SQ_array[i,0] * self.SQ_array[i,2] * fsq
             elif input_level == 'I':
-                min_factor = np.min([self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6], self.SQ_array[i,7]])
-                fsq = (min_factor + (np.sum([self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6], self.SQ_array[i,7]]) - min_factor)/3)/2
-                self.SR[i,1] = 0.5 * (self.SQ_array[i,1]+self.SQ_array[i,2]) * self.SQ_array[i,3] * fsq
+                min_factor = np.min([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])
+
+                # fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor)/3)/2
+                fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])/3))/2
+
+                self.SR[i] = 0.5 * (self.SQ_array[i,0]+self.SQ_array[i,1]) * self.SQ_array[i,2] * fsq
             elif input_level == 'H':
-                min_factor = np.min([self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6], self.SQ_array[i,7]])
-                fsq = (min_factor + (np.sum([self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6], self.SQ_array[i,7]]) - min_factor)/3)/2
-                self.SR[i,1] = self.SQ_array[i,2] * self.SQ_array[i,3] * fsq
+                min_factor = np.min([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])
+                # fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor)/3)/2
+
+                fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])/3))/2
+                self.SR[i] = self.SQ_array[i,1] * self.SQ_array[i,2] * fsq
             else:
                 print('Wrong Input Level !')
+        
+        self.SR_pd = pd.DataFrame({'SMU':self.SMU,
+                                  'SR': self.SR})
     
     def getSoilQualities(self):
         """
         Obtain the calculated seven soil qualities for each soil mapping unit
-        as 2-D NumPy array. Each column corresponds to a particular soil quality
-        such a way as [SQ1, SQ2, SQ3, SQ4, SQ5, SQ6, SQ7].
+        as pandas dataframe.
         Args:
             None.
         Return:
-            2-D numpy array."""
-        return self.SQ_array
+            Soil Ratings: Pandas DataFrame in such [SMU, SQ1, SQ2, SQ3, SQ4, SQ5, SQ6, SQ7]."""
+        return self.SQ_array_pd
 
     def getSoilRatings(self):
         """
@@ -468,9 +518,9 @@ class SoilConstraints(object):
         Args:
             None.
         Return:
-            Soil Ratings: 2-D NumPy array.
+            Soil Ratings: Pandas DataFrame in such [SMU, SR].
         """
-        return self.SR
+        return self.SR_pd
     
     def applySoilConstraints(self, soil_map, yield_in):
         """
@@ -489,9 +539,9 @@ class SoilConstraints(object):
         self.soilsuit_map = np.zeros(soil_map.shape)
 
         for i1 in range(0, self.SR.shape[0]):
-            temp_idx = soil_map==self.SR[i1,0]
-            self.soilsuit_map[temp_idx] = self.SR[i1,1]
-            yield_final[temp_idx] = yield_in[temp_idx] * self.SR[i1,1]
+            temp_idx = soil_map==self.SMU[i1]
+            self.soilsuit_map[temp_idx] = self.SR[i1]
+            yield_final[temp_idx] = yield_in[temp_idx] * self.SR[i1]
 
         return yield_final
     

@@ -1,7 +1,7 @@
 """
-PyAEZ version 2.2.0 (Dec 2023)
+PyAEZ version 2.2 (Dec 2023)
 2020: N. Lakmal Deshapriya
-2023: Swun Wunna Htet
+2023 (Dec): Swun Wunna Htet
 
 Modifications:
 1.  Excel sheet integration is now added to the routine.

@@ -1,8 +1,12 @@
 """
-PyAEZ version 2.1.0 (June 2023)
+PyAEZ version 2.2 (Dec 2023)
 Additional calculations used throughout AEZ modules
 2020: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet, K. Boonma
+2023 (Dec): Swun Wunna Htet
+
+Modification:
+1. Latitude calculated revised according to GAEZ Fortran routine.
 """
 
 import numpy as np

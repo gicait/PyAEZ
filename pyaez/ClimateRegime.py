@@ -1,5 +1,5 @@
 """
-PyAEZ version 2.1.0 (June 2023)
+PyAEZ version 2.2 (Dec 2023)
 This ClimateRegime Class read/load and calculates the agro-climatic indicators
 required to run PyAEZ.  
 2021: N. Lakmal Deshapriya

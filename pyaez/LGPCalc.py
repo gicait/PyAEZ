@@ -1,5 +1,5 @@
 """
-PyAEZ version 2.1.0 (June 2023)
+PyAEZ version 2.2 (Dec 2023)
 PyAEZ: LGPCalc.py calculates the length of growing period (LGP)
 2022/2023: Kittiphon Boonma 
 """

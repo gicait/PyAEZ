@@ -652,9 +652,9 @@ class CropSimulation(object):
         self.permafrost_class = permafrost_class  # permafrost class 2D numpy array
         self.set_Permafrost_screening = True
 
-    def setupTypeBConstraint(self, file_path, crop_name):
+    def setCropSpecificRule(self, file_path, crop_name):
         """
-        Optional function initiates the type B constraint (Temperature Profile 
+        Optional function initiates the Crop Specific Rule (Temperature Profile 
         Constraint) on the existing crop based on user-specified constraint rules.
 
         Parameters

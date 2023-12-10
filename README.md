@@ -11,7 +11,7 @@ PyAEZ is a python package consisted of many algorithms related to Agro-ecalogica
 Now the package can be installed using `pip` command as below,
 
 ```shell
-pip install pyaez==2.1
+pip install pyaez==2.2
 ```
 
 Alternatively, can be installed using using `conda` command as below,
@@ -58,24 +58,27 @@ Following 6 Jupyter notebooks in the GitHub repository can be used as worked ful
 
 **Note**: _NB2_CropSimulation.ipynb_ takes a huge amount of time due to automatic crop calendar calculations. Hence, we have rewritten core parts of PyAEZ (_CropWatCalc.py_, _BioMassCalc.py_ and _ETOCalc.py_) with [Numba](http://numba.pydata.org/) compatible manner as well. Numba translates Python functions to optimized machine code at runtime, allowing calculation speeds close to C or FORTRAN.
 
-### Release Note PyAEZv2.1
-The goal of this release is to improve the overall accuracy and reliability of the AEZ methodology in Module 1, 2, and 3. The key updates are as follows:
+### Release Note PyAEZv2.2
+The improvement of the overall accuracy and reliability of the AEZ methodology is covered in new version in Module 2, 3, and input data usage is modified in Module 4 & 5. The key updates are listed as follows: 
 
-**Module 1**:
-- Major improvements in the Length of Growing Period (LGP) calculation routine through the implementation of Numba (a Python package to speed up the calculation) and cross-checking the methodology with the Global AEZ from IIASA. 
-- All the climatic indicators had been thoroughly cross-checked and verified with the Global AEZ outputs. 
+**Module 2**: 
+- New parameters added in reading crop/crop cycle parameters from excel sheet (minimum and maximum cycle lengths, plant height) 
+- Revised algorithm flow for overall perennial/annual crop simulations. 
+- New logic: kc factor adjustment based on local climate (Crop Water Requirement) 
+- Revised logic: Daily value interpolations of Ac, Bc, Bo and Pm based on GAEZ (Biomass Calculation) 
 
-**Module 2**:
-- Reading crop/crop cycle parameters from excel sheet.
-- Updated algorithm for TSUM screening and parameter settings.
-- New thermal screening logics: permafrost screening, crop-specific rule screening.
-- Updated algorithm for perennial crop simulations.
-- New outputs: thermal reduction factor maps (fc1), yield reduction due to moisture deficit (fc2) and optimum starting date, for both rainfed and irrigated conditions.
+**Module 3**: 
+- Look-up tables of agro-climatic constraints can be provided as excel sheets. 
+- Validated calculation procedures of fc3 map. 
 
-**Module 3**:
-- New look-up table setting for agro-climatic reduction factors for both rainfed and irrigated conditions.
-- Updated algorithm related to agro-climatic constraints calculation.
-- New outputs: Adjusted Length of Growing Period for agro-climatic constraints, agro-climatic constraint map (fc3).
+**Module 4**: 
+- Soil Requirement Suitability factors can now be prepared and provided as excel sheets. 
+- New routine: 7-soil layer inputs of soil characteristics to evaluate soil suitability (based on HWSD v2.0) (Experimental). 
+- New output: soil suitability rating map (fc4). 
+
+**Module 5**: 
+- Terrain constraint factors can now be prepared and provided as excel sheets. 
+- New output: terrain suitability map (fc5).  
 
 
 ### Documentation
@@ -87,9 +90,9 @@ API Documentation is located in "docs" folder.
 Use this bibtex to cite us.
 
 ```
-@misc{PyAEZ(v2.1.0),
+@misc{PyAEZ(v2.2),
   title={PyAEZ Python Package for Agro-ecological zoning (AEZ)},
-  author={Swun Wunna Htet, Kittiphon Boonma, Gianluca Franceschini, N. Lakmal Deshapriya, Thaileng Thol, Kavinda Gunasekara, Rajendra Shrestha,  Freddy Nachtergaele, Monica Petri, Beau Damen},
+  author={Swun Wunna Htet, Kittiphon Boonma, Guenther Fischer, Gianluca Franceschini, N. Lakmal Deshapriya, Thaileng Thol, Kavinda Gunasekara, Rajendra Shrestha,  Freddy Nachtergaele, Monica Petri, Beau Damen},
   year={2023},
   publisher={Github},
   journal={GitHub repository},

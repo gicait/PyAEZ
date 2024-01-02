@@ -1157,7 +1157,7 @@ class ClimateRegime(object):
     according to Gunther's agreement and the documentation.
     """
          
-    def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t10, ts_t0):
+    def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t0, ts_t10):
         
         # defining the constant arrays for rainfed and irrigated conditions, all pixel values start with 1
         multi_crop_rain = np.zeros((self.im_height, self.im_width), dtype = int) # all values started with Zone A

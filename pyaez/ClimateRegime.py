@@ -473,8 +473,6 @@ class ClimateRegime(object):
         #============================
         Txsnm = 0.  # Txsnm - snow melt temperature threshold
         Fsnm = 5.5  # Fsnm - snow melting coefficient
-        Sb_old = 0.
-        Wb_old = 0.
         #============================
         Tx365 = self.maxT_daily.copy()
         Ta365 = self.meanT_daily.copy()
@@ -492,6 +490,8 @@ class ClimateRegime(object):
         #============================
         for i_row in range(self.im_height):
             for i_col in range(self.im_width):
+                Sb_old = 0.
+                Wb_old = 0.                
 
                 lgpt5_point = self.lgpt5[i_row, i_col]
 

@@ -986,11 +986,11 @@ class ClimateRegime(object):
                             aez[i_r, i_c] = 53
 
                         # BO/Cold climate, with Permafrost
-                        elif aez_temp_regime[i_r, i_c] == 9 and aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4] == True:
+                        elif aez_temp_regime[i_r, i_c] == 9 and (aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4]) == True:
                             aez[i_r, i_c] = 54
 
                         # Arctic/ Very cold climate
-                        elif aez_temp_regime[i_r, i_c] == 10 and aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4] == True:
+                        elif aez_temp_regime[i_r, i_c] == 10 and (aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4]) == True:
                             aez[i_r, i_c] = 55
 
                         # Severe soil/terrain limitations

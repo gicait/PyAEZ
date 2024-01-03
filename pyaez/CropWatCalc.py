@@ -315,13 +315,14 @@ class CropWatCalc(object):
             """
         kc = orig_kc.copy()
         stage_per = self.d_per.copy()
-        start, incycle_len = self.cycle_begin, self.cycle_len
+        incycle_len = self.cycle_len
 
         # Kc1 (kc factor for initial growth stage) procedure
-        precip_cycle = self.Prec[start-1:start-1+incycle_len-1] # correct
-        eto_cycle = self.peto[start-1: start-1+incycle_len-1] # correct
-        minT_cycle = self.min_temp[start-1:start-1+incycle_len-1] # correct
-        maxT_cycle = self.max_temp[start-1:start-1+incycle_len-1] # correct
+        precip_cycle = self.Prec.copy() # correct
+        eto_cycle = self.peto.copy() # correct
+        minT_cycle = self.min_temp.copy() # correct
+        maxT_cycle = self.max_temp.copy() # correct
+
 
         d_days = np.round( incycle_len * (np.cumsum(stage_per)/100) ).astype('int')
 
@@ -423,7 +424,7 @@ class CropWatCalc(object):
         hfct = (hx/3.)**0.3
 
         # length duration starts from previous DOY to length for D2+ D3
-        d_days
+        
         precip_d2 = precip_cycle[d_days[0]:d_days[2]-1]
         eto_d2 = eto_cycle[d_days[0]:d_days[2]-1]
         wd_d2 = self.wind_sp[d_days[0]:d_days[2]-1]
@@ -431,8 +432,11 @@ class CropWatCalc(object):
         minT_d2 = minT_cycle[d_days[0]:d_days[2]-1]
         maxT_d2 = maxT_cycle[d_days[0]:d_days[2]-1]
 
+
         e0n = np.exp((17.27 * minT_d2)/(237.3 + minT_d2))
         e0x = np.exp((17.27 * maxT_d2)/(237.3 + maxT_d2))
+
+        
 
         div = np.divide(e0n, e0x, where = e0x!=0, out = np.zeros(e0n.shape[0]))
         e0n_sum = np.sum(div)

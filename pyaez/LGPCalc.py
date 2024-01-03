@@ -331,6 +331,8 @@ def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, ista
             Eta365 = etm
         else:
             Eta365 = Eta
+
+        sbx = sb_old-snm
             
         Wb365 = wb
         Wx365 = wx

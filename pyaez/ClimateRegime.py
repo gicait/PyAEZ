@@ -473,8 +473,6 @@ class ClimateRegime(object):
         #============================
         Txsnm = 0.  # Txsnm - snow melt temperature threshold
         Fsnm = 5.5  # Fsnm - snow melting coefficient
-        Sb_old = 0.
-        Wb_old = 0.
         #============================
         Tx365 = self.maxT_daily.copy()
         Ta365 = self.meanT_daily.copy()
@@ -492,6 +490,8 @@ class ClimateRegime(object):
         #============================
         for i_row in range(self.im_height):
             for i_col in range(self.im_width):
+                Sb_old = 0.
+                Wb_old = 0.                
 
                 lgpt5_point = self.lgpt5[i_row, i_col]
 
@@ -986,11 +986,11 @@ class ClimateRegime(object):
                             aez[i_r, i_c] = 53
 
                         # BO/Cold climate, with Permafrost
-                        elif aez_temp_regime[i_r, i_c] == 9 and aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4] == True:
+                        elif aez_temp_regime[i_r, i_c] == 9 and (aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4]) == True:
                             aez[i_r, i_c] = 54
 
                         # Arctic/ Very cold climate
-                        elif aez_temp_regime[i_r, i_c] == 10 and aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4] == True:
+                        elif aez_temp_regime[i_r, i_c] == 10 and (aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4]) == True:
                             aez[i_r, i_c] = 55
 
                         # Severe soil/terrain limitations
@@ -1157,7 +1157,7 @@ class ClimateRegime(object):
     according to Gunther's agreement and the documentation.
     """
          
-    def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t10, ts_t0):
+    def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t0, ts_t10):
         
         # defining the constant arrays for rainfed and irrigated conditions, all pixel values start with 1
         multi_crop_rain = np.zeros((self.im_height, self.im_width), dtype = int) # all values started with Zone A

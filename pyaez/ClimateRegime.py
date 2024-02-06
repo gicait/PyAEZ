@@ -236,7 +236,107 @@ class ClimateRegime(object):
         else:
             return thermal_climate
     
+    def getThermalClimatePixel(self, row, col):
+        """Classification of rainfall and temperature seasonality into thermal climate classes for a pixel location
 
+        Returns:
+            2D NumPy: Thermal Climate classification
+        """        
+        # Note that currently, this thermal climate is designed only for the northern hemisphere, southern hemisphere is not implemented yet.
+        thermal_climate = 0
+
+
+        if self.set_mask:
+            if self.im_mask[row, col] == self.nodata_val:
+                thermal_climate = 0
+                
+        # converting daily to monthly
+        obj_utilities = UtilitiesCalc.UtilitiesCalc()
+        meanT_monthly_sealevel = obj_utilities.averageDailyToMonthly(self.meanT_daily_sealevel[row,col,:])
+        meanT_monthly = obj_utilities.averageDailyToMonthly(self.meanT_daily[row,col,:])
+        P_by_PET_monthly = obj_utilities.averageDailyToMonthly(self.P_by_PET_daily[row,col,:])
+
+            
+        # Seasonal parameters            
+        summer_PET0 = np.sum(P_by_PET_monthly[3:9])
+        winter_PET0 = np.sum([P_by_PET_monthly[9::], P_by_PET_monthly[0:3]])
+        Ta_diff = np.max(meanT_monthly_sealevel) - \
+            np.min(meanT_monthly_sealevel)
+        
+        # Tropics
+        if np.min(meanT_monthly_sealevel) >= 18. and Ta_diff < 15.:
+            if np.mean(meanT_monthly) < 20.:
+                thermal_climate = 2  # Tropical highland
+            else:
+                thermal_climate = 1  # Tropical lowland
+                
+        # SubTropic
+        elif np.min(meanT_monthly_sealevel) >= 5. and np.sum(meanT_monthly_sealevel >= 10) >= 8:
+            if np.sum(self.totalPrec_daily[row,col,:]) < 250:
+                # 'Subtropics Low Rainfall
+                thermal_climate = 3
+            elif self.latitude[row,col]>=0: 
+                if summer_PET0 >= winter_PET0:
+                    # Subtropics Summer Rainfall
+                    thermal_climate = 4
+                else:
+                    # Subtropics Winter Rainfall
+                    thermal_climate = 5
+            else:
+                if summer_PET0 >= winter_PET0:
+                    # Subtropics Winter Rainfall
+                    thermal_climate = 5                     
+                else:
+                    # Subtropics Summer Rainfall
+                    thermal_climate = 4
+
+                
+        # Temperate
+        elif np.sum(meanT_monthly_sealevel >= 10) >= 4:
+            if Ta_diff <= 20:
+                # Oceanic Temperate
+                thermal_climate = 6
+            elif Ta_diff <= 35:
+                # Sub-Continental Temperate
+                thermal_climate= 7
+            else:
+                # Continental Temperate
+                thermal_climate= 8
+
+        elif np.sum(meanT_monthly_sealevel >= 10) >= 1:
+            # Boreal
+            if Ta_diff <= 20:
+                # Oceanic Boreal
+                thermal_climate = 9
+            elif Ta_diff <= 35:
+                # Sub-Continental Boreal
+                thermal_climate = 10
+            else:
+                # Continental Boreal
+                thermal_climate = 11
+        else:
+            # Arctic
+            thermal_climate = 12
+
+        meanT_monthly_sealevel = obj_utilities.averageDailyToMonthly(self.meanT_daily_sealevel[row,col,:])
+        meanT_monthly = obj_utilities.averageDailyToMonthly(self.meanT_daily[row,col,:])
+        P_by_PET_monthly = obj_utilities.averageDailyToMonthly(self.P_by_PET_daily[row,col,:])
+
+        para = {'Months': np.arange(1,13),
+                'Monthly sea-level adjusted Temperature': meanT_monthly_sealevel,
+                'Monthly mean average temperature':meanT_monthly,
+                'Monthly P/PET': P_by_PET_monthly}
+        
+        single = {'row': float(row), 'col': float(col),
+                'Temperature amplitude': Ta_diff,
+                  'Latitude': self.latitude[row,col],
+                  'Final Thermal Climate Class': float(thermal_climate),
+                  'Elevation': float(self.elevation[row,col]),
+                  'summer_PET0 Summation': summer_PET0,
+                  'winter_PET0 Summation': winter_PET0}
+        
+        return [para, single]
+    
     def getThermalZone(self):
         """The thermal zone is classified based on actual temperature which reflects 
         on the temperature regimes of major thermal climates

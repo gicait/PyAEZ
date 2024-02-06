@@ -30,6 +30,11 @@ class SoilConstraints(object):
         OC_intp  = np.interp(OC_val , para['OC_val'], para['OC_fct'])/100
         TEB_intp = np.interp(TEB_val, para['TEB_val'], para['TEB_fct'])/100
 
+        print('TXT_intp = ',TXT_intp)
+        print('pH_intp = ',pH_intp)
+        print('OC_intp = ',OC_intp)
+        print('TEB_intp = ',TEB_intp)
+
         if top_sub == 'top':
             min_factor = np.min([TXT_intp, pH_intp, OC_intp, TEB_intp])
             final_factor = (min_factor + (np.sum([TXT_intp, pH_intp, OC_intp, TEB_intp]) - min_factor)/3)/2
@@ -51,6 +56,12 @@ class SoilConstraints(object):
         CECclay_intp = np.interp(CECclay_val, para['CECclay_val'], para['CECclay_fct'])/100
         CECsoil_intp = np.interp(CECsoil_val, para['CECsoil_val'], para['CECsoil_fct'])/100
         pH_intp = np.interp(pH_val, para['pH_val'], para['pH_fct'])/100
+
+        print('TXT_intp = ',TXT_intp)
+        print('BS_intp = ',BS_intp)
+        print('CECclay_intp = ',CECclay_intp)
+        print('CECsoil_intp = ',CECsoil_intp)
+        print('pH_intp = ',pH_intp)
 
         if top_sub == 'top':
             min_factor = np.min([TXT_intp, BS_intp, CECsoil_intp])
@@ -74,6 +85,11 @@ class SoilConstraints(object):
         SPH_intp = para['SPH_fct'][np.where(para['SPH_val'] == SPH_val)[0][0]]/100
         OSD_intp = np.interp(OSD_val, para['OSD_val'], para['OSD_fct'])/100
 
+        print('RSD_intp = ',RSD_intp)
+        print('SPR_intp = ',SPR_intp)
+        print('SPH_intp = ',SPH_intp)
+        print('OSD_intp = ',OSD_intp)
+
         final_factor = RSD_intp * np.min([SPR_intp, SPH_intp, OSD_intp])
 
         return final_factor
@@ -87,6 +103,9 @@ class SoilConstraints(object):
 
         DRG_intp = para['DRG_fct'][np.where(para['DRG_val'] == DRG_val)[0][0]]/100
         SPH_intp = para['SPH_fct'][np.where(para['SPH_val'] == SPH_val)[0][0]]/100
+
+        print('DRG_intp = ',DRG_intp)
+        print('SPH_intp = ',SPH_intp)
 
         final_factor = np.min([DRG_intp, SPH_intp])
 
@@ -103,6 +122,9 @@ class SoilConstraints(object):
         EC_intp = np.interp(EC_val, para['EC_val'], para['EC_fct'])/100
         SPH_intp = para['SPH_fct'][np.where(para['SPH_val'] == SPH_val)[0][0]]/100
 
+        print('ESP_intp = ',ESP_intp)
+        print('EC_intp = ',EC_intp)
+        print('SPH_intp = ',SPH_intp)
 
         final_factor = np.min([ESP_intp*EC_intp, SPH_intp])
 
@@ -118,6 +140,10 @@ class SoilConstraints(object):
         CCB_intp = np.interp(CCB_val, para['CCB_val'], para['CCB_fct'])/100
         GYP_intp = np.interp(GYP_val, para['GYP_val'], para['GYP_fct'])/100
         SPH_intp = para['SPH_fct'][np.where(para['SPH_val'] == SPH_val)[0][0]]/100
+
+        print('CCB_intp = ',CCB_intp)
+        print('GYP_intp = ',GYP_intp)
+        print('SPH_intp = ',SPH_intp)
 
         final_factor = np.min([CCB_intp*GYP_intp, SPH_intp])
 
@@ -135,6 +161,12 @@ class SoilConstraints(object):
         SPH_intp = para['SPH_fct'][np.where(para['SPH_val'] == SPH_val)[0][0]]/100
         TXT_intp = para['TXT_fct'][np.where(para['TXT_val'] == TXT_val)[0][0]]/100
         VSP_intp = np.interp(VSP_val, para['VSP_val'], para['VSP_fct'])/100
+
+        print('RSD_intp = ',RSD_intp)
+        print('GRC_intp = ',GRC_intp)
+        print('SPH_intp = ',SPH_intp)
+        print('TXT_intp = ',TXT_intp)
+        print('VSP_intp = ',VSP_intp)
 
         min_factor = np.min([RSD_intp, GRC_intp, SPH_intp, TXT_intp, VSP_intp])
         final_factor = (min_factor + (np.sum([RSD_intp, GRC_intp, SPH_intp, TXT_intp, VSP_intp]) - min_factor)/4)/2
@@ -315,9 +347,73 @@ class SoilConstraints(object):
         'VSP_fct':(irr_df['SQ7'].loc[irr_df['SQ7'][0] == 'VSP_fct']).dropna(axis = 1).to_numpy()[0,1:].astype(float)
         }
     
+    def SoilQualityIntermediates(self,topsoil_path, subsoil_path, SQ, SMU, irr_or_rain):
+        
+        # reading soil properties from excel sheet
+        topsoil_df = pd.read_excel(topsoil_path,sheet_name= None)
+        subsoil_df = pd.read_excel(subsoil_path, sheet_name= None)
+
+        # check if two dataframes have same number of SMUs, if not raise error.
+        if topsoil_df['D1'].shape != subsoil_df['D1'].shape:
+            raise Exception(r'Please recheck the number of entries of top-soil and sub soil excel sheets')
+
+        self.SMU = topsoil_df['D1'].CODE
+        # zero array of all individual soil qualities for each self.SMU
+        
+        # 1st =  7 for 7 soil layers to evaluate, 2nd = self.SMUs, 3rd = Soil Qualities
+
+        # Representing seven layers
+        layer_lst = np.array(['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'])
+
+
+        for i in range(layer_lst.shape[0]):
+
+            topdf = topsoil_df[layer_lst[i]]
+            subdf = subsoil_df[layer_lst[i]]
+            print('Going_{}'.format(layer_lst[i]))
+
+            SQ_array = np.zeros(7)
+
+
+            sel_SMU = SMU
+            t_code = topdf.loc[topdf['CODE'] == sel_SMU]
+            s_code = subdf.loc[subdf['CODE'] == sel_SMU]
+
+
+            if SQ ==  'SQ1':
+                # SQ1 calculation
+                # top-soil
+                print('TOPSOIL')
+                SQ1_t = self.soil_qty_1(TXT_val= t_code['TXT'].iloc[0], OC_val = t_code['OC'].iloc[0], pH_val=t_code['pH'].iloc[0],
+                                        TEB_val= t_code['TEB'].iloc[0], condition= irr_or_rain, top_sub= 'top')
+                # sub-soil
+                print('topsoil SQ1 = {}'.format(SQ1_t))
+                print('SUBSOIL')
+                SQ1_s = self.soil_qty_1(TXT_val= s_code['TXT'].iloc[0], OC_val = s_code['OC'].iloc[0], pH_val=s_code['pH'].iloc[0],
+                                        TEB_val= s_code['TEB'].iloc[0], condition= irr_or_rain, top_sub= 'sub')
+                
+                print('subsoil SQ1 = {}'.format(SQ1_s))
+                SQ1 = (SQ1_t + SQ1_s)/2
+                print('Final SQ1 =', SQ1)
+            
+            elif SQ == 'SQ2':
+                # SQ2 calculation
+                # top-soil
+                print('TOPSOIL')
+                SQ2_t = self.soil_qty_2(TXT_val= t_code['TXT'].iloc[0], BS_val=t_code['BS'].iloc[0], CECclay_val=t_code['CEC_clay'].iloc[0], 
+                                        CECsoil_val= t_code['CEC_soil'].iloc[0], pH_val=t_code['pH'].iloc[0], condition = irr_or_rain, top_sub= 'top')
+                
+                # sub-soil
+                print("SUBSOIL")
+                SQ2_s = self.soil_qty_2(TXT_val= s_code['TXT'].iloc[0], BS_val=s_code['BS'].iloc[0], CECclay_val=s_code['CEC_clay'].iloc[0], 
+                            CECsoil_val= s_code['CEC_soil'].iloc[0], pH_val=s_code['pH'].iloc[0], condition = irr_or_rain, top_sub= 'sub')
+                
+                SQ2 = (SQ2_t + SQ2_s)/2
+                print('Final SQ2 =', SQ2)
+
+
 
     def calculateSoilQualities(self, irr_or_rain, topsoil_path, subsoil_path):
-
         """
         Calculate the Soil Qualities for each SMU in soil map using soil characteristics
         from top-soil and sub-soil layer (each with 7 sub-divisions).
@@ -476,23 +572,28 @@ class SoilConstraints(object):
 
             if input_level == 'L':
                 min_factor = np.min([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])
+                summation = np.sum([np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])]) - min_factor
 
                 # fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor)/3)/2
-                fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])/3))/2
+                fsq = (min_factor + (summation/3))/2
 
                 self.SR[i] = self.SQ_array[i,0] * self.SQ_array[i,2] * fsq
+
             elif input_level == 'I':
                 min_factor = np.min([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])
+                summation = np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor
 
                 # fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor)/3)/2
-                fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])/3))/2
+                fsq = (min_factor + (summation/3))/2
 
                 self.SR[i] = 0.5 * (self.SQ_array[i,0]+self.SQ_array[i,1]) * self.SQ_array[i,2] * fsq
+
             elif input_level == 'H':
                 min_factor = np.min([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])
+                summation = np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor
                 # fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor)/3)/2
 
-                fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])/3))/2
+                fsq = (min_factor + (summation/3))/2
                 self.SR[i] = self.SQ_array[i,1] * self.SQ_array[i,2] * fsq
             else:
                 print('Wrong Input Level !')

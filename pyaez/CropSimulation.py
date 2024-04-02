@@ -4,15 +4,14 @@ This CropSimulation Class simulates all the possible crop cycles to find
 the best crop cycle that produces maximum yield for a particular grid
 2020: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet, Kittiphon Boonma
-2023 (Dec): Swun Wunna Htet
 
-Modifications
-1.  Minimum cycle length checking logic added to crop simulation.
-2.  New crop parameters: minimum cycle length, maximum cycle length, plant height is added logic added.
+Bug fixes:
+2/4/2024: Fixes TSUM screening activation when TSUM thresholds are not provided.
 """
 
 import numpy as np
 import pandas as pd
+import math
 try:
     import gdal
 except:
@@ -221,8 +220,10 @@ class CropSimulation(object):
         else:
             self.perennial = False
 
-        # If users provide all TSUM thresholds, TSUM screening will be done. Otherwise, TSUM screening will not be activated.
-        if np.all([crop_df['LnS'][crop_df_index] != np.nan, crop_df['LsO'][crop_df_index] != np.nan, crop_df['LO'][crop_df_index] != np.nan, crop_df['HnS'][crop_df_index] != np.nan, crop_df['HsO'][crop_df_index] != np.nan, crop_df['HO'][crop_df_index] != np.nan]):
+        # If users provide all TSUM thresholds, TSUM screening
+        if np.any([math.isnan(crop_df['LnS'][crop_df_index]), math.isnan(crop_df['LsO'][crop_df_index]), math.isnan(crop_df['LO'][crop_df_index]), math.isnan(crop_df['HnS'][crop_df_index]), math.isnan(crop_df['HsO'][crop_df_index]), math.isnan(crop_df['HO'][crop_df_index])]):
+            self.set_Tsum_screening = False
+        else:
             self.setTSumScreening(LnS=crop_df['LnS'][crop_df_index], LsO=crop_df['LsO'][crop_df_index], LO=crop_df['LO'][crop_df_index],
                                   HnS=crop_df['HnS'][crop_df_index], HsO=crop_df['HsO'][crop_df_index], HO=crop_df['HO'][crop_df_index])
 

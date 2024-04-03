@@ -441,7 +441,7 @@ class BioMassCalc(object):
             return
 
         '''Maximum Rate of Gross Biomass Production''' # Minor change
-
+        bgm = 0.
         if iPm > 20:
             bgm = (f_day_clouded * (.8 + (0.01 * iPm)) * bo_mean) + ((1-f_day_clouded) * (.5 + (.025 * iPm)) * bc_mean);
         elif iPm < 20:
@@ -449,7 +449,9 @@ class BioMassCalc(object):
         # 
         elif iPm == 20:
             bgm = (f_day_clouded*bo_mean) + ((1 - f_day_clouded)*bc_mean);
-
+        print('LAI = ', LAi)
+        print('Cycle_len =', cycle_len)
+        print('Ct =', Ct)
         '''net biomass production '''
         Bn = (0.36 * bgm * l)/((1/cycle_len)+0.25*Ct)
         

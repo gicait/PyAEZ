@@ -1,5 +1,5 @@
 """
-PyAEZ version 2.2 (Dec 2023)
+PyAEZ version 2.3 (Dec 2023)
 This CropSimulation Class simulates all the possible crop cycles to find 
 the best crop cycle that produces maximum yield for a particular grid
 2020: N. Lakmal Deshapriya
@@ -1249,7 +1249,9 @@ class CropSimulation(object):
         else:
             return [fi, permafrost]
 
-#----------------- End of file -------------------------#
+#------------------------------------------------ End of file ------------------------------------------------------#
+#----------------------------------------------DEVELLOPER'S CODES --------------------------------------------------#
+
     def simulateCropCycleOne(self, row, col, ccdsi, ccdsr, start_doy=1, end_doy=365, step_doy=1, leap_year=False):
         """Running the crop cycle calculation/simulation for a single pixel location.
 
@@ -1915,3 +1917,250 @@ class CropSimulation(object):
         print('\nSimulations Completed !')
 
         return [general ,climate, cycle, final ,biomassi, biomassr ,cropwat, ts_i, ts_r]
+    
+    def simulateIrrigatedCropCycle(self, start_doy = 1, end_doy = 365, step_doy = 1, leap_year = False):
+        """Test code for irrigated yield simulation
+        """
+
+        # counter for tracking progress
+
+        count_pixel_completed = 0
+        total = self.im_height * self.im_width
+        # this stores final result
+        self.final_yield_irrig = np.zeros((self.im_height, self.im_width))
+        self.crop_calender_irr = np.zeros(
+            (self.im_height, self.im_width), dtype=int)
+        self.fc1_irr = np.zeros((self.im_height, self.im_width))
+
+        # Loop starts here
+        for i_row in range(self.im_height):
+            for i_col in range(self.im_width):
+                
+
+                # Masking
+                if self.set_mask:
+                    if self.im_mask[i_row, i_col] == self.nodata_val:
+                        count_pixel_completed = count_pixel_completed + 1
+                        print('\rDone %: ' + str(round(count_pixel_completed /
+                        total*100, 2)), end='\r')
+                        continue    
+                
+                # 2. Permafrost screening
+                if self.set_Permafrost_screening:
+                    if np.logical_or(self.permafrost_class[i_row, i_col] == 1, self.permafrost_class[i_row, i_col] == 2):
+                        count_pixel_completed = count_pixel_completed + 1
+                        print('\rDone %: ' + str(round(count_pixel_completed /
+                        total*100, 2)), end='\r')
+                        continue
+
+                # Thermal Climate Screening
+                if self.set_tclimate_screening:
+                    if self.t_climate[i_row, i_col] in self.no_t_climate:
+                        count_pixel_completed = count_pixel_completed + 1
+                        
+                        print('\rDone %: ' + str(round(count_pixel_completed /
+                        total*100, 2)), end='\r')
+                        continue
+                
+                # setting effective cycle length
+                eff_cycle_len = 0
+                LAi_irr = 0.
+                HI_irr = 0.
+
+                """Cycle length checking for rainfed and irrigated annuals.
+                    Concerns with LGPt5 (irrigated)"""
+                if not self.perennial:
+
+                    if int(self.LGPT5[i_row, i_col]) > self.min_cycle_len:
+                        eff_cycle_len = self.cycle_len
+                        LAi_irr = self.LAi_irr
+                        HI_irr = self.HI_irr
+
+                    else:
+                        continue
+                else:
+                    """Adjustment of cycle length, LAI and HI for Perennials"""
+                    self.set_adjustment = True
+
+                    """ Adjustment for IRRIGATED conditions"""
+                    """Use LGPT5 for minimum temperatures less than 8. Use LGPT10 for temperature greater than 8."""
+                    # effective cycle length will be our cycle length
+                    if self.min_temp <= 8:
+                        if int(self.LGPT5[i_row, i_col]) < self.min_cycle_len:
+                            continue
+                        else:
+                            eff_cycle_len = min(int(self.LGPT5[i_row, i_col]), self.max_cycle_len)
+                    elif self.min_temp >8:
+                        if int(self.LGPT10[i_row, i_col]) < self.min_cycle_len:
+                            continue
+                        else:
+                            eff_cycle_len = min(int(self.LGPT10[i_row, i_col]), self.max_cycle_len)
+                    
+                    lai_hi = self.adjustForPerennialCrop(
+                            eff_cycle_len , aLAI=self.aLAI, bLAI=self.bLAI, aHI=self.aHI, bHI=self.bHI, rain_or_irr='irr')
+                    
+                    if eff_cycle_len < self.min_cycle_len:
+                        continue
+                    else:
+                        LAi_irr = lai_hi[0]
+                        HI_irr = lai_hi[1]
+                
+
+                count_pixel_completed = count_pixel_completed + 1
+
+                # Determination of leap year
+                if leap_year:
+                    days_in_year = 366
+                else:
+                    days_in_year = 365
+                
+                # extract climate data
+                minT_daily_point = self.minT_daily[i_row, i_col, :]
+                maxT_daily_point = self.maxT_daily[i_row, i_col, :]
+                shortRad_daily_point = self.shortRad_daily[i_row, i_col, :]
+                wind2m_daily_point = self.wind2m_daily[i_row, i_col, :]
+                totalPrec_daily_point = self.totalPrec_daily[i_row, i_col, :]
+                rel_humidity_daily_point = self.rel_humidity_daily[i_row, i_col, :]
+                pet_daily_point = self.pet_daily[i_row, i_col, :]
+
+                # Empty arrays that stores yield estimations and fc1 of all cycles per particular location (pixel)
+                yield_of_all_crop_cycles_irrig = np.empty(0, dtype= int)
+                fc1_irr_lst = np.empty(0, dtype= np.float16)
+
+                
+                """Individual cycle simulation starts here"""
+                for i_cycle in range(start_doy-1, end_doy, step_doy):
+
+                    """
+                    Check if the first day of a cycle meets minimum temperature requirement. If not, all outputs will be zero.
+                    and iterates to next cycle.
+                    """
+                    if (minT_daily_point[i_cycle]+maxT_daily_point[i_cycle])/2 < self.min_temp:
+                        yield_of_all_crop_cycles_irrig = np.append(yield_of_all_crop_cycles_irrig, 0)
+                        fc1_irr_lst = np.append(fc1_irr_lst, 0.)
+                        continue
+                    else:
+                        """
+                        Repeat climate data
+                        """
+                        minT_daily_2year = np.tile(minT_daily_point, 2)
+                        maxT_daily_2year = np.tile(maxT_daily_point, 2)
+                        shortRad_daily_2year = np.tile(shortRad_daily_point, 2) # MJ/m2/day
+                        wind2m_daily_2year = np.tile(wind2m_daily_point,2)
+                        totalPrec_daily_2year = np.tile(totalPrec_daily_point, 2)
+                        pet_daily_2year = np.tile(pet_daily_point, 2)
+
+
+                    # extract climate data within the season to pass in to calculation classes
+                    # cycle-length duration of temperature for temperature profile 
+                    minT_daily_season_irr = minT_daily_2year[i_cycle: i_cycle +
+                                                                int(eff_cycle_len)-1]
+                    maxT_daily_season_irr = maxT_daily_2year[i_cycle: i_cycle +
+                                                                int(eff_cycle_len)-1]
+                    
+                    if self.perennial:
+                        minT_daily_season_irr_tsum = minT_daily_2year[i_cycle: i_cycle +
+                                                                    365-1]
+                        maxT_daily_season_irr_tsum = maxT_daily_2year[i_cycle: i_cycle +
+                                                                365-1]
+                        
+                    shortRad_daily_season_irr = shortRad_daily_2year[
+                            i_cycle: i_cycle+int(eff_cycle_len)-1]
+                    pet_daily_season_irr = pet_daily_2year[
+                        i_cycle: i_cycle+int(eff_cycle_len)-1]
+                    totalPrec_daily_season_irr = totalPrec_daily_2year[
+                        i_cycle: i_cycle+int(eff_cycle_len)-1]
+
+                    """Creating Thermal Screening object classes for perennial IRRIGATED conditions"""
+                    obj_screening_irr = ThermalScreening.ThermalScreening()
+
+                    if self.perennial:
+                        obj_screening_irr.setClimateData(minT_daily_season_irr_tsum, maxT_daily_season_irr_tsum, 
+                                                        minT_daily_season_irr, maxT_daily_season_irr)
+                    else:
+                        obj_screening_irr.setClimateData(minT_daily_season_irr, maxT_daily_season_irr, 
+                                                        minT_daily_season_irr, maxT_daily_season_irr)
+                    
+                    # Thermal Screening flag activation
+                    if self.set_lgpt_screening:
+                            obj_screening_irr.setLGPTScreening(
+                                no_lgpt=self.no_lgpt, optm_lgpt=self.optm_lgpt)
+
+                    # TSUM Screening
+                    if self.set_Tsum_screening:
+                        obj_screening_irr.setTSumScreening(
+                            LnS=self.LnS, LsO=self.LsO, LO=self.LO, HnS=self.HnS, HsO=self.HsO, HO=self.HO)
+                        
+                    # Crop-Specific Rule Screening
+                    if self.setTypeBConstraint:
+                        obj_screening_irr.applyTypeBConstraint(
+                            data=self.data, input_temp_profile=obj_screening_irr.tprofile, perennial_flag= self.perennial)
+                        
+                    fc1_irr = 1.
+                    fc1_irr = obj_screening_irr.getReductionFactor2()
+
+                    if fc1_irr == None or fc1_irr == np.nan:
+                        raise Exception('Fc1 irrigated not returned properly. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+
+                    if fc1_irr >0:
+                        """If fc1 IRRIGATED IS NOT ZERO >>> BIOMASS IRRIGATED STARTS"""
+                        obj_maxyield_irr = BioMassCalc.BioMassCalc(
+                            i_cycle+1, i_cycle+1+eff_cycle_len-1, self.latitude[i_row, i_col])
+                        obj_maxyield_irr.setClimateData(
+                            minT_daily_season_irr, maxT_daily_season_irr, shortRad_daily_season_irr)
+                        obj_maxyield_irr.setCropParameters(
+                            LAi_irr, HI_irr, self.legume, self.adaptability)
+                        obj_maxyield_irr.calculateBioMass()
+                        est_yield_irrigated = obj_maxyield_irr.calculateYield()
+
+                        # reduce thermal screening factor
+                        est_yield_irrigated = est_yield_irrigated * fc1_irr
+
+                        if est_yield_irrigated == None or est_yield_irrigated== np.nan:
+                            raise Exception('Biomass Yield for irrigated not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+                    else:
+                        est_yield_irrigated = 0
+                    
+                    yield_of_all_crop_cycles_irrig = np.append(yield_of_all_crop_cycles_irrig, est_yield_irrigated)
+                    fc1_irr_lst = np.append(fc1_irr_lst, fc1_irr)
+
+                    # Error raising
+                    if len(yield_of_all_crop_cycles_irrig) != i_cycle+1:
+                        raise Exception('Irrigated yield list not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+                                
+                    if len(fc1_irr_lst) != i_cycle+1 or fc1_irr == None or fc1_irr == np.nan:
+                        raise Exception('Fc1 irr not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+                
+                # print('All cycles completed', end='\r')
+
+                # get agro-climatic yield and crop calendar for IRRIGATED condition
+                if len(yield_of_all_crop_cycles_irrig) == len(fc1_irr_lst):
+
+                    self.final_yield_irrig[i_row, i_col] = np.max(yield_of_all_crop_cycles_irrig) # Maximum attainable yield
+                    # print('Final Yield = {}'.format(self.final_yield_irrig[i_row, i_col]))
+                    # Array index where maximum yield is obtained
+                    i = np.where(yield_of_all_crop_cycles_irrig == np.max(yield_of_all_crop_cycles_irrig))[0][0] # index of maximum yield
+
+                    self.crop_calender_irr[i_row, i_col] = int(i+1)*step_doy # Crop calendar for irrigated condition
+                    # print('Crop Calendar = {}'.format(i))
+                    self.fc1_irr[i_row, i_col] = fc1_irr_lst[i] # fc1 irrigated for the specific crop calendar DOY
+                    # print('Fc1 = {}'.format(self.fc1_irr[i_row, i_col]))
+
+                    print('\rDone %: ' + str(round(count_pixel_completed / total*100, 2)), end='\r')
+                else:
+                    raise Exception('Lists of irrigated yield and fc1 have different lengths')
+                    
+        print('\nSimulations Completed !')
+
+    def getThermalReductionFactorIRR(self):
+        """
+        Function for thermal reduction factor (fc1) map. For perennial crop,
+        the function produces a list of fc1 maps for both conditions.
+        Returns
+        -------
+        TYPE: A python list of 2-D numpy arrays: [fc1 rainfed, fc1 irrigated] 
+        or a 2-D numpy array.
+            Thermal reduction factor map (fc1) for corresponding conditions.
+
+        """
+        return self.fc1_irr

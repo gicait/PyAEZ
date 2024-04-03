@@ -1,5 +1,5 @@
 """
-PyAEZ version 2.2 (Dec 2023)
+PyAEZ version 2.3 (Dec 2023)
 Thermal Screening
 2020: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet
@@ -9,6 +9,7 @@ Modification:
 1. Removing time slicing with start date and cycle length.
 2. Removing getSuitability function.
 3. TSUM threhold values are rounded as integers for overcoming inconsistent data types.
+4. The two different temperature data is used (each with different cycle length slicing).
 
 """
 
@@ -22,10 +23,12 @@ class ThermalScreening(object):
         self.set_Tsum_screening = False
         self.setTypeBConstraint = False 
 
+    
+    def setClimateData(self, minT_daily_tsum, maxT_daily_tsum, minT_daily_tp, maxT_daily_tp):
 
-    def setClimateData(self, minT_daily, maxT_daily):
-        # self.cycle_len=cycle_len
-        self.meanT_daily = (minT_daily + maxT_daily) / 2
+        self.meanT_daily_tsum = (minT_daily_tsum + maxT_daily_tsum) / 2
+        self.meanT_daily_tp = (minT_daily_tp + maxT_daily_tp) / 2
+
         self.lgp0 = self.getThermalLGP0()
         self.lgp5 = self.getThermalLGP5()
         self.lgp10 = self.getThermalLGP10()
@@ -36,33 +39,34 @@ class ThermalScreening(object):
 
     """ Calculation of Module I indicators"""
     def getThermalLGP0(self):
-        return np.sum(self.meanT_daily > 0)
+        return np.sum(self.meanT_daily_tsum > 0)
 
     def getThermalLGP5(self):
-        return np.sum(self.meanT_daily > 5)
+        return np.sum(self.meanT_daily_tsum > 5)
 
     def getThermalLGP10(self):
-        return np.sum(self.meanT_daily > 10)
+        return np.sum(self.meanT_daily_tsum > 10)
 
     def getTemperatureSum0(self):
-        tempT = self.meanT_daily.copy()
+        
+        tempT = self.meanT_daily_tsum.copy()
         tempT[tempT <= 0] = 0
         return np.round(np.sum(tempT), decimals=0)
 
     def getTemperatureSum5(self):
-        tempT = self.meanT_daily
+        tempT = self.meanT_daily_tsum
         tempT[tempT <= 5] = 0
         return np.round(np.sum(tempT), decimals=0)
 
     def getTemperatureSum10(self):
-        tempT = self.meanT_daily
+        tempT = self.meanT_daily_tsum
         tempT[tempT <= 10] = 0
         return np.round(np.sum(tempT), decimals=0)
 
 
     def getTemperatureProfile(self):
         # Calculation of Temp Profile for 1-D numpy array of climate data input
-        temp1D = self.meanT_daily.copy()
+        temp1D = self.meanT_daily_tp.copy()
         # temp1D = temp1D[start_day-1: start_day-1 + cycle_len]
 
         interp1D = np.zeros(temp1D.shape)

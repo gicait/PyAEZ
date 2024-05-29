@@ -9,7 +9,7 @@ Modification:
 1. Removing time slicing with start date and cycle length.
 2. Removing getSuitability function.
 3. TSUM threhold values are rounded as integers for overcoming inconsistent data types.
-
+4. Fixed a bug where the constraint type for crop-specific rule is not operated due to different symbol type.
 """
 
 import numpy as np
@@ -297,7 +297,7 @@ class ThermalScreening(object):
             for i in range(len(self.calc_value)):
 
                 # "Constraint Rule calculation for greater than"
-                if self.constr_type[i] == '<=':
+                if self.constr_type[i] == '<=' or self.constr_type[i] == '≤':
 
                     # """Check if all threshold values are the same"""
                     if self.optimal[i] == self.sub_optimal[i] == self.not_suitable[i]:
@@ -365,7 +365,7 @@ class ThermalScreening(object):
                                 [f1, thermal_screening_f])
 
 
-                elif self.constr_type[i] == '>=':
+                elif self.constr_type[i] == '>=' or self.constr_type[i] =='≥':
 
                     # """Check if all threshold values are the same"""
                     if self.optimal[i] == self.sub_optimal[i] == self.not_suitable[i]:

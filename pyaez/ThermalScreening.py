@@ -1,15 +1,18 @@
 """
-PyAEZ version 2.3 (Dec 2023)
+PyAEZ version 3.0 (Dec 2024)
 Thermal Screening
 2020: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet
 2023 (Dec): Swun Wunna Htet
+2024 (Dec): Swun Wunna Htet
 
 Modification:
 1. Removing time slicing with start date and cycle length.
 2. Removing getSuitability function.
 3. TSUM threhold values are rounded as integers for overcoming inconsistent data types.
 4. The two different temperature data is used (each with different cycle length slicing).
+5. The climate data will only use mean temperature instead of minimum and maximum temperature to reduce
+   extra calculation.
 
 """
 
@@ -24,10 +27,25 @@ class ThermalScreening(object):
         self.setTypeBConstraint = False 
 
     
-    def setClimateData(self, minT_daily_tsum, maxT_daily_tsum, minT_daily_tp, maxT_daily_tp):
+    def setClimateData(self, meanT_daily_tsum,  meanT_daily_tp):
+        """
+        Setting up the Climate Data. Input climate data will be used for calculation of 
+        TSUM values and temperature profile calculation.
+        
+        Parameters
+        ----------
+        meanT_daily_tsum (1D NumPy Array): crop-cycle specific mean temperature used for
+                                           TSUM calculation [Deg Celsius]
+        meanT_daily_tp (1D NumPy Array): crop-cycle specific mean temperature used for
+                                         temperature profile calculation [Deg Celsius]
+        
+        Returns
+        ------
+        None.
+        """
 
-        self.meanT_daily_tsum = (minT_daily_tsum + maxT_daily_tsum) / 2
-        self.meanT_daily_tp = (minT_daily_tp + maxT_daily_tp) / 2
+        self.meanT_daily_tsum = meanT_daily_tsum.copy()
+        self.meanT_daily_tp = meanT_daily_tp.copy()
 
         self.lgp0 = self.getThermalLGP0()
         self.lgp5 = self.getThermalLGP5()
@@ -39,35 +57,113 @@ class ThermalScreening(object):
 
     """ Calculation of Module I indicators"""
     def getThermalLGP0(self):
+        """
+        Calculation of temperature growing period at zero degree Celsius threshold.
+        
+        Parameters
+        ----------
+        None.
+        
+        Returns
+        -------
+        None.
+        """
         return np.sum(self.meanT_daily_tsum > 0)
 
     def getThermalLGP5(self):
+        """
+        Calculation of temperature growing period at five degree Celsius threshold.
+        
+        Parameters
+        ----------
+        None.
+        
+        Returns
+        -------
+        None.
+        """
         return np.sum(self.meanT_daily_tsum > 5)
 
     def getThermalLGP10(self):
+        """
+        Calculation of temperature growing period at ten degree Celsius threshold.
+        
+        Parameters
+        ----------
+        None.
+        
+        Returns
+        -------
+        None.
+        """
         return np.sum(self.meanT_daily_tsum > 10)
 
     def getTemperatureSum0(self):
+        """
+        Calculation of temperature summation at zero degree Celsius threshold.
+        
+        Parameters
+        ----------
+        None.
+        
+        Returns
+        -------
+        None.
+        """
         
         tempT = self.meanT_daily_tsum.copy()
         tempT[tempT <= 0] = 0
         return np.round(np.sum(tempT), decimals=0)
 
     def getTemperatureSum5(self):
+        """
+        Calculation of temperature summation at five degree Celsius threshold.
+        
+        Parameters
+        ----------
+        None.
+        
+        Returns
+        -------
+        None.
+        """
         tempT = self.meanT_daily_tsum
         tempT[tempT <= 5] = 0
         return np.round(np.sum(tempT), decimals=0)
 
     def getTemperatureSum10(self):
+        """
+        Calculation of temperature summation at ten degree Celsius threshold.
+        
+        Parameters
+        ----------
+        None.
+        
+        Returns
+        -------
+        None.
+        """
         tempT = self.meanT_daily_tsum
         tempT[tempT <= 10] = 0
         return np.round(np.sum(tempT), decimals=0)
 
 
     def getTemperatureProfile(self):
+        """
+        Calculation of temperature profile. The length of temperature data differs depend on 
+        crop type (annuals or perennials).
+        
+        Parameters
+        ----------
+        None.
+        
+        Returns
+        -------
+        None.
+        """
         # Calculation of Temp Profile for 1-D numpy array of climate data input
         temp1D = self.meanT_daily_tp.copy()
-        # temp1D = temp1D[start_day-1: start_day-1 + cycle_len]
+
 
         interp1D = np.zeros(temp1D.shape)
 
@@ -168,6 +264,7 @@ class ThermalScreening(object):
             N7a = temp_profile[6]
             N8a = temp_profile[7]
             N9a = temp_profile[8]
+            
             N1b = temp_profile[9]
             N2b = temp_profile[10]
             N3b = temp_profile[11]
@@ -301,7 +398,7 @@ class ThermalScreening(object):
             for i in range(len(self.calc_value)):
 
                 # "Constraint Rule calculation for greater than"
-                if self.constr_type[i] == '<=':
+                if self.constr_type[i] == '<=' or self.constr_type[i] == '≤':
 
                     # """Check if all threshold values are the same"""
                     if self.optimal[i] == self.sub_optimal[i] == self.not_suitable[i]:
@@ -333,7 +430,8 @@ class ThermalScreening(object):
                                 [f1, thermal_screening_f])
 
                     # """For calculated value beyond sub-optimum/not-suitable, use previous linear interpolation (But not sure)"""
-                        elif self.calc_value > self.sub_optimal[i]:
+                        # elif self.calc_value > self.sub_optimal[i]:
+                        else:
                             f1 = 0
                             thermal_screening_f = np.min(
                                 [f1, thermal_screening_f])
@@ -369,7 +467,7 @@ class ThermalScreening(object):
                                 [f1, thermal_screening_f])
 
 
-                elif self.constr_type[i] == '>=':
+                elif self.constr_type[i] == '>=' or self.constr_type[i] == '≥':
 
                     # """Check if all threshold values are the same"""
                     if self.optimal[i] == self.sub_optimal[i] == self.not_suitable[i]:

@@ -14,6 +14,7 @@ Modification:
 4. Day time temperature calculation corrected to respective day of year interval.
 5. Numba incorporation are removed due to lack of support for scipy interpolation.
 6. Ac, Bc, and Bo reference tables for Southern Hemisphere are updated.
+7. Fixed an issue when day time temperature calculation during year transition is not properly calculated.
 """
 
 import numpy as np
@@ -21,17 +22,18 @@ from scipy.interpolate import CubicSpline
 
 class BioMassCalc(object):
 
-    def __init__(self, cycle_begin, cycle_end, latitude):
+    def __init__(self, cycle_begin, cycle_end, latitude, leap_year = False):
 
         self.cycle_begin = cycle_begin
         self.cycle_end = cycle_end
-        self.cycle_len = cycle_end - cycle_begin +1
+        self.cycle_len = cycle_end - cycle_begin
 
         self.lat = latitude
         self.lat_index1 = int(np.floor((latitude)/10));
         self.lat_index2 = int(np.ceil((latitude)/10));
         self.lat_t = self.lat_index1 * 10;
         self.lat_b = self.lat_index2 * 10;
+        self.leap_year = leap_year
 
 
     def setClimateData(self, min_temp, max_temp, short_rad):
@@ -57,32 +59,68 @@ class BioMassCalc(object):
         # day-time temperature corrected and calculated according to DOY
         self.dT_daily = np.zeros(self.minT_daily.shape[0])
 
-        for i1 in range(self.cycle_begin, self.cycle_end):
+        doy_lst = np.arange(self.cycle_begin, self.cycle_end+1)
+        
+        # reformatting doy list if its out of 365
+        if self.leap_year:
+            doy_lst = np.where(doy_lst>366, 366-doy_lst, doy_lst)
+        else:
+            doy_lst = np.where(doy_lst>365, 365-doy_lst, doy_lst)
+        
+        for i1 in range(self.dT_daily.shape[0]):
 
-            if i1<=31:# Jan
-                self.dT_daily[i1 - self.cycle_begin] = 0.0278 + 0.3301*self.minT_daily[i1 - self.cycle_begin] + 0.6716*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(32, 59+1): # Feb
-                self.dT_daily[i1 - self.cycle_begin] = 0.078 + 0.3345*self.minT_daily[i1 - self.cycle_begin] + 0.6672*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(60, 90+1): # Mar
-                self.dT_daily[i1 - self.cycle_begin] = 0.0770 + 0.3392*self.minT_daily[i1 - self.cycle_begin] + 0.6642*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(91, 120+1): # Apr
-                self.dT_daily[i1 - self.cycle_begin] = 0.2276 + 0.3466*self.minT_daily[i1 - self.cycle_begin] + 0.6536*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(121, 151+1): # May
-                self.dT_daily[i1 - self.cycle_begin] = 0.2494 + 0.3399*self.minT_daily[i1 - self.cycle_begin] + 0.6576*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(152, 181+1): # June
-                self.dT_daily[i1 - self.cycle_begin] = 0.9955+ 0.3335*self.minT_daily[i1 - self.cycle_begin] + 0.6628*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(182, 212+1): # July
-                self.dT_daily[i1 - self.cycle_begin] = 0.2624+ 0.3351*self.minT_daily[i1 - self.cycle_begin] + 0.659*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(213, 243+1): # Aug
-                self.dT_daily[i1 - self.cycle_begin] = 0.2860+ 0.3297*self.minT_daily[i1 - self.cycle_begin] + 0.6612*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(244, 273 +1): # Sep
-                self.dT_daily[i1 - self.cycle_begin] = 0.3492+ 0.3410*self.minT_daily[i1 - self.cycle_begin] + 0.6515*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(274, 304+1): # Oct
-                self.dT_daily[i1 - self.cycle_begin] = 0.1598+ 0.3394*self.minT_daily[i1 - self.cycle_begin] + 0.6591*self.maxT_daily[i1 - self.cycle_begin];
-            elif i1 in range(305, 334+1): # Nov
-                self.dT_daily[i1 - self.cycle_begin] = 0.1156+ 0.3476*self.minT_daily[i1 - self.cycle_begin] + 0.6571*self.maxT_daily[i1 - self.cycle_begin];
-            else: # Dec
-                self.dT_daily[i1 - self.cycle_begin] = -0.0617+ 0.3462*self.minT_daily[i1 - self.cycle_begin] + 0.6649*self.maxT_daily[i1 - self.cycle_begin];
+            doy = doy_lst[i1]
+
+            if self.leap_year:
+                if doy<=31:# Jan
+                    self.dT_daily[i1] = 0.0278 + 0.3301*self.minT_daily[i1] + 0.6716*self.maxT_daily[i1];
+                elif doy in range(32, 60+1): # Feb
+                    self.dT_daily[i1] = 0.078 + 0.3345*self.minT_daily[i1] + 0.6672*self.maxT_daily[i1];
+                elif doy in range(61, 91+1): # Mar
+                    self.dT_daily[i1] = 0.0770 + 0.3392*self.minT_daily[i1] + 0.6642*self.maxT_daily[i1];
+                elif doy in range(92, 121+1): # Apr
+                    self.dT_daily[i1] = 0.2276 + 0.3466*self.minT_daily[i1] + 0.6536*self.maxT_daily[i1];
+                elif doy in range(122, 152+1): # May
+                    self.dT_daily[i1] = 0.2494 + 0.3399*self.minT_daily[i1] + 0.6576*self.maxT_daily[i1];
+                elif doy in range(153, 182+1): # June
+                    self.dT_daily[i1] = 0.9955+ 0.3335*self.minT_daily[i1] + 0.6628*self.maxT_daily[i1];
+                elif doy in range(183, 213+1): # July
+                    self.dT_daily[i1] = 0.2624+ 0.3351*self.minT_daily[i1] + 0.659*self.maxT_daily[i1];
+                elif doy in range(214, 244+1): # Aug
+                    self.dT_daily[i1] = 0.2860+ 0.3297*self.minT_daily[i1] + 0.6612*self.maxT_daily[i1];
+                elif doy in range(245, 274 +1): # Sep
+                    self.dT_daily[i1] = 0.3492+ 0.3410*self.minT_daily[i1] + 0.6515*self.maxT_daily[i1];
+                elif doy in range(275, 305+1): # Oct
+                    self.dT_daily[i1] = 0.1598+ 0.3394*self.minT_daily[i1] + 0.6591*self.maxT_daily[i1];
+                elif doy in range(306, 335+1): # Nov
+                    self.dT_daily[i1] = 0.1156+ 0.3476*self.minT_daily[i1] + 0.6571*self.maxT_daily[i1];
+                else: # Dec
+                    self.dT_daily[i1] = -0.0617+ 0.3462*self.minT_daily[i1] + 0.6649*self.maxT_daily[i1];
+            else:
+                if doy<=31:# Jan
+                    self.dT_daily[i1] = 0.0278 + 0.3301*self.minT_daily[i1] + 0.6716*self.maxT_daily[i1];
+                elif doy in range(32, 59+1): # Feb
+                    self.dT_daily[i1] = 0.078 + 0.3345*self.minT_daily[i1] + 0.6672*self.maxT_daily[i1];
+                elif doy in range(60, 90+1): # Mar
+                    self.dT_daily[i1] = 0.0770 + 0.3392*self.minT_daily[i1] + 0.6642*self.maxT_daily[i1];
+                elif doy in range(91, 120+1): # Apr
+                    self.dT_daily[i1] = 0.2276 + 0.3466*self.minT_daily[i1] + 0.6536*self.maxT_daily[i1];
+                elif doy in range(121, 151+1): # May
+                    self.dT_daily[i1] = 0.2494 + 0.3399*self.minT_daily[i1] + 0.6576*self.maxT_daily[i1];
+                elif doy in range(152, 181+1): # June
+                    self.dT_daily[i1] = 0.9955+ 0.3335*self.minT_daily[i1] + 0.6628*self.maxT_daily[i1];
+                elif doy in range(182, 212+1): # July
+                    self.dT_daily[i1] = 0.2624+ 0.3351*self.minT_daily[i1] + 0.659*self.maxT_daily[i1];
+                elif doy in range(213, 243+1): # Aug
+                    self.dT_daily[i1] = 0.2860+ 0.3297*self.minT_daily[i1] + 0.6612*self.maxT_daily[i1];
+                elif doy in range(244, 273 +1): # Sep
+                    self.dT_daily[i1] = 0.3492+ 0.3410*self.minT_daily[i1] + 0.6515*self.maxT_daily[i1];
+                elif doy in range(274, 304+1): # Oct
+                    self.dT_daily[i1] = 0.1598+ 0.3394*self.minT_daily[i1] + 0.6591*self.maxT_daily[i1];
+                elif doy in range(305, 334+1): # Nov
+                    self.dT_daily[i1] = 0.1156+ 0.3476*self.minT_daily[i1] + 0.6571*self.maxT_daily[i1];
+                else: # Dec
+                    self.dT_daily[i1] = -0.0617+ 0.3462*self.minT_daily[i1] + 0.6649*self.maxT_daily[i1];
 
     def setCropParameters(self, LAI, HI, legume, adaptability):
         """
@@ -210,9 +248,9 @@ class BioMassCalc(object):
 
         # Cubic Spline interpolation for individual DOY within the cycle length for Ac, Bc and Bo
 
-        Ac_interp = cbl_ac(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
-        Bc_interp = cbl_bc(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
-        Bo_interp = cbl_bo(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
+        Ac_interp = cbl_ac(np.arange(cycle_begin, cycle_end), extrapolate= True);
+        Bc_interp = cbl_bc(np.arange(cycle_begin, cycle_end), extrapolate= True);
+        Bo_interp = cbl_bo(np.arange(cycle_begin, cycle_end), extrapolate= True);
 
 
         Ac_mean = np.mean( Ac_interp );
@@ -394,9 +432,9 @@ class BioMassCalc(object):
 
         # Cubic Spline interpolation for individual DOY within the cycle length for Ac, Bc and Bo
 
-        Ac_interp = cbl_ac(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
-        Bc_interp = cbl_bc(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
-        Bo_interp = cbl_bo(np.arange(cycle_begin, cycle_end+1), extrapolate= True);
+        Ac_interp = cbl_ac(np.arange(cycle_begin, cycle_end), extrapolate= True);
+        Bc_interp = cbl_bc(np.arange(cycle_begin, cycle_end), extrapolate= True);
+        Bo_interp = cbl_bo(np.arange(cycle_begin, cycle_end), extrapolate= True);
 
 
         Ac_mean = np.mean( Ac_interp );
@@ -449,9 +487,7 @@ class BioMassCalc(object):
         # 
         elif iPm == 20:
             bgm = (f_day_clouded*bo_mean) + ((1 - f_day_clouded)*bc_mean);
-        print('LAI = ', LAi)
-        print('Cycle_len =', cycle_len)
-        print('Ct =', Ct)
+
         '''net biomass production '''
         Bn = (0.36 * bgm * l)/((1/cycle_len)+0.25*Ct)
         

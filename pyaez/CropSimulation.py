@@ -564,6 +564,8 @@ class CropSimulation(object):
         if rain_or_irr == 'rain':
             # leaf area index adjustment for perennial crops
             self.LAi_rain = self.LAi * ((cycle_len-aLAI)/bLAI)
+
+            # leaf area index must 
             # harvest index adjustment for perennial crops
             self.HI_rain = self.HI * ((cycle_len-aHI)/bHI)
 

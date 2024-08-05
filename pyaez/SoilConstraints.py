@@ -274,7 +274,7 @@ class SoilConstraints(object):
         SPH_intp = 100 if pd.isna(SPH_val) else  para['SPH_fct'][np.where(para['SPH_val'] == SPH_val)[0][0]]
         OSD_intp = 100 if math.isnan(OSD_val) else np.interp(OSD_val, para['OSD_val'], para['OSD_fct'])
 
-        final_factor = RSD_intp * np.min([SPR_intp, SPH_intp, OSD_intp])
+        final_factor = RSD_intp * np.min([SPR_intp, SPH_intp, OSD_intp]) / 100
 
         return final_factor
     
@@ -530,7 +530,7 @@ class SoilConstraints(object):
         Args:
             soil_characteristics_path (String): I for Irrigated, R for Rainfed
             topsoil_path (String): file-path of top-soil characteristics excel sheet(xlsx format)
-            subsoil_paht (String): file-path of sub-soil characteristics excel sheet (xlsx format)
+            subsoil_path (String): file-path of sub-soil characteristics excel sheet (xlsx format)
         
         Return:
             None."""
@@ -561,12 +561,12 @@ class SoilConstraints(object):
 
             if input_level == 'L':
                 min_factor = np.min([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])
-                summation = np.sum([np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])]) - min_factor
+                summation = np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])- min_factor
 
                 # fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor)/3)/2
                 fsq = (min_factor + (summation/3))/2
 
-                self.SR[i] = self.SQ_array[i,0] * self.SQ_array[i,2] * fsq
+                self.SR[i] = self.SQ_array[i,0] * self.SQ_array[i,2] * fsq / pow(100, 3-1)
 
             elif input_level == 'I':
                 min_factor = np.min([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])
@@ -575,7 +575,7 @@ class SoilConstraints(object):
                 # fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor)/3)/2
                 fsq = (min_factor + (summation/3))/2
 
-                self.SR[i] = 0.5 * (self.SQ_array[i,0]+self.SQ_array[i,1]) * self.SQ_array[i,2] * fsq
+                self.SR[i] = 0.5 * (self.SQ_array[i,0]+self.SQ_array[i,1]) * self.SQ_array[i,2] * fsq / pow(100,3-1)
 
             elif input_level == 'H':
                 min_factor = np.min([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]])
@@ -583,7 +583,7 @@ class SoilConstraints(object):
                 # fsq = (min_factor + (np.sum([self.SQ_array[i,3], self.SQ_array[i,4], self.SQ_array[i,5], self.SQ_array[i,6]]) - min_factor)/3)/2
 
                 fsq = (min_factor + (summation/3))/2
-                self.SR[i] = self.SQ_array[i,1] * self.SQ_array[i,2] * fsq
+                self.SR[i] = self.SQ_array[i,1] * self.SQ_array[i,2] * fsq/pow(100,3-1)
             else:
                 print('Wrong Input Level !')
         
@@ -612,7 +612,7 @@ class SoilConstraints(object):
         """
         return self.SR_pd
     
-    def applySoilConstraints(self, soil_map, yield_in):
+    def applySoilConstraints(self, soil_map, yield_in, omit_yld_0 = False):
         """
         Apply yield reduction to input yield map with specific input-management
         level soil ratings.
@@ -631,7 +631,8 @@ class SoilConstraints(object):
         for i1 in range(0, self.SR.shape[0]):
             temp_idx = soil_map==self.SMU[i1]
             self.soilsuit_map[temp_idx] = self.SR[i1]
-            yield_final[temp_idx] = yield_in[temp_idx] * self.SR[i1]
+            yield_final[temp_idx] = yield_in[temp_idx] * (self.SR[i1]/100)
+        
 
         return yield_final
     
@@ -646,7 +647,7 @@ class SoilConstraints(object):
         Return:
             Soil reduction factor: 2-D NumPy Array.
         """
-        return self.soilsuit_map
+        return np.round(self.soilsuit_map/100, 2)
     
     #--------------------------------------  MAIN FUNCTIONS STARTS HERE  ------------------------------------#
     #--------------------------------------  END OF SOIL CONSTRAINTS  ---------------------------------------#

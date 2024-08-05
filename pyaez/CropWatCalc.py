@@ -19,7 +19,7 @@ class CropWatCalc(object):
     def __init__(self, cycle_begin, cycle_end, perennial_flag = False):
         self.cycle_begin = cycle_begin
         self.cycle_end = cycle_end
-        self.cycle_len = cycle_end - cycle_begin +1
+        self.cycle_len = cycle_end - cycle_begin
         self.perennial_flag = perennial_flag
 
     def setClimateData(self, pet, precipitation, wind_speed, min_temp, max_temp):
@@ -61,7 +61,7 @@ class CropWatCalc(object):
         petc_stage = np.zeros(self.peto.size)
         petc_all = np.zeros(self.peto.size)
 
-        for ii in range(self.cycle_len-1):
+        for ii in range(self.cycle_len):
 
             # print('i = ', ii)
 
@@ -88,7 +88,7 @@ class CropWatCalc(object):
 
         ## each growing stage
         W = self.Sa*D[0] 
-        for ii in range(self.cycle_len-1):
+        for ii in range(self.cycle_len):
 
             if self.Prec[ii] >= petc_stage[ii]:
                 peta_stage[ii] = petc_stage[ii]
@@ -103,7 +103,7 @@ class CropWatCalc(object):
 
         ## entire growing season
         W = self.Sa*D[0] 
-        for ii in range(self.cycle_len-1):
+        for ii in range(self.cycle_len):
 
             if self.Prec[ii] >= petc_all[ii]:
                 peta_all[ii] = petc_all[ii]
@@ -122,7 +122,7 @@ class CropWatCalc(object):
         petc_all_sum = np.sum( petc_all )
         
 
-        f0 = 1 - self.yloss_f_all * ( 1 - (peta_all_sum/petc_all_sum) )
+        f0 = 1 - (self.yloss_f_all * ( 1 - (peta_all_sum/petc_all_sum) ))
 
         '''Assess Yield Loss in individual growth stages separately'''
         if self.perennial_flag:
@@ -141,10 +141,10 @@ class CropWatCalc(object):
 
             # 1. Modification (SWH)
             # Avoiding division by zero
-            f1_d1 = 1 - self.yloss_f[0] if petc_d1==0 else 1 - self.yloss_f[0] * (1 - (peta_d1/petc_d1));
-            f1_d2 = 1 - self.yloss_f[1] if petc_d2==0 else 1 - self.yloss_f[1] * (1 - (peta_d2/petc_d2));
-            f1_d3 = 1 - self.yloss_f[2] if petc_d3==0 else 1 - self.yloss_f[2] * (1 - (peta_d3/petc_d3));
-            f1_d4 = 1 - self.yloss_f[3] if petc_d4==0 else 1 - self.yloss_f[3] * (1 - (peta_d4/petc_d4));
+            f1_d1 = 1 - self.yloss_f[0] if petc_d1==0 else 1 - (self.yloss_f[0] * (1 - (peta_d1/petc_d1)));
+            f1_d2 = 1 - self.yloss_f[1] if petc_d2==0 else 1 - (self.yloss_f[1] * (1 - (peta_d2/petc_d2)));
+            f1_d3 = 1 - self.yloss_f[2] if petc_d3==0 else 1 - (self.yloss_f[2] * (1 - (peta_d3/petc_d3)));
+            f1_d4 = 1 - self.yloss_f[3] if petc_d4==0 else 1 - (self.yloss_f[3] * (1 - (peta_d4/petc_d4)));
 
             f1 = np.min([f1_d1,f1_d2,f1_d3,f1_d4]) # some references use product, some use minimum. here we use minimum as in Thailand report
 
@@ -186,15 +186,15 @@ class CropWatCalc(object):
         for ii in range(length):
 
             ## each growing stage
-            if ii <= ddays[0]:
+            if ii+1 <= ddays[0]:
                 petc_stage[ii] = kc[0] * peto[ii]
-            elif ii <= ddays[1]:
-                kc_temp = kc[0] + (ii-ddays[0]) * ( (kc[1]-kc[0])/(ddays[1]-ddays[0]) )
+            elif ii+1 <= ddays[1]:
+                kc_temp = kc[0] + (ii+1-ddays[0]) * ( (kc[1]-kc[0])/(ddays[1]-ddays[0]) )
                 petc_stage[ii] = kc_temp * peto[ii]
-            elif ii <= ddays[2]:
+            elif ii+1 <= ddays[2]:
                 petc_stage[ii] = kc[1] * peto[ii]
             else:
-                kc_temp = kc[1] + (ii-ddays[2]) * ( (kc[2]-kc[1])/(ddays[3]-ddays[2]) )
+                kc_temp = kc[1] + (ii+1-ddays[2]) * ( (kc[2]-kc[1])/(ddays[3]-ddays[2]) )
                 petc_stage[ii] = kc_temp * peto[ii]
 
             ## entire gorwing season
@@ -247,7 +247,7 @@ class CropWatCalc(object):
         peta_all_sum = np.sum( peta_all )
         petc_all_sum = np.sum( petc_all )
 
-        f0 = 1 - yloss_f_all * ( 1 - (peta_all_sum/petc_all_sum) )
+        f0 = 1 - (yloss_f_all * ( 1 - (peta_all_sum/petc_all_sum) ))
 
         '''Assess Yield Loss in individual growth stages separately'''
         if perennial_flag:
@@ -266,10 +266,10 @@ class CropWatCalc(object):
 
             # 1. Modification (SWH)
             # Avoiding division by zero
-            f1_d1 = 1 - yloss_f[0] if petc_d1==0 else 1 - yloss_f[0] * (1 - (peta_d1/petc_d1))
-            f1_d2 = 1 - yloss_f[1] if petc_d2==0 else 1 - yloss_f[1] * (1 - (peta_d2/petc_d2))
-            f1_d3 = 1 - yloss_f[2] if petc_d3==0 else 1 - yloss_f[2] * (1 - (peta_d3/petc_d3))
-            f1_d4 = 1 - yloss_f[3] if petc_d4==0 else 1 - yloss_f[3] * (1 - (peta_d4/petc_d4))
+            f1_d1 = 1 - yloss_f[0] if petc_d1==0 else 1 - (yloss_f[0] * (1 - (peta_d1/petc_d1)))
+            f1_d2 = 1 - yloss_f[1] if petc_d2==0 else 1 - (yloss_f[1] * (1 - (peta_d2/petc_d2)))
+            f1_d3 = 1 - yloss_f[2] if petc_d3==0 else 1 - (yloss_f[2] * (1 - (peta_d3/petc_d3)))
+            f1_d4 = 1 - yloss_f[3] if petc_d4==0 else 1 - (yloss_f[3] * (1 - (peta_d4/petc_d4)))
 
             f1 = min(f1_d1,f1_d2,f1_d3,f1_d4) # some references use product, some use minimum. here we use minimum as in Thailand report
 

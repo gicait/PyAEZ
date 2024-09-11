@@ -598,6 +598,11 @@ class CropSimulation(object):
                         total*100, 2)), end='\r')
                         continue
                 
+                LAi_rain = 0.
+                HI_rain = 0.
+                LAi_irr = 0.
+                HI_irr = 0.
+
                 """Cycle length checking for rainfed and irrigated annuals.
                     Concerns with LGPt5 (irrigated) and LGP (rainfed)"""
                 if not self.perennial:
@@ -640,11 +645,11 @@ class CropSimulation(object):
 
                         # Leaf Area Index adjustment for rainfed condition
                         if cycle_len_rain - self.aLAI > self.bLAI:
-                            LAI_rain = self.LAi
+                            LAi_rain = self.LAi
                         elif cycle_len_rain - self.aLAI < 0:
-                            LAI_rain = 0
+                            LAi_rain = 0
                         else:
-                            LAI_rain = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_rain, oLAI = self.LAI, aLAI = self.aLAI, bLAI = self.bLAI)
+                            LAi_rain = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_rain, oLAI = self.LAi, aLAI = self.aLAI, bLAI = self.bLAI)
 
                         # Harvest Index adjustment for rainfed conditions
                         if cycle_len_rain -self.aHI > self.bHI:
@@ -659,22 +664,22 @@ class CropSimulation(object):
                     # effective cycle length will be our cycle length
                     if self.min_temp <= 8:
                         if int(self.LGPT5[i_row, i_col]) < self.min_cycle_len:
-                            self.cycle_len_irr = 0
+                            cycle_len_irr = 0
                         else:
-                            self.cycle_len_irr = min(int(self.LGPT5[i_row, i_col]), self.max_cycle_len)
+                            cycle_len_irr = min(int(self.LGPT5[i_row, i_col]), self.max_cycle_len)
                     elif self.min_temp >8:
                         if int(self.LGPT10[i_row, i_col]) < self.min_cycle_len:
-                            self.cycle_len_irr = 0
+                            cycle_len_irr = 0
                         else:
-                            self.cycle_len_irr = min(int(self.LGPT10[i_row, i_col]), self.max_cycle_len)
+                            cycle_len_irr = min(int(self.LGPT10[i_row, i_col]), self.max_cycle_len)
                     
                     # Leaf Area Index adjustment for irrigated condition
                         if cycle_len_irr - self.aLAI > self.bLAI:
-                            LAI_irr = self.LAi
+                            LAi_irr = self.LAi
                         elif cycle_len_irr - self.aLAI < 0:
-                            LAI_irr = 0
+                            LAi_irr = 0
                         else:
-                            LAI_irr = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_irr, oLAI = self.LAI, aLAI = self.aLAI, bLAI = self.bLAI)
+                            LAi_irr = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_irr, oLAI = self.LAi, aLAI = self.aLAI, bLAI = self.bLAI)
 
                         # Harvest Index adjustment for irrigated condition
                         if cycle_len_irr -self.aHI > self.bHI:
@@ -687,10 +692,6 @@ class CropSimulation(object):
                 count_pixel_completed = count_pixel_completed + 1       
                 # this allows handing leap and non-leap year differently. This is only relevant for monthly data because this value will be used in interpolations.
                 # In case of daily data, length of vector will be taken as number of days in  a year.
-                if leap_year:
-                    days_in_year = 366
-                else:
-                    days_in_year = 365
 
                 # extract daily climate data for particular location.
 
@@ -755,6 +756,7 @@ class CropSimulation(object):
                         # extract climate data within the season to pass in to calculation classes
                         minT_daily_season_rain = minT_daily_2year[i_cycle: i_cycle + int(cycle_len_rain)]
                         maxT_daily_season_rain = maxT_daily_2year[i_cycle: i_cycle + int(cycle_len_rain)]
+                        meanT_daily_season_rain = meanT_daily_2year[i_cycle: i_cycle + int(cycle_len_rain)]
                         shortRad_daily_season_rain = shortRad_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
                         pet_daily_season_rain = pet_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
                         totalPrec_daily_season_rain = totalPrec_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
@@ -767,7 +769,7 @@ class CropSimulation(object):
                         if self.perennial:
                             obj_screening_rain.setClimateData(meanT_daily_2year[i_cycle: i_cycle+365], meanT_daily_2year[i_cycle: i_cycle+365])
                         else:
-                            obj_screening_rain.setClimateData(meanT_daily_2year[i_cycle: i_cycle+cycle_len_irr], meanT_daily_2year[i_cycle: i_cycle+cycle_len_irr])
+                            obj_screening_rain.setClimateData(meanT_daily_season_rain, meanT_daily_season_rain)
                         
 
                         if self.set_lgpt_screening:
@@ -791,12 +793,12 @@ class CropSimulation(object):
                             fc2_value = 0.
                         else:
                             
-                            if LAI_rain <=0 or HI_rain <= 0:
+                            if LAi_rain <=0 or HI_rain <= 0:
                                 est_yield_rainfed = 0
                             else:
 
                                 """If fc1 RAINFED IS NOT ZERO >>> BIOMASS RAINFED STARTS"""
-                                obj_maxyield_rain = BioMassCalc.BioMassCalc(i_cycle+1, i_cycle+1+cycle_len_rain-1, self.latitude[i_row, i_col])
+                                obj_maxyield_rain = BioMassCalc.BioMassCalc(i_cycle+1, i_cycle+1+cycle_len_rain, self.latitude[i_row, i_col], leap_year)
                                 obj_maxyield_rain.setClimateData(minT_daily_season_rain, maxT_daily_season_rain, shortRad_daily_season_rain)
                                 obj_maxyield_rain.setCropParameters(LAi_rain, HI_rain, self.legume, self.adaptability)
                                 obj_maxyield_rain.calculateBioMass()
@@ -808,24 +810,27 @@ class CropSimulation(object):
                             """ For Annual RAINFED, crop water requirements are calculated in full procedures.
                                 For Perennial RAINFED, procedures related with yield loss factors are omitted out.
                                 """
-                            fc2_value = 1.
                             
-                            obj_cropwat = CropWatCalc.CropWatCalc(
-                                i_cycle+1, i_cycle+1+cycle_len_rain-1, perennial_flag = self.perennial)
-                            obj_cropwat.setClimateData(pet_daily_season_rain, totalPrec_daily_season_rain, 
-                                                       wind_sp_daily_season_rain, minT_daily_season_rain, 
-                                                       maxT_daily_season_rain)
-                            
-                            # check Sa is a raster or single value and extract Sa value accordingly
-                            if len(np.array(self.Sa).shape) == 2:
-                                Sa_temp = self.Sa[i_row, i_col]
+                            if est_yield_rainfed <=0:
+                                est_yield_moisture_limited = 0.
+                                fc2_value = 0.
                             else:
-                                Sa_temp = self.Sa
-                            obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f,
-                                                            self.yloss_f_all, est_yield_rainfed, self.D1, self.D2, Sa_temp, self.pc, self.plant_height)
-                            est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
+                                obj_cropwat = CropWatCalc.CropWatCalc(
+                                    i_cycle+1, i_cycle+1+cycle_len_rain, perennial_flag = self.perennial)
+                                obj_cropwat.setClimateData(pet_daily_season_rain, totalPrec_daily_season_rain, 
+                                                        wind_sp_daily_season_rain, minT_daily_season_rain, 
+                                                        maxT_daily_season_rain)
+                                
+                                # check Sa is a raster or single value and extract Sa value accordingly
+                                if len(np.array(self.Sa).shape) == 2:
+                                    Sa_temp = self.Sa[i_row, i_col]
+                                else:
+                                    Sa_temp = self.Sa
+                                obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f,
+                                                                self.yloss_f_all, est_yield_rainfed, self.D1, self.D2, Sa_temp, self.pc, self.plant_height)
+                                est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
 
-                            fc2_value = obj_cropwat.getfc2factormap()
+                                fc2_value = obj_cropwat.getfc2factormap()
 
                     yield_of_all_crop_cycles_rainfed = np.append(yield_of_all_crop_cycles_rainfed, est_yield_moisture_limited)
                     fc2_lst = np.append(fc2_lst, fc2_value)
@@ -845,18 +850,18 @@ class CropSimulation(object):
 
 
                     ##########################
-                    if self.cycle_len_irr in [-1, 0]:
+                    if cycle_len_irr in [-1, 0]:
                         est_yield_irrigated = 0.
                         fc1_irr = 0.
                     else:
                             
                         # extract climate data within the season to pass in to calculation classes
-                        minT_daily_season_irr = minT_daily_2year[i_cycle: i_cycle +int(self.cycle_len_irr)]
-                        maxT_daily_season_irr = maxT_daily_2year[i_cycle: i_cycle +int(self.cycle_len_irr)]
-                        meanT_daily_season_irr = meanT_daily_2year[i_cycle: i_cycle +int(self.cycle_len_irr)]
-                        shortRad_daily_season_irr = shortRad_daily_2year[i_cycle: i_cycle+int(self.cycle_len_irr)]
-                        pet_daily_season_irr = pet_daily_2year[i_cycle: i_cycle+int(self.cycle_len_irr)]
-                        totalPrec_daily_season_irr = totalPrec_daily_2year[i_cycle: i_cycle+int(self.cycle_len_irr)]
+                        minT_daily_season_irr = minT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
+                        maxT_daily_season_irr = maxT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
+                        meanT_daily_season_irr = meanT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
+                        shortRad_daily_season_irr = shortRad_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
+                        # pet_daily_season_irr = pet_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
+                        # totalPrec_daily_season_irr = totalPrec_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
                         
                     
                         """Creating Thermal Screening object classes for IRRIGATED conditions"""
@@ -865,9 +870,9 @@ class CropSimulation(object):
                         """ For Perennials, 365 days of climate data will be used for Thermal Screening.
                         For Annuals, climate data within crop-specific cycle length will be used for Thermal Screening."""
                         if self.perennial:
-                            obj_screening_irr.setClimate(meanT_daily_2year[i_cycle: i_cycle+365], meanT_daily_2year[i_cycle: i_cycle+365])
+                            obj_screening_irr.setClimateData(meanT_daily_2year[i_cycle: i_cycle+365], meanT_daily_2year[i_cycle: i_cycle+365])
                         else:
-                            obj_screening_irr.setClimateData(minT_daily_season_irr, maxT_daily_season_irr)
+                            obj_screening_irr.setClimateData(meanT_daily_season_irr, meanT_daily_season_irr)
 
                         if self.set_lgpt_screening:
                             obj_screening_irr.setLGPTScreening(no_lgpt=self.no_lgpt, optm_lgpt=self.optm_lgpt)
@@ -889,16 +894,16 @@ class CropSimulation(object):
                         if fc1_irr == 0.:
                             est_yield_irrigated = 0.
                         else:
-                            if LAI_irr <=0 or HI_irr <= 0:
+                            if LAi_irr <=0 or HI_irr <= 0:
                                 est_yield_irrigated = 0
                             else:
                                 """If fc1 IRRIGATED IS NOT ZERO >>> BIOMASS IRRIGATED STARTS"""
                                 obj_maxyield_irr = BioMassCalc.BioMassCalc(
-                                    i_cycle+1, i_cycle+1+self.cycle_len_irr-1, self.latitude[i_row, i_col])
+                                    i_cycle+1, i_cycle+1+cycle_len_irr, self.latitude[i_row, i_col], leap_year)
                                 obj_maxyield_irr.setClimateData(
                                     minT_daily_season_irr, maxT_daily_season_irr, shortRad_daily_season_irr)
                                 obj_maxyield_irr.setCropParameters(
-                                    self.LAi_irr, self.HI_irr, self.legume, self.adaptability)
+                                    LAi_irr, HI_irr, self.legume, self.adaptability)
                                 obj_maxyield_irr.calculateBioMass()
                                 est_yield_irrigated = obj_maxyield_irr.calculateYield()
                             # reduce thermal screening factor
@@ -925,22 +930,23 @@ class CropSimulation(object):
                 # get agro-climatic yield and crop calendar for IRRIGATED condition
                 if np.logical_and(len(yield_of_all_crop_cycles_irrig) == len(fc1_irr_lst), len(yield_of_all_crop_cycles_irrig) == len(fc1_irr_lst)):
 
-                    self.final_yield_irrig[i_row, i_col] = np.max(yield_of_all_crop_cycles_irrig) # Maximum attainable yield
+                    self.final_yield_irrig[i_row, i_col] = np.nanmax(yield_of_all_crop_cycles_irrig) # Maximum attainable yield
 
                     # Array index where maximum yield is obtained
-                    i = np.where(yield_of_all_crop_cycles_irrig == np.max(yield_of_all_crop_cycles_irrig))[0][0] # index of maximum yield
+                    i = np.where(yield_of_all_crop_cycles_irrig == np.nanmax(yield_of_all_crop_cycles_irrig))[0][0] # index of maximum yield
 
-                    self.crop_calender_irr[i_row, i_col] = int(i+1)*step_doy # Crop calendar for irrigated condition
+                    self.crop_calender_irr[i_row, i_col] = (int(i+1)*step_doy) if self.final_yield_irrig[i_row, i_col] != 0 else 0 # Crop calendar for irrigated condition
 
                     self.fc1_irr[i_row, i_col] = fc1_irr_lst[i] # fc1 irrigated for the specific crop calendar DOY
 
                 # get agro-climatic yield and crop calendar for RAINFED condition
                 if np.logical_and(len(yield_of_all_crop_cycles_rainfed) == len(fc1_rain_lst), len(yield_of_all_crop_cycles_rainfed) == len(fc1_rain_lst)):
-                    self.final_yield_rainfed[i_row, i_col] = np.max(yield_of_all_crop_cycles_rainfed) # Maximum attainable yield
+                    
+                    self.final_yield_rainfed[i_row, i_col] = np.nanmax(yield_of_all_crop_cycles_rainfed) # Maximum attainable yield
 
                     i1 = np.where(yield_of_all_crop_cycles_rainfed == np.max(yield_of_all_crop_cycles_rainfed))[0][0] # index of maximum yield
                     
-                    self.crop_calender_rain[i_row, i_col] = int(i1+1) * step_doy # Crop calendar for rainfed condition
+                    self.crop_calender_rain[i_row, i_col] = (int(i1+1) * step_doy) if self.final_yield_rainfed[i_row, i_col] != 0 else 0 # Crop calendar for rainfed condition
                     
                     self.fc1_rain[i_row, i_col] = fc1_rain_lst[i1]
                     
@@ -1028,422 +1034,422 @@ class CropSimulation(object):
     """------------------       MODULE II:CROP SIMULATION ENDS HERE     ------------------------"""
 
     #----------------------------------------------DEVELLOPER'S CODES --------------------------------------------------#
-    def simulateCropCycle(self, start_doy=1, end_doy=365, step_doy=1, leap_year=False):
-        """Running the crop cycle calculation/simulation.
+    # def simulateCropCycle(self, start_doy=1, end_doy=365, step_doy=1, leap_year=False):
+    #     """Running the crop cycle calculation/simulation.
 
-        Args:
-            start_doy (int, optional): Starting Julian day for simulating period. Defaults to 1.
-            end_doy (int, optional): Ending Julian day for simulating period. Defaults to 365.
-            step_doy (int, optional): Spacing (in days) between 2 adjacent crop simulations. Defaults to 1.
-            leap_year (bool, optional): whether or not the simulating year is a leap year. Defaults to False.
+    #     Args:
+    #         start_doy (int, optional): Starting Julian day for simulating period. Defaults to 1.
+    #         end_doy (int, optional): Ending Julian day for simulating period. Defaults to 365.
+    #         step_doy (int, optional): Spacing (in days) between 2 adjacent crop simulations. Defaults to 1.
+    #         leap_year (bool, optional): whether or not the simulating year is a leap year. Defaults to False.
 
-        """        
+    #     """        
 
-        # just a counter to keep track of progress
-        count_pixel_completed = 0
-        total = self.im_height * self.im_width
+    #     # just a counter to keep track of progress
+    #     count_pixel_completed = 0
+    #     total = self.im_height * self.im_width
 
-        # this stores final result
-        self.final_yield_rainfed = np.zeros((self.im_height, self.im_width))
-        self.final_yield_irrig = np.zeros((self.im_height, self.im_width))
-        self.crop_calender_irr = np.zeros((self.im_height, self.im_width), dtype=int)
-        self.crop_calender_rain = np.zeros((self.im_height, self.im_width), dtype=int)
+    #     # this stores final result
+    #     self.final_yield_rainfed = np.zeros((self.im_height, self.im_width))
+    #     self.final_yield_irrig = np.zeros((self.im_height, self.im_width))
+    #     self.crop_calender_irr = np.zeros((self.im_height, self.im_width), dtype=int)
+    #     self.crop_calender_rain = np.zeros((self.im_height, self.im_width), dtype=int)
         
-        self.fc2 = np.zeros((self.im_height, self.im_width))
-        self.fc1_rain = np.zeros((self.im_height, self.im_width))
-        self.fc1_irr = np.zeros((self.im_height, self.im_width))
+    #     self.fc2 = np.zeros((self.im_height, self.im_width))
+    #     self.fc1_rain = np.zeros((self.im_height, self.im_width))
+    #     self.fc1_irr = np.zeros((self.im_height, self.im_width))
 
 
-        for i_row in range(self.im_height):
+    #     for i_row in range(self.im_height):
 
-            for i_col in range(self.im_width):
+    #         for i_col in range(self.im_width):
 
-                # check current location (pixel) is outside of study area or not. if it's outside of study area goes to next location (pixel)
-                # Those unsuitable
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        count_pixel_completed = count_pixel_completed + 1
-                        print('\rDone %: ' + str(round(count_pixel_completed /
-                        total*100, 2)), end='\r')
-                        continue
+    #             # check current location (pixel) is outside of study area or not. if it's outside of study area goes to next location (pixel)
+    #             # Those unsuitable
+    #             if self.set_mask:
+    #                 if self.im_mask[i_row, i_col] == self.nodata_val:
+    #                     count_pixel_completed = count_pixel_completed + 1
+    #                     print('\rDone %: ' + str(round(count_pixel_completed /
+    #                     total*100, 2)), end='\r')
+    #                     continue
 
-                # 2. Permafrost screening
-                if self.set_Permafrost_screening:
-                    if np.logical_or(self.permafrost_class[i_row, i_col] == 1, self.permafrost_class[i_row, i_col] == 2):
-                        count_pixel_completed = count_pixel_completed + 1
-                        print('\rDone %: ' + str(round(count_pixel_completed /
-                        total*100, 2)), end='\r')
-                        continue
+    #             # 2. Permafrost screening
+    #             if self.set_Permafrost_screening:
+    #                 if np.logical_or(self.permafrost_class[i_row, i_col] == 1, self.permafrost_class[i_row, i_col] == 2):
+    #                     count_pixel_completed = count_pixel_completed + 1
+    #                     print('\rDone %: ' + str(round(count_pixel_completed /
+    #                     total*100, 2)), end='\r')
+    #                     continue
 
-                # Thermal Climate Screening
-                if self.set_tclimate_screening:
-                    if self.t_climate[i_row, i_col] in self.no_t_climate:
-                        count_pixel_completed = count_pixel_completed + 1
+    #             # Thermal Climate Screening
+    #             if self.set_tclimate_screening:
+    #                 if self.t_climate[i_row, i_col] in self.no_t_climate:
+    #                     count_pixel_completed = count_pixel_completed + 1
                         
-                        print('\rDone %: ' + str(round(count_pixel_completed /
-                        total*100, 2)), end='\r')
-                        continue
+    #                     print('\rDone %: ' + str(round(count_pixel_completed /
+    #                     total*100, 2)), end='\r')
+    #                     continue
                 
-                """Cycle length checking for rainfed and irrigated annuals.
-                    Concerns with LGPt5 (irrigated) and LGP (rainfed)"""
-                if not self.perennial:
+    #             """Cycle length checking for rainfed and irrigated annuals.
+    #                 Concerns with LGPt5 (irrigated) and LGP (rainfed)"""
+    #             if not self.perennial:
 
-                    "Harvest Index and Leaf Area Index are not adjusted."
-                    LAi_rain = self.LAi
-                    HI_rain = self.HI
+    #                 "Harvest Index and Leaf Area Index are not adjusted."
+    #                 LAi_rain = self.LAi
+    #                 HI_rain = self.HI
 
-                    LAi_irr = self.LAi
-                    HI_irr = self.HI
+    #                 LAi_irr = self.LAi
+    #                 HI_irr = self.HI
                     
-                    # for irrigated conditions
-                    # In real simulation, this pixel would be omitted out
-                    if int(self.LGPT5[i_row, i_col]) < self.min_cycle_len:
-                        cycle_len_irr = 0
-                    else:
-                        cycle_len_irr = self.cycle_len
+    #                 # for irrigated conditions
+    #                 # In real simulation, this pixel would be omitted out
+    #                 if int(self.LGPT5[i_row, i_col]) < self.min_cycle_len:
+    #                     cycle_len_irr = 0
+    #                 else:
+    #                     cycle_len_irr = self.cycle_len
                     
-                    # for rainfed condition
-                    # In real simulation, this pixel would be omitted out for 
-                    if int(self.LGP[i_row, i_col]) < self.min_cycle_len:
-                        cycle_len_rain = 0
-                    else:
-                        cycle_len_rain = self.cycle_len
+    #                 # for rainfed condition
+    #                 # In real simulation, this pixel would be omitted out for 
+    #                 if int(self.LGP[i_row, i_col]) < self.min_cycle_len:
+    #                     cycle_len_rain = 0
+    #                 else:
+    #                     cycle_len_rain = self.cycle_len
                     
-                else:
-                    """Cycle length checking for rainfed and irrigated perennials.
-                    Concerns with LGPt5 (irrigated) and LGP (rainfed)"""
+    #             else:
+    #                 """Cycle length checking for rainfed and irrigated perennials.
+    #                 Concerns with LGPt5 (irrigated) and LGP (rainfed)"""
 
-                    """Adjustment of cycle length, LAI and HI for Perennials"""
-                    self.set_adjustment = True
+    #                 """Adjustment of cycle length, LAI and HI for Perennials"""
+    #                 self.set_adjustment = True
 
-                    """ Adjustment for RAINFED conditions"""
-                    if int(self.LGP[i_row, i_col]) < self.min_cycle_len:
-                        cycle_len_rain = 0
+    #                 """ Adjustment for RAINFED conditions"""
+    #                 if int(self.LGP[i_row, i_col]) < self.min_cycle_len:
+    #                     cycle_len_rain = 0
                         
-                    else:
-                        # effective cycle length is determined by comparing LGP with maximum cycle length. However, 
-                        # the effective cycle length must not be greater than reference cycle length
-                        cycle_len_rain = self.cycle_len if (min(int(self.LGP[i_row, i_col]), self.max_cycle_len) > self.cycle_len) else (min(int(self.LGP[i_row, i_col]), self.max_cycle_len))
+    #                 else:
+    #                     # effective cycle length is determined by comparing LGP with maximum cycle length. However, 
+    #                     # the effective cycle length must not be greater than reference cycle length
+    #                     cycle_len_rain = self.cycle_len if (min(int(self.LGP[i_row, i_col]), self.max_cycle_len) > self.cycle_len) else (min(int(self.LGP[i_row, i_col]), self.max_cycle_len))
 
-                        # Leaf Area Index adjustment for rainfed condition
-                        if (cycle_len_rain - self.aLAI > self.bLAI):
-                            LAI_rain = self.LAi
-                        elif cycle_len_rain - self.aLAI < 0:
-                            LAI_rain = 0
-                        else:
-                            LAI_rain = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_rain, oLAI = self.LAI, aLAI = self.aLAI, bLAI = self.bLAI)
+    #                     # Leaf Area Index adjustment for rainfed condition
+    #                     if (cycle_len_rain - self.aLAI > self.bLAI):
+    #                         LAI_rain = self.LAi
+    #                     elif cycle_len_rain <= self.aLAI:
+    #                         LAI_rain = 0
+    #                     else:
+    #                         LAI_rain = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_rain, oLAI = self.LAI, aLAI = self.aLAI, bLAI = self.bLAI)
 
-                        # Harvest Index adjustment for rainfed conditions
-                        if cycle_len_rain -self.aHI > self.bHI:
-                            HI_rain = self.HI
-                        elif cycle_len_rain - self.aHI <0:
-                            HI_rain = 0
-                        else:
-                            HI_rain = self.HarvestIndexAdjustment(cycle_len = cycle_len_rain, oHI = self.HI, aHI = self.aHI, bHI = self.bHI)
+    #                     # Harvest Index adjustment for rainfed conditions
+    #                     if cycle_len_rain -self.aHI > self.bHI:
+    #                         HI_rain = self.HI
+    #                     elif cycle_len_rain<= self.aHI:
+    #                         HI_rain = 0
+    #                     else:
+    #                         HI_rain = self.HarvestIndexAdjustment(cycle_len = cycle_len_rain, oHI = self.HI, aHI = self.aHI, bHI = self.bHI)
                         
-                    """ Adjustment for IRRIGATED conditions"""
-                    """Use LGPT5 for minimum temperatures less than 8. Use LGPT10 for temperature greater than 8."""
-                    # effective cycle length will be our cycle length
-                    if self.min_temp <= 8:
-                        if int(self.LGPT5[i_row, i_col]) < self.min_cycle_len:
-                            cycle_len_irr = 0
-                        else:
-                            cycle_len_irr = min(int(self.LGPT5[i_row, i_col]), self.max_cycle_len)
-                    elif self.min_temp >8:
-                        if int(self.LGPT10[i_row, i_col]) < self.min_cycle_len:
-                            cycle_len_irr = 0
-                        else:
-                            cycle_len_irr = min(int(self.LGPT10[i_row, i_col]), self.max_cycle_len)
+    #                 """ Adjustment for IRRIGATED conditions"""
+    #                 """Use LGPT5 for minimum temperatures less than 8. Use LGPT10 for temperature greater than 8."""
+    #                 # effective cycle length will be our cycle length
+    #                 if self.min_temp <= 8:
+    #                     if int(self.LGPT5[i_row, i_col]) < self.min_cycle_len:
+    #                         cycle_len_irr = 0
+    #                     else:
+    #                         cycle_len_irr = min(int(self.LGPT5[i_row, i_col]), self.max_cycle_len)
+    #                 elif self.min_temp >8:
+    #                     if int(self.LGPT10[i_row, i_col]) < self.min_cycle_len:
+    #                         cycle_len_irr = 0
+    #                     else:
+    #                         cycle_len_irr = min(int(self.LGPT10[i_row, i_col]), self.max_cycle_len)
                     
-                    cycle_len_irr = self.cycle_len if (cycle_len_irr > self.cycle_len) else cycle_len_irr
+    #                     cycle_len_irr = self.cycle_len if (cycle_len_irr >= self.cycle_len) else cycle_len_irr
                     
-                    # Leaf Area Index adjustment for irrigated condition
-                    if cycle_len_irr - self.aLAI > self.bLAI:
-                        LAI_irr = self.LAi
-                    elif cycle_len_irr - self.aLAI < 0:
-                        LAI_irr = 0
-                    else:
-                        LAI_irr = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_irr, oLAI = self.LAI, aLAI = self.aLAI, bLAI = self.bLAI)
+    #                 # Leaf Area Index adjustment for irrigated condition
+    #                 if cycle_len_irr - self.aLAI > self.bLAI:
+    #                     LAI_irr = self.LAi
+    #                 elif cycle_len_irr <= self.aLAI:
+    #                     LAI_irr = 0
+    #                 else:
+    #                     LAI_irr = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_irr, oLAI = self.LAI, aLAI = self.aLAI, bLAI = self.bLAI)
 
-                    # Harvest Index adjustment for irrigated condition
-                    if cycle_len_irr -self.aHI > self.bHI:
-                        HI_irr = self.HI
-                    elif cycle_len_irr - self.aHI <0:
-                        HI_irr = 0
-                    else:
-                        HI_irr = self.HarvestIndexAdjustment(cycle_len = cycle_len_irr, oHI = self.HI, aHI = self.aHI, bHI = self.bHI)
+    #                 # Harvest Index adjustment for irrigated condition
+    #                 if cycle_len_irr -self.aHI > self.bHI:
+    #                     HI_irr = self.HI
+    #                 elif cycle_len_irr<= self.aHI:
+    #                     HI_irr = 0
+    #                 else:
+    #                     HI_irr = self.HarvestIndexAdjustment(cycle_len = cycle_len_irr, oHI = self.HI, aHI = self.aHI, bHI = self.bHI)
                 
-                count_pixel_completed = count_pixel_completed + 1       
-                # this allows handing leap and non-leap year differently. This is only relevant for monthly data because this value will be used in interpolations.
-                # In case of daily data, length of vector will be taken as number of days in  a year.
-                if leap_year:
-                    days_in_year = 366
-                else:
-                    days_in_year = 365
+    #             count_pixel_completed = count_pixel_completed + 1       
+    #             # this allows handing leap and non-leap year differently. This is only relevant for monthly data because this value will be used in interpolations.
+    #             # In case of daily data, length of vector will be taken as number of days in  a year.
+    #             # if leap_year:
+    #             #     days_in_year = 366
+    #             # else:
+    #             #     days_in_year = 365
 
-                # extract daily climate data for particular location.
+    #             # extract daily climate data for particular location.
 
-                minT_daily_point = self.minT_daily[i_row, i_col, :]
-                maxT_daily_point = self.maxT_daily[i_row, i_col, :]
-                meanT_daily_point = self.meanT_daily[i_row, i_col,:]
-                shortRad_daily_point = self.shortRad_daily[i_row, i_col, :]
-                wind2m_daily_point = self.wind2m_daily[i_row, i_col, :]
-                totalPrec_daily_point = self.totalPrec_daily[i_row, i_col, :]
-                rel_humidity_daily_point = self.rel_humidity_daily[i_row, i_col, :]
-                pet_daily_point = self.pet_daily[i_row, i_col, :]   
-
-
-                # Empty arrays that stores yield estimations and fc1 and fc2 of all cycles per particular location (pixel)
-                yield_of_all_crop_cycles_rainfed = np.empty(0, dtype= np.float16)
-                yield_of_all_crop_cycles_irrig = np.empty(0, dtype= np.float16)
-
-                fc1_rain_lst = np.empty(0, dtype= np.float16)
-                fc1_irr_lst = np.empty(0, dtype= np.float16)
-
-                fc2_lst = np.empty(0, dtype= np.float16)
+    #             minT_daily_point = self.minT_daily[i_row, i_col, :]
+    #             maxT_daily_point = self.maxT_daily[i_row, i_col, :]
+    #             meanT_daily_point = self.meanT_daily[i_row, i_col,:]
+    #             shortRad_daily_point = self.shortRad_daily[i_row, i_col, :]
+    #             wind2m_daily_point = self.wind2m_daily[i_row, i_col, :]
+    #             totalPrec_daily_point = self.totalPrec_daily[i_row, i_col, :]
+    #             rel_humidity_daily_point = self.rel_humidity_daily[i_row, i_col, :]
+    #             pet_daily_point = self.pet_daily[i_row, i_col, :]   
 
 
-                """ Calculation of each individual day's yield for rainfed and irrigated conditions"""
+    #             # Empty arrays that stores yield estimations and fc1 and fc2 of all cycles per particular location (pixel)
+    #             yield_of_all_crop_cycles_rainfed = np.empty(0, dtype= np.float16)
+    #             yield_of_all_crop_cycles_irrig = np.empty(0, dtype= np.float16)
 
-                for i_cycle in range(start_doy-1, end_doy, step_doy):
+    #             fc1_rain_lst = np.empty(0, dtype= np.float16)
+    #             fc1_irr_lst = np.empty(0, dtype= np.float16)
 
-                    """Check if the first day of a cycle meets minimum temperature requirement. If not, all outputs will be zero.
-                        And iterates to next cycle."""
-                    if (minT_daily_point[i_cycle]+maxT_daily_point[i_cycle])/2 < self.min_temp:
-                        est_yield_moisture_limited = 0.
-                        fc1_rain = 0.
-                        fc1_irr =0.
-                        fc2_value = 0.
-                        est_yield_irrigated = 0.
+    #             fc2_lst = np.empty(0, dtype= np.float16)
 
-                        yield_of_all_crop_cycles_rainfed = np.append(yield_of_all_crop_cycles_rainfed, 0.)
-                        yield_of_all_crop_cycles_irrig = np.append(yield_of_all_crop_cycles_irrig, 0.)
-                        fc1_rain_lst = np.append(fc1_rain_lst, 0.)
-                        fc1_irr_lst = np.append(fc1_irr_lst, 0.)
-                        fc2_lst = np.append(fc2_lst, 0.)
-                        continue
+
+    #             """ Calculation of each individual day's yield for rainfed and irrigated conditions"""
+
+    #             for i_cycle in range(start_doy-1, end_doy, step_doy):
+
+    #                 """Check if the first day of a cycle meets minimum temperature requirement. If not, all outputs will be zero.
+    #                     And iterates to next cycle."""
+    #                 if (minT_daily_point[i_cycle]+maxT_daily_point[i_cycle])/2 < self.min_temp:
+    #                     est_yield_moisture_limited = 0.
+    #                     fc1_rain = 0.
+    #                     fc1_irr =0.
+    #                     fc2_value = 0.
+    #                     est_yield_irrigated = 0.
+
+    #                     yield_of_all_crop_cycles_rainfed = np.append(yield_of_all_crop_cycles_rainfed, 0.)
+    #                     yield_of_all_crop_cycles_irrig = np.append(yield_of_all_crop_cycles_irrig, 0.)
+    #                     fc1_rain_lst = np.append(fc1_rain_lst, 0.)
+    #                     fc1_irr_lst = np.append(fc1_irr_lst, 0.)
+    #                     fc2_lst = np.append(fc2_lst, 0.)
+    #                     continue
                     
-                    """Repeat the climate data two times and concatenate for computational convenience. If perennial, the cycle length
-                            will be different for separate conditions"""
-                    minT_daily_2year = np.tile(minT_daily_point, 2)
-                    maxT_daily_2year = np.tile(maxT_daily_point, 2)
-                    meanT_daily_2year = np.tile(meanT_daily_point, 2)
-                    shortRad_daily_2year = np.tile(shortRad_daily_point, 2)
-                    wind2m_daily_2year = np.tile(wind2m_daily_point,2)
-                    totalPrec_daily_2year = np.tile(totalPrec_daily_point, 2)
-                    pet_daily_2year = np.tile(pet_daily_point, 2)
-                    meanT_daily_2year = np.tile(meanT_daily_point, 2)
+    #                 """Repeat the climate data two times and concatenate for computational convenience. If perennial, the cycle length
+    #                         will be different for separate conditions"""
+    #                 minT_daily_2year = np.tile(minT_daily_point, 2)
+    #                 maxT_daily_2year = np.tile(maxT_daily_point, 2)
+    #                 meanT_daily_2year = np.tile(meanT_daily_point, 2)
+    #                 shortRad_daily_2year = np.tile(shortRad_daily_point, 2)
+    #                 wind2m_daily_2year = np.tile(wind2m_daily_point,2)
+    #                 totalPrec_daily_2year = np.tile(totalPrec_daily_point, 2)
+    #                 pet_daily_2year = np.tile(pet_daily_point, 2)
+    #                 meanT_daily_2year = np.tile(meanT_daily_point, 2)
                     
-                    if cycle_len_rain in[-1,0]:
-                        est_yield_moisture_limited = 0.
-                        fc1_rain = 0.
-                        fc2_value = 0.
-                    else:
-                        """ Time slicing tiled climate data with corresponding cycle lengths for rainfed and irrigated conditions"""
-                        """For rainfed"""
+    #                 if cycle_len_rain in[-1,0]:
+    #                     est_yield_moisture_limited = 0.
+    #                     fc1_rain = 0.
+    #                     fc2_value = 0.
+    #                 else:
+    #                     """ Time slicing tiled climate data with corresponding cycle lengths for rainfed and irrigated conditions"""
+    #                     """For rainfed"""
 
-                        # extract climate data within the season to pass in to calculation classes
-                        minT_daily_season_rain = minT_daily_2year[i_cycle: i_cycle + int(cycle_len_rain)]
-                        maxT_daily_season_rain = maxT_daily_2year[i_cycle: i_cycle + int(cycle_len_rain)]
-                        meanT_daily_season_rain = meanT_daily_2year[i_cycle: i_cycle + int(cycle_len_rain)]
-                        shortRad_daily_season_rain = shortRad_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
-                        pet_daily_season_rain = pet_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
-                        totalPrec_daily_season_rain = totalPrec_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
-                        wind_sp_daily_season_rain = wind2m_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
+    #                     # extract climate data within the season to pass in to calculation classes
+    #                     minT_daily_season_rain = minT_daily_2year[i_cycle: i_cycle + int(cycle_len_rain)]
+    #                     maxT_daily_season_rain = maxT_daily_2year[i_cycle: i_cycle + int(cycle_len_rain)]
+    #                     meanT_daily_season_rain = meanT_daily_2year[i_cycle: i_cycle + int(cycle_len_rain)]
+    #                     shortRad_daily_season_rain = shortRad_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
+    #                     pet_daily_season_rain = pet_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
+    #                     totalPrec_daily_season_rain = totalPrec_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
+    #                     wind_sp_daily_season_rain = wind2m_daily_2year[i_cycle: i_cycle+int(cycle_len_rain)]
                         
-                        """Creating Thermal Screening object classes for perennial RAINFED conditions"""
-                        obj_screening_rain = ThermalScreening.ThermalScreening()
+    #                     """Creating Thermal Screening object classes for perennial RAINFED conditions"""
+    #                     obj_screening_rain = ThermalScreening.ThermalScreening()
 
-                        """ For Perennials, 365 days of climate data will be used for Thermal Screening.
-                            For Annuals, climate data within crop-specific cycle length will be used for Thermal Screening."""
-                        if self.perennial:
-                            obj_screening_rain.setClimateData(meanT_daily_2year[i_cycle: i_cycle+365], meanT_daily_2year[i_cycle: i_cycle+365])
-                        else:
-                            obj_screening_rain.setClimateData(meanT_daily_season_rain, meanT_daily_season_rain)
+    #                     """ For Perennials, 365 days of climate data will be used for Thermal Screening.
+    #                         For Annuals, climate data within crop-specific cycle length will be used for Thermal Screening."""
+    #                     if self.perennial:
+    #                         obj_screening_rain.setClimateData(meanT_daily_2year[i_cycle: i_cycle+365], meanT_daily_2year[i_cycle: i_cycle+365])
+    #                     else:
+    #                         obj_screening_rain.setClimateData(meanT_daily_season_rain, meanT_daily_season_rain)
                         
 
-                        if self.set_lgpt_screening:
-                            obj_screening_rain.setLGPTScreening(no_lgpt=self.no_lgpt, optm_lgpt=self.optm_lgpt)
+    #                     if self.set_lgpt_screening:
+    #                         obj_screening_rain.setLGPTScreening(no_lgpt=self.no_lgpt, optm_lgpt=self.optm_lgpt)
 
-                        # TSUM Screening
-                        if self.set_Tsum_screening:
-                            obj_screening_rain.setTSumScreening(LnS=self.LnS, LsO=self.LsO, LO=self.LO, HnS=self.HnS, HsO=self.HsO, HO=self.HO)
+    #                     # TSUM Screening
+    #                     if self.set_Tsum_screening:
+    #                         obj_screening_rain.setTSumScreening(LnS=self.LnS, LsO=self.LsO, LO=self.LO, HnS=self.HnS, HsO=self.HsO, HO=self.HO)
 
-                        # Crop-Specific Rule Screening
-                        if self.setTypeBConstraint:
-                            obj_screening_rain.applyTypeBConstraint(data=self.data, input_temp_profile=obj_screening_rain.tprofile, perennial_flag= self.perennial)
+    #                     # Crop-Specific Rule Screening
+    #                     if self.setTypeBConstraint:
+    #                         obj_screening_rain.applyTypeBConstraint(data=self.data, input_temp_profile=obj_screening_rain.tprofile, perennial_flag= self.perennial)
 
-                        # Initial set up value for fc1 RAINFED
-                        fc1_rain = 1.
-                        fc1_rain = obj_screening_rain.getReductionFactor2()  # fc1 for rainfed condition
+    #                     # Initial set up value for fc1 RAINFED
+    #                     fc1_rain = 1.
+    #                     fc1_rain = obj_screening_rain.getReductionFactor2()  # fc1 for rainfed condition
                         
-                        if fc1_rain == 0.:
-                            est_yield_moisture_limited = 0.
-                            fc1_rain = 0.
-                            fc2_value = 0.
-                        else:
+    #                     if fc1_rain == 0.:
+    #                         est_yield_moisture_limited = 0.
+    #                         fc1_rain = 0.
+    #                         fc2_value = 0.
+    #                     else:
                             
-                            if LAI_rain <=0 or HI_rain <= 0:
-                                est_yield_rainfed = 0
-                            else:
+    #                         if LAI_rain <=0 or HI_rain <= 0:
+    #                             est_yield_rainfed = 0
+    #                         else:
 
-                                """If fc1 RAINFED IS NOT ZERO >>> BIOMASS RAINFED STARTS"""
-                                obj_maxyield_rain = BioMassCalc.BioMassCalc(i_cycle+1, i_cycle+1+cycle_len_rain-1, self.latitude[i_row, i_col])
-                                obj_maxyield_rain.setClimateData(minT_daily_season_rain, maxT_daily_season_rain, shortRad_daily_season_rain)
-                                obj_maxyield_rain.setCropParameters(LAi_rain, HI_rain, self.legume, self.adaptability)
-                                obj_maxyield_rain.calculateBioMass()
-                                est_yield_rainfed = obj_maxyield_rain.calculateYield()
+    #                             """If fc1 RAINFED IS NOT ZERO >>> BIOMASS RAINFED STARTS"""
+    #                             obj_maxyield_rain = BioMassCalc.BioMassCalc(i_cycle+1, i_cycle+1+cycle_len_rain, self.latitude[i_row, i_col], leap_year)
+    #                             obj_maxyield_rain.setClimateData(minT_daily_season_rain, maxT_daily_season_rain, shortRad_daily_season_rain)
+    #                             obj_maxyield_rain.setCropParameters(LAi_rain, HI_rain, self.legume, self.adaptability)
+    #                             obj_maxyield_rain.calculateBioMass()
+    #                             est_yield_rainfed = obj_maxyield_rain.calculateYield()
 
-                            # reduce thermal screening factor
-                            est_yield_rainfed = est_yield_rainfed * fc1_rain
+    #                         # reduce thermal screening factor
+    #                         est_yield_rainfed = est_yield_rainfed * fc1_rain
 
-                            """ For Annual RAINFED, crop water requirements are calculated in full procedures.
-                                For Perennial RAINFED, procedures related with yield loss factors are omitted out.
-                                """
-                            fc2_value = 1.
+    #                         """ For Annual RAINFED, crop water requirements are calculated in full procedures.
+    #                             For Perennial RAINFED, procedures related with yield loss factors are omitted out.
+    #                             """
+    #                         fc2_value = 1.
                             
-                            obj_cropwat = CropWatCalc.CropWatCalc(
-                                i_cycle+1, i_cycle+1+cycle_len_rain, perennial_flag = self.perennial)
-                            obj_cropwat.setClimateData(pet_daily_season_rain, totalPrec_daily_season_rain, 
-                                                       wind_sp_daily_season_rain, minT_daily_season_rain, 
-                                                       maxT_daily_season_rain)
+    #                         obj_cropwat = CropWatCalc.CropWatCalc(
+    #                             i_cycle+1, i_cycle+1+cycle_len_rain, perennial_flag = self.perennial)
+    #                         obj_cropwat.setClimateData(pet_daily_season_rain, totalPrec_daily_season_rain, 
+    #                                                    wind_sp_daily_season_rain, minT_daily_season_rain, 
+    #                                                    maxT_daily_season_rain)
                             
-                            # check Sa is a raster or single value and extract Sa value accordingly
-                            if len(np.array(self.Sa).shape) == 2:
-                                Sa_temp = self.Sa[i_row, i_col]
-                            else:
-                                Sa_temp = self.Sa
-                            obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f,
-                                                            self.yloss_f_all, est_yield_rainfed, self.D1, self.D2, Sa_temp, self.pc, self.plant_height)
-                            est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
+    #                         # check Sa is a raster or single value and extract Sa value accordingly
+    #                         if len(np.array(self.Sa).shape) == 2:
+    #                             Sa_temp = self.Sa[i_row, i_col]
+    #                         else:
+    #                             Sa_temp = self.Sa
+    #                         obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f,
+    #                                                         self.yloss_f_all, est_yield_rainfed, self.D1, self.D2, Sa_temp, self.pc, self.plant_height)
+    #                         est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
 
-                            fc2_value = obj_cropwat.getfc2factormap()
+    #                         fc2_value = obj_cropwat.getfc2factormap()
 
-                    yield_of_all_crop_cycles_rainfed = np.append(yield_of_all_crop_cycles_rainfed, est_yield_moisture_limited)
-                    fc2_lst = np.append(fc2_lst, fc2_value)
-                    fc1_rain_lst = np.append(fc1_rain_lst, fc1_rain)
+    #                 yield_of_all_crop_cycles_rainfed = np.append(yield_of_all_crop_cycles_rainfed, est_yield_moisture_limited)
+    #                 fc2_lst = np.append(fc2_lst, fc2_value)
+    #                 fc1_rain_lst = np.append(fc1_rain_lst, fc1_rain)
 
-                    """Error checking code snippet"""
-                    if est_yield_moisture_limited == None or est_yield_moisture_limited == np.nan:
-                        raise Exception('Crop Water Yield not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
-                    if fc2_value == None or fc2_value == np.nan:
-                        raise Exception('fc2 value not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
-                    if len(fc1_rain_lst) != i_cycle+1 or fc1_rain == None or fc1_rain == np.nan:
-                        raise Exception('Fc1 rain not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
-                    if len(yield_of_all_crop_cycles_rainfed) != i_cycle+1:
-                        raise Exception('Rainfed yield list not properly appended') 
-                    if len(fc2_lst) != i_cycle+1:
-                        raise Exception('Fc2 list not appended properly. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+    #                 """Error checking code snippet"""
+    #                 if est_yield_moisture_limited == None or est_yield_moisture_limited == np.nan:
+    #                     raise Exception('Crop Water Yield not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+    #                 if fc2_value == None or fc2_value == np.nan:
+    #                     raise Exception('fc2 value not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+    #                 if len(fc1_rain_lst) != i_cycle+1 or fc1_rain == None or fc1_rain == np.nan:
+    #                     raise Exception('Fc1 rain not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+    #                 if len(yield_of_all_crop_cycles_rainfed) != i_cycle+1:
+    #                     raise Exception('Rainfed yield list not properly appended') 
+    #                 if len(fc2_lst) != i_cycle+1:
+    #                     raise Exception('Fc2 list not appended properly. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
 
 
-                    ##########################
-                    if cycle_len_irr in [-1, 0]:
-                        est_yield_irrigated = 0.
-                        fc1_irr = 0.
-                    else:
+    #                 ##########################
+    #                 if cycle_len_irr in [-1, 0]:
+    #                     est_yield_irrigated = 0.
+    #                     fc1_irr = 0.
+    #                 else:
                             
-                        # extract climate data within the season to pass in to calculation classes
-                        minT_daily_season_irr = minT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
-                        maxT_daily_season_irr = maxT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
-                        meanT_daily_season_irr = meanT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
-                        meanT_daily_season_irr = meanT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
-                        shortRad_daily_season_irr = shortRad_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
-                        pet_daily_season_irr = pet_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
-                        totalPrec_daily_season_irr = totalPrec_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
+    #                     # extract climate data within the season to pass in to calculation classes
+    #                     minT_daily_season_irr = minT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
+    #                     maxT_daily_season_irr = maxT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
+    #                     meanT_daily_season_irr = meanT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
+    #                     meanT_daily_season_irr = meanT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
+    #                     shortRad_daily_season_irr = shortRad_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
+    #                     pet_daily_season_irr = pet_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
+    #                     totalPrec_daily_season_irr = totalPrec_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
                         
                     
-                        """Creating Thermal Screening object classes for IRRIGATED conditions"""
-                        obj_screening_irr = ThermalScreening.ThermalScreening()
+    #                     """Creating Thermal Screening object classes for IRRIGATED conditions"""
+    #                     obj_screening_irr = ThermalScreening.ThermalScreening()
                         
-                        """ For Perennials, 365 days of climate data will be used for Thermal Screening.
-                        For Annuals, climate data within crop-specific cycle length will be used for Thermal Screening."""
-                        if self.perennial:
-                            obj_screening_irr.setClimateData(meanT_daily_2year[i_cycle: i_cycle+365], meanT_daily_2year[i_cycle: i_cycle+365])
-                        else:
-                            obj_screening_irr.setClimateData(minT_daily_season_irr, maxT_daily_season_irr)
+    #                     """ For Perennials, 365 days of climate data will be used for Thermal Screening.
+    #                     For Annuals, climate data within crop-specific cycle length will be used for Thermal Screening."""
+    #                     if self.perennial:
+    #                         obj_screening_irr.setClimateData(meanT_daily_2year[i_cycle: i_cycle+365], meanT_daily_2year[i_cycle: i_cycle+365])
+    #                     else:
+    #                         obj_screening_irr.setClimateData(minT_daily_season_irr, maxT_daily_season_irr)
 
-                        if self.set_lgpt_screening:
-                            obj_screening_irr.setLGPTScreening(no_lgpt=self.no_lgpt, optm_lgpt=self.optm_lgpt)
+    #                     if self.set_lgpt_screening:
+    #                         obj_screening_irr.setLGPTScreening(no_lgpt=self.no_lgpt, optm_lgpt=self.optm_lgpt)
 
-                        # TSUM Screening
-                        if self.set_Tsum_screening:
-                            obj_screening_irr.setTSumScreening(LnS=self.LnS, LsO=self.LsO, LO=self.LO, HnS=self.HnS, HsO=self.HsO, HO=self.HO)
+    #                     # TSUM Screening
+    #                     if self.set_Tsum_screening:
+    #                         obj_screening_irr.setTSumScreening(LnS=self.LnS, LsO=self.LsO, LO=self.LO, HnS=self.HnS, HsO=self.HsO, HO=self.HO)
 
-                        # Crop-Specific Rule Screening
-                        if self.setTypeBConstraint:
-                            obj_screening_irr.applyTypeBConstraint(data=self.data, input_temp_profile=obj_screening_irr.tprofile, perennial_flag= self.perennial)
+    #                     # Crop-Specific Rule Screening
+    #                     if self.setTypeBConstraint:
+    #                         obj_screening_irr.applyTypeBConstraint(data=self.data, input_temp_profile=obj_screening_irr.tprofile, perennial_flag= self.perennial)
 
-                        # Initial set up value for fc1 RAINFED
-                        fc1_irr = 1.
+    #                     # Initial set up value for fc1 RAINFED
+    #                     fc1_irr = 1.
 
-                        fc1_irr = obj_screening_irr.getReductionFactor2()  # fc1 for rainfed condition
+    #                     fc1_irr = obj_screening_irr.getReductionFactor2()  # fc1 for rainfed condition
 
                 
-                        if fc1_irr == 0.:
-                            est_yield_irrigated = 0.
-                        else:
-                            if LAI_irr <=0 or HI_irr <= 0:
-                                est_yield_irrigated = 0
-                            else:
-                                """If fc1 IRRIGATED IS NOT ZERO >>> BIOMASS IRRIGATED STARTS"""
-                                obj_maxyield_irr = BioMassCalc.BioMassCalc(
-                                    i_cycle+1, i_cycle+1+self.cycle_len_irr-1, self.latitude[i_row, i_col])
-                                obj_maxyield_irr.setClimateData(
-                                    minT_daily_season_irr, maxT_daily_season_irr, shortRad_daily_season_irr)
-                                obj_maxyield_irr.setCropParameters(
-                                    self.LAi_irr, self.HI_irr, self.legume, self.adaptability)
-                                obj_maxyield_irr.calculateBioMass()
-                                est_yield_irrigated = obj_maxyield_irr.calculateYield()
-                            # reduce thermal screening factor
-                            est_yield_irrigated = est_yield_irrigated * fc1_irr
+    #                     if fc1_irr == 0.:
+    #                         est_yield_irrigated = 0.
+    #                     else:
+    #                         if LAI_irr <=0 or HI_irr <= 0:
+    #                             est_yield_irrigated = 0
+    #                         else:
+    #                             """If fc1 IRRIGATED IS NOT ZERO >>> BIOMASS IRRIGATED STARTS"""
+    #                             obj_maxyield_irr = BioMassCalc.BioMassCalc(
+    #                                 i_cycle+1, i_cycle+1+self.cycle_len_irr, self.latitude[i_row, i_col])
+    #                             obj_maxyield_irr.setClimateData(
+    #                                 minT_daily_season_irr, maxT_daily_season_irr, shortRad_daily_season_irr)
+    #                             obj_maxyield_irr.setCropParameters(
+    #                                 self.LAi_irr, self.HI_irr, self.legume, self.adaptability)
+    #                             obj_maxyield_irr.calculateBioMass()
+    #                             est_yield_irrigated = obj_maxyield_irr.calculateYield()
+    #                         # reduce thermal screening factor
+    #                         est_yield_irrigated = est_yield_irrigated * fc1_irr
 
-                    yield_of_all_crop_cycles_irrig = np.append(yield_of_all_crop_cycles_irrig, est_yield_irrigated)
-                    fc1_irr_lst = np.append(fc1_irr_lst, fc1_irr)
+    #                 yield_of_all_crop_cycles_irrig = np.append(yield_of_all_crop_cycles_irrig, est_yield_irrigated)
+    #                 fc1_irr_lst = np.append(fc1_irr_lst, fc1_irr)
 
-                    # Error raising
-                    if est_yield_irrigated == None or est_yield_irrigated== np.nan:
-                        raise Exception('Biomass Yield for irrigated not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+    #                 # Error raising
+    #                 if est_yield_irrigated == None or est_yield_irrigated== np.nan:
+    #                     raise Exception('Biomass Yield for irrigated not returned. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
 
-                    if len(yield_of_all_crop_cycles_irrig) != i_cycle+1:
-                        raise Exception('Irrigated yield list not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+    #                 if len(yield_of_all_crop_cycles_irrig) != i_cycle+1:
+    #                     raise Exception('Irrigated yield list not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
                                 
-                    if len(fc1_irr_lst) != i_cycle+1 or fc1_irr == None or fc1_irr == np.nan:
-                        raise Exception('Fc1 irr not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+    #                 if len(fc1_irr_lst) != i_cycle+1 or fc1_irr == None or fc1_irr == np.nan:
+    #                     raise Exception('Fc1 irr not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
                     
-                    if len(fc1_irr_lst)!= i_cycle+1 or fc1_rain == None or fc1_rain == np.nan:
-                        raise Exception('Fc1 irr not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
+    #                 if len(fc1_irr_lst)!= i_cycle+1 or fc1_rain == None or fc1_rain == np.nan:
+    #                     raise Exception('Fc1 irr not properly appended. Row_{}_col_{}_Cycle_{}'.format(i_row, i_col, i_cycle))
 
-                """Getting Maximum Attainable Yield from the list for irrigated and rainfed conditions and the Crop Calendar"""
+    #             """Getting Maximum Attainable Yield from the list for irrigated and rainfed conditions and the Crop Calendar"""
 
-                # get agro-climatic yield and crop calendar for IRRIGATED condition
-                if np.logical_and(len(yield_of_all_crop_cycles_irrig) == len(fc1_irr_lst), len(yield_of_all_crop_cycles_irrig) == len(fc1_irr_lst)):
+    #             # get agro-climatic yield and crop calendar for IRRIGATED condition
+    #             if np.logical_and(len(yield_of_all_crop_cycles_irrig) == len(fc1_irr_lst), len(yield_of_all_crop_cycles_irrig) == len(fc1_irr_lst)):
 
-                    self.final_yield_irrig[i_row, i_col] = np.nanmax(yield_of_all_crop_cycles_irrig) # Maximum attainable yield
+    #                 self.final_yield_irrig[i_row, i_col] = np.nanmax(yield_of_all_crop_cycles_irrig) # Maximum attainable yield
 
-                    # Array index where maximum yield is obtained
-                    i = np.where(yield_of_all_crop_cycles_irrig == np.max(yield_of_all_crop_cycles_irrig))[0][0] # index of maximum yield
+    #                 # Array index where maximum yield is obtained
+    #                 i = np.where(yield_of_all_crop_cycles_irrig == np.max(yield_of_all_crop_cycles_irrig))[0][0] # index of maximum yield
 
-                    self.crop_calender_irr[i_row, i_col] = int(i+1)*step_doy if self.final_yield_irrig[i_row, i_col] != 0 else 0 # Crop calendar for irrigated condition
+    #                 self.crop_calender_irr[i_row, i_col] = int(i+1)*step_doy if self.final_yield_irrig[i_row, i_col] != 0 else 0 # Crop calendar for irrigated condition
 
-                    self.fc1_irr[i_row, i_col] = fc1_irr_lst[i] # fc1 irrigated for the specific crop calendar DOY
+    #                 self.fc1_irr[i_row, i_col] = fc1_irr_lst[i] # fc1 irrigated for the specific crop calendar DOY
 
-                # get agro-climatic yield and crop calendar for RAINFED condition
-                if np.logical_and(len(yield_of_all_crop_cycles_rainfed) == len(fc1_rain_lst), len(yield_of_all_crop_cycles_rainfed) == len(fc1_rain_lst)):
-                    self.final_yield_rainfed[i_row, i_col] = np.max(yield_of_all_crop_cycles_rainfed) # Maximum attainable yield
+    #             # get agro-climatic yield and crop calendar for RAINFED condition
+    #             if np.logical_and(len(yield_of_all_crop_cycles_rainfed) == len(fc1_rain_lst), len(yield_of_all_crop_cycles_rainfed) == len(fc1_rain_lst)):
+    #                 self.final_yield_rainfed[i_row, i_col] = np.max(yield_of_all_crop_cycles_rainfed) # Maximum attainable yield
 
-                    i1 = np.where(yield_of_all_crop_cycles_rainfed == np.max(yield_of_all_crop_cycles_rainfed))[0][0] # index of maximum yield
+    #                 i1 = np.where(yield_of_all_crop_cycles_rainfed == np.max(yield_of_all_crop_cycles_rainfed))[0][0] # index of maximum yield
                     
-                    self.crop_calender_rain[i_row, i_col] = int(i1+1) * step_doy if self.final_yield_rainfed[i_row, i_col] != 0 else 0# Crop calendar for rainfed condition
+    #                 self.crop_calender_rain[i_row, i_col] = int(i1+1) * step_doy if self.final_yield_rainfed[i_row, i_col] != 0 else 0# Crop calendar for rainfed condition
                     
-                    self.fc1_rain[i_row, i_col] = fc1_rain_lst[i1]
+    #                 self.fc1_rain[i_row, i_col] = fc1_rain_lst[i1]
                     
-                    # if not self.perennial:
-                    self.fc2[i_row, i_col] = fc2_lst[i1]
+    #                 # if not self.perennial:
+    #                 self.fc2[i_row, i_col] = fc2_lst[i1]
 
 
-                print('\rDone %: ' + str(round(count_pixel_completed / total*100, 2)), end='\r')
+    #             print('\rDone %: ' + str(round(count_pixel_completed / total*100, 2)), end='\r')
         
-        print('\nSimulations Completed !')
+    #     print('\nSimulations Completed !')
     
     def simulateCropCycleOne(self, row, col, ccdi, ccdr, step_doy=1, leap_year=False):
         """Running the crop cycle calculation/simulation for a particular pixel location.
@@ -1476,9 +1482,9 @@ class CropSimulation(object):
         fc1_rain = 0.
         fc1_irr = 0.
 
-        LAI_rain = 0.
+        LAi_rain = 0.
         HI_rain = 0.
-        LAI_irr = 0.
+        LAi_irr = 0.
         HI_irr = 0.
 
         # check current location (pixel) is outside of study area or not. if it's outside of study area goes to next location (pixel)
@@ -1502,10 +1508,10 @@ class CropSimulation(object):
         if not self.perennial:
 
             "Harvest Index and Leaf Area Index are not adjusted."
-            LAI_rain = self.LAi
+            LAi_rain = self.LAi
             HI_rain = self.HI
 
-            LAI_irr = self.LAi
+            LAi_irr = self.LAi
             HI_irr = self.HI
             
             # for irrigated conditions
@@ -1539,11 +1545,11 @@ class CropSimulation(object):
 
                 # Leaf Area Index adjustment for rainfed condition
                 if (cycle_len_rain - self.aLAI > self.bLAI):
-                    LAI_rain = self.LAi
+                    LAi_rain = self.LAi
                 elif cycle_len_rain <= self.aLAI:
-                    LAI_rain = 0
+                    LAi_rain = 0
                 else:
-                    LAI_rain = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_rain, oLAI = self.LAi, aLAI = self.aLAI, bLAI = self.bLAI)
+                    LAi_rain = self.LeafAreaIndexAdjustment(cycle_len= cycle_len_rain, oLAI = self.LAi, aLAI = self.aLAI, bLAI = self.bLAI)
                 
                 # Harvest Index adjustment for rainfed conditions
                 if cycle_len_rain -self.aHI > self.bHI:
@@ -1587,10 +1593,6 @@ class CropSimulation(object):
            
         # this allows handing leap and non-leap year differently. This is only relevant for monthly data because this value will be used in interpolations.
         # In case of daily data, length of vector will be taken as number of days in  a year.
-        if leap_year:
-            days_in_year = 366
-        else:
-            days_in_year = 365
 
         # extract daily climate data for particular location.
 
@@ -1693,14 +1695,14 @@ class CropSimulation(object):
                     fc2_value = 0.
                 else:
                     
-                    if LAI_rain <=0 or HI_rain <= 0:
+                    if LAi_rain <=0 or HI_rain <= 0:
                         est_yield_rainfed = 0
                     else:
 
                         """If fc1 RAINFED IS NOT ZERO >>> BIOMASS RAINFED STARTS"""
                         obj_maxyield_rain = BioMassCalc.BioMassCalc(i_cycle+1, i_cycle+1+cycle_len_rain, self.latitude[i_row, i_col], leap_year)
                         obj_maxyield_rain.setClimateData(minT_daily_season_rain, maxT_daily_season_rain, shortRad_daily_season_rain)
-                        obj_maxyield_rain.setCropParameters(LAI_rain, HI_rain, self.legume, self.adaptability)
+                        obj_maxyield_rain.setCropParameters(LAi_rain, HI_rain, self.legume, self.adaptability)
                         obj_maxyield_rain.calculateBioMass()
                         est_yield_rainfed = obj_maxyield_rain.calculateYield()
 
@@ -1760,8 +1762,8 @@ class CropSimulation(object):
                 maxT_daily_season_irr = maxT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
                 meanT_daily_season_irr = meanT_daily_2year[i_cycle: i_cycle +int(cycle_len_irr)]
                 shortRad_daily_season_irr = shortRad_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
-                pet_daily_season_irr = pet_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
-                totalPrec_daily_season_irr = totalPrec_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
+                # pet_daily_season_irr = pet_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
+                # totalPrec_daily_season_irr = totalPrec_daily_2year[i_cycle: i_cycle+int(cycle_len_irr)]
                 
             
                 """Creating Thermal Screening object classes for IRRIGATED conditions"""
@@ -1794,13 +1796,13 @@ class CropSimulation(object):
                 if fc1_irr == 0.:
                     est_yield_irrigated = 0.
                 else:
-                    if LAI_irr <=0 or HI_irr <= 0:
+                    if LAi_irr <=0 or HI_irr <= 0:
                         est_yield_irrigated = 0
                     else:
                         """If fc1 IRRIGATED IS NOT ZERO >>> BIOMASS IRRIGATED STARTS"""
                         obj_maxyield_irr = BioMassCalc.BioMassCalc(i_cycle+1, i_cycle+1+cycle_len_irr, self.latitude[i_row, i_col], leap_year)
                         obj_maxyield_irr.setClimateData(minT_daily_season_irr, maxT_daily_season_irr, shortRad_daily_season_irr)
-                        obj_maxyield_irr.setCropParameters(LAI_irr, HI_irr, self.legume, self.adaptability)
+                        obj_maxyield_irr.setCropParameters(LAi_irr, HI_irr, self.legume, self.adaptability)
                         obj_maxyield_irr.calculateBioMass()
                         est_yield_irrigated = obj_maxyield_irr.calculateYield()
                     # reduce thermal screening factor
@@ -1931,7 +1933,10 @@ class CropSimulation(object):
 
             bio.setCropParameters(LAI= LAI_irr, HI= HI_irr, legume= self.legume, adaptability= self.adaptability)
 
-            bio_lst = bio.biomassinter()
+            bio_lsti = bio.biomassinter()
+            bio_lsti1 = bio_lsti[0]
+            bio_lsti2 = bio_lsti[1]
+            bio_lsti3 = bio_lsti[2]
 
             biomassi = {
             'adaptability': [bio.adaptability +1],
@@ -1940,20 +1945,27 @@ class CropSimulation(object):
             'cycle_end': [bio.cycle_end],
             'LAI': [bio.LAi],
             'HI': [bio.HI],
-            'Ac_mean': [bio_lst[0]],
-            'Bc_mean': [bio_lst[1]],
-            'Bo_mean': [bio_lst[2]],
-            'meanT_mean': [bio_lst[3]],
-            'dT_mean': [bio_lst[4]],
-            'Rg':[bio_lst[5]],
-            'f_day_clouded':[bio_lst[6]],
-            'pm': [bio_lst[7]],
-            'ct': [bio_lst[9]],
-            'growth ratio(l)': [bio_lst[10]],
-            'bgm': [bio_lst[11]],
-            'Bn': [bio_lst[12]],
-            'By': [np.round(bio_lst[12] * bio.HI, 0).astype(int)],
-            'final irrigated yield':[np.round(bio_lst[12] * bio.HI * fc1_irr_lst[ccdi_idx], 0)]
+            'Ac_daily':bio_lsti2[0],
+            'Bc_daily':bio_lsti2[1],
+            'Bo_daily':bio_lsti2[2],
+            'Ac_monthly':bio_lsti3[0],
+            'Bc_monthly':bio_lsti3[1],
+            'Bo_monthly':bio_lsti3[2],
+
+            'Ac_mean': [bio_lsti1[0]],
+            'Bc_mean': [bio_lsti1[1]],
+            'Bo_mean': [bio_lsti1[2]],
+            'meanT_mean': [bio_lsti1[3]],
+            'dT_mean': [bio_lsti1[4]],
+            'Rg':[bio_lsti1[5]],
+            'f_day_clouded':[bio_lsti1[6]],
+            'pm': [bio_lsti1[7]],
+            'ct': [bio_lsti1[9]],
+            'growth ratio(l)': [bio_lsti1[10]],
+            'bgm': [bio_lsti1[11]],
+            'Bn': [bio_lsti1[12]],
+            'By': [np.round(bio_lsti1[12] * bio.HI, 0).astype(int)],
+            'final irrigated yield':[np.round(bio_lsti1[12] * bio.HI * fc1_irr_lst[ccdi_idx], 0)]
             }
         
         if LAI_rain <= 0 or HI_rain <=0:
@@ -1978,7 +1990,10 @@ class CropSimulation(object):
 
             bio2.setCropParameters(LAI= LAI_rain, HI= HI_rain, legume= self.legume, adaptability= self.adaptability)
 
-            bio_lst2 = bio2.biomassinter()
+            bio_lstr = bio2.biomassinter()
+            bio_lstr1 = bio_lstr[0]
+            bio_lstr2 = bio_lstr[1]
+            bio_lstr3 = bio_lstr[2]
 
             # Crop Water Requirement calculation for rainfed condition (GAEZ specific starting date)
             cwat = CropWatCalc.CropWatCalc(cycle_begin= ccdr_idx+1, cycle_end= ccdr_idx+1+int(cycle_len_rain))
@@ -1992,7 +2007,7 @@ class CropSimulation(object):
                                 kc_all=self.kc_all,
                                 yloss_f=self.yloss_f,
                                 yloss_f_all= self.yloss_f_all,
-                                est_yield= (np.round(bio_lst2[12] * bio2.HI, 0).astype(int)) * fc1_rain_lst[ccdr_idx],
+                                est_yield= (np.round(bio_lstr1[12] * bio2.HI, 0).astype(int)) * fc1_rain_lst[ccdr_idx],
                                 D1=self.D1,
                                 D2=self.D2,
                                 Sa= self.Sa,
@@ -2007,20 +2022,27 @@ class CropSimulation(object):
                 'cycle_end': [bio2.cycle_end],
                 'LAI': [bio2.LAi],
                 'HI': [bio2.HI],
-                'Ac_mean': [bio_lst2[0]],
-                'Bc_mean': [bio_lst2[1]],
-                'Bo_mean': [bio_lst2[2]],
-                'meanT_mean': [bio_lst2[3]],
-                'dT_mean': [bio_lst2[4]],
-                'Rg':[bio_lst2[5]],
-                'f_day_clouded':[bio_lst2[6]],
-                'pm': [bio_lst2[7]],
-                'ct': [bio_lst2[9]],
-                'growth ratio(l)': [bio_lst2[10]],
-                'bgm': [bio_lst2[11]],
-                'Bn': [bio_lst2[12]],
-                'By': [np.round(bio_lst2[12] * bio2.HI, 0).astype(int)],
-                'rainfed yield':[(np.round(bio_lst2[12] * bio2.HI, 0).astype(int)) * fc1_rain_lst[ccdr_idx]]
+                'Ac_daily':bio_lstr2[0],
+                'Bc_daily':bio_lstr2[1],
+                'Bo_daily':bio_lstr2[2],
+                'Ac_monthly':bio_lstr3[0],
+                'Bc_monthly':bio_lstr3[1],
+                'Bo_monthly':bio_lstr3[2],
+
+                'Ac_mean': [bio_lstr1[0]],
+                'Bc_mean': [bio_lstr1[1]],
+                'Bo_mean': [bio_lstr1[2]],
+                'meanT_mean': [bio_lstr1[3]],
+                'dT_mean': [bio_lstr1[4]],
+                'Rg':[bio_lstr1[5]],
+                'f_day_clouded':[bio_lstr1[6]],
+                'pm': [bio_lstr1[7]],
+                'ct': [bio_lstr1[9]],
+                'growth ratio(l)': [bio_lstr1[10]],
+                'bgm': [bio_lstr1[11]],
+                'Bn': [bio_lstr1[12]],
+                'By': [np.round(bio_lstr1[12] * bio2.HI, 0).astype(int)],
+                'rainfed yield':[(np.round(bio_lstr1[12] * bio2.HI, 0).astype(int)) * fc1_rain_lst[ccdr_idx]]
                 }
             
             cropwat = {
@@ -2041,7 +2063,7 @@ class CropSimulation(object):
                 'y_loss_repro':[cwat.yloss_f[2]],
                 'y_loss_maturity': [cwat.yloss_f[3]],
                 'y_loss_all': [cwat.yloss_f_all],
-                'potential yield': [(np.round(bio_lst2[12] * bio2.HI, 0).astype(int)) * fc1_rain_lst[ccdr_idx]],
+                'potential yield': [(np.round(bio_lstr1[12] * bio2.HI, 0).astype(int)) * fc1_rain_lst[ccdr_idx]],
                 'root_depth_start': [cwat.D1],
                 'root_depth_end':[cwat.D2],
                 'Sa': [cwat.Sa],

@@ -14,7 +14,9 @@ Modification:
 4. Day time temperature calculation corrected to respective day of year interval.
 5. Numba incorporation are removed due to lack of support for scipy interpolation.
 6. Ac, Bc, and Bo reference tables for Southern Hemisphere are updated.
-7. Fixed an issue when day time temperature calculation during year transition is not properly calculated.
+7. Fixed an issue when day time temperature calculation during year transition is not properly calculated for leap year.
+8. The LAI and growth rate multiplier (l) look-up tables are updated. Interpolated l value will be used for the biomass calculation.
+9. Removed unnecessary input arguments for the Bn calculation.
 """
 
 import numpy as np
@@ -23,6 +25,16 @@ from scipy.interpolate import CubicSpline
 class BioMassCalc(object):
 
     def __init__(self, cycle_begin, cycle_end, latitude, leap_year = False):
+
+        """
+        Biomasss Calculation object class creation.
+        
+        Args:
+            cycle_begin (int): starting DOY of the crop cycle
+            cycle_end (int) : end DOY of the crop cycle
+            latitude (float): Decimal latitude of a pixel location
+            leap_year (Boolean): Yes/No for leap year.
+        """
 
         self.cycle_begin = cycle_begin
         self.cycle_end = cycle_end
@@ -44,7 +56,7 @@ class BioMassCalc(object):
             min_temp = minimum temperature (Deg C, 1-D NumPy Array)
             max_temp = maximum temperature (Deg C, 1-D NumPy Array)
             short_rad = shortwave radiation (W/m2, 1-D NumPy Array)
-            """
+        """
         
         self.minT_daily = min_temp
         self.maxT_daily = max_temp
@@ -62,10 +74,7 @@ class BioMassCalc(object):
         doy_lst = np.arange(self.cycle_begin, self.cycle_end+1)
         
         # reformatting doy list if its out of 365
-        if self.leap_year:
-            doy_lst = np.where(doy_lst>366, 366-doy_lst, doy_lst)
-        else:
-            doy_lst = np.where(doy_lst>365, 365-doy_lst, doy_lst)
+        doy_lst = np.where(doy_lst>366, 366-doy_lst, doy_lst) if self.leap_year else np.where(doy_lst>365, 365-doy_lst, doy_lst)
         
         for i1 in range(self.dT_daily.shape[0]):
 
@@ -137,12 +146,11 @@ class BioMassCalc(object):
         self.legume = legume # binary value
         self.adaptability = adaptability-1
         
-    def calculateBiomassNumba(cycle_begin, cycle_end, cycle_len, lat, lat_index1, lat_index2,
-                         lat_t, lat_b, minT_daily, maxT_daily, shortRad_daily, meanT_daily,
-                         dT_daily, LAi, HI, legume, adaptability):
+    def calculateBiomassNumba(cycle_begin, cycle_end, cycle_len, lat,
+                         lat_t, lat_b, shortRad_daily, meanT_daily,
+                         dT_daily, LAi, legume, adaptability):
 
-        """Calculate the biomass from the settings of all input variables
-        """
+        """Calculate the biomass from the settings of all input variables"""
         # creating the latitude array from
         lat_array = np.arange(-90,100,10)
 
@@ -220,6 +228,10 @@ class BioMassCalc(object):
                                 [0.0, 0.0, 15.0, 32.5, 35.0, 35.0, 35.0],
                                 [0.0, 0.0, 5.0, 45.0, 65.0, 65.0, 65.0],
                                 [0.0, 5.0, 45.0, 65.0, 65.0, 65.0, 65.0]]);
+        
+        """Growth rate multiplier table"""
+        LAI_table = np.array([1., 2., 3., 4., 5., 6., 7., 8.])
+        l_table = np.array([0.35, 0.6, 0.8, 0.92, 1., 1.05, 1.08, 1.1])
 
         Ac_interp1 = np.zeros(12);
         for i in range(Ac_interp1.shape[0]):
@@ -232,7 +244,7 @@ class BioMassCalc(object):
         Bo_interp1 = np.zeros(12);
         for i in range(Bo_interp1.shape[0]):
             Bo_interp1[i] = np.interp(lat, [lat_t, lat_b], [Bo[top_row_idx,:][i], Bo[bot_row_idx,:][i]]);
-
+        
         # New Middle DOY, 1 additional addded at DOY 15's front and two added after DOY 345 
         new_doy = np.arange(-15, 410, 30);
 
@@ -281,27 +293,15 @@ class BioMassCalc(object):
         # With Gunther's confirmation, coefficients for the squared term will be changed from 0.001 t0 0.00104289
         Ct = c*(0.0044 + (0.0019*meanT_mean) + (0.00104289*np.power(meanT_mean,2)));
 
-        # growth rate multiplier
-        if(1 <= LAi and LAi < 2):
-            l = 0.4;
-        elif(LAi < 3):
-            l = 0.6;
-        elif(LAi < 4):
-            l = 0.8;
-        elif(LAi < 5):
-            l = 0.9;
-        elif(5 <= LAi):
-            l = 1;
-        elif(LAi < 1):
-            print("LAI too Low")
-            return
+        # growth rate multiplier (linear interpolation)
+        l = np.interp(LAi, LAI_table, l_table)
 
         '''Maximum Rate of Gross Biomass Production''' # Minor change
-
+        bgm = 0.
         if iPm > 20:
             bgm = (f_day_clouded * (.8 + (0.01 * iPm)) * bo_mean) + ((1-f_day_clouded) * (.5 + (.025 * iPm)) * bc_mean);
         elif iPm < 20:
-            bgm = (f_day_clouded * (.5 + (.025 * iPm)) * bo_mean) + ((1-f_day_clouded) * .05 * iPm * bc_mean);
+            bgm = (f_day_clouded * (.5 + (.025 * iPm)) * bo_mean) + ((1-f_day_clouded) * (.05 * iPm) * bc_mean);
         # 
         elif iPm == 20:
             bgm = (f_day_clouded*bo_mean) + ((1 - f_day_clouded)*bc_mean);
@@ -312,10 +312,10 @@ class BioMassCalc(object):
         return Bn
     
     def calculateBioMass(self):
-        self.Bn =  BioMassCalc.calculateBiomassNumba(self.cycle_begin, self.cycle_end, self.cycle_len, self.lat, self.lat_index1, self.lat_index2, self.lat_t, self.lat_b,  self.minT_daily, self.maxT_daily, 
-                                               self.shortRad_daily, self.meanT_daily, self.dT_daily, self.LAi, self.HI, self.legume, self.adaptability)
+        self.Bn =  BioMassCalc.calculateBiomassNumba(self.cycle_begin, self.cycle_end, self.cycle_len, self.lat, self.lat_t, self.lat_b, 
+                                               self.shortRad_daily, self.meanT_daily, self.dT_daily, self.LAi, self.legume, self.adaptability)
 
-    # 
+
     def calculateYield(self):
         self.PYield = np.round(self.Bn * self.HI, 0).astype(int);
         return self.PYield
@@ -323,7 +323,7 @@ class BioMassCalc(object):
     """Developer Note: This below code section is to investigate for intermediate variables used in internal biomass calcualtion. Do not remove this code snippet below"""
     # @staticmethod
     # @nb.jit(nopython=True)
-    def calculateBioMassinterNumba(self, cycle_begin, cycle_end, cycle_len, lat, lat_index1, lat_index2, lat_t, lat_b,  minT_daily, maxT_daily, shortRad_daily, meanT_daily, dT_daily, LAi, HI, legume, adaptability):
+    def calculateBioMassinterNumba(self, cycle_begin, cycle_end, cycle_len, lat, lat_t, lat_b, shortRad_daily, meanT_daily, dT_daily, LAi, legume, adaptability):
 
         """Calculate the biomass from the settings of all input variables
         """
@@ -404,6 +404,10 @@ class BioMassCalc(object):
                                 [0.0, 0.0, 15.0, 32.5, 35.0, 35.0, 35.0],
                                 [0.0, 0.0, 5.0, 45.0, 65.0, 65.0, 65.0],
                                 [0.0, 5.0, 45.0, 65.0, 65.0, 65.0, 65.0]]);
+        
+        """Growth rate multiplier table"""
+        LAI_table = np.array([1., 2., 3., 4., 5., 6., 7., 8.])
+        l_table = np.array([0.35, 0.6, 0.8, 0.92, 1., 1.05, 1.08, 1.1])
 
         Ac_interp1 = np.zeros(12);
         for i in range(Ac_interp1.shape[0]):
@@ -462,21 +466,11 @@ class BioMassCalc(object):
             c = 0.0108;
 
         # Fortran => Ct c * (0.044 + 0.0019 * meanT_mean + 0.0010 * np.power(meanT_mean,2)) (Changed)
-        Ct = c*(0.0044 + (0.0019*meanT_mean) + (0.0010*np.power(meanT_mean,2)));
+        # With Gunther's confirmation, coefficients for the squared term will be changed from 0.001 t0 0.00104289
+        Ct = c*(0.0044 + (0.0019*meanT_mean) + (0.00104289*np.power(meanT_mean,2)));
 
-        if(1 <= LAi and LAi < 2):
-            l = 0.4;
-        elif(LAi < 3):
-            l = 0.6;
-        elif(LAi < 4):
-            l = 0.8;
-        elif(LAi < 5):
-            l = 0.9;
-        elif(5 <= LAi):
-            l = 1;
-        elif(LAi < 1):
-            print("LAI too Low")
-            return
+        # growth rate multiplier (linear interpolation)
+        l = np.interp(LAi, LAI_table, l_table)
 
         '''Maximum Rate of Gross Biomass Production''' # Minor change
         bgm = 0.
@@ -491,11 +485,11 @@ class BioMassCalc(object):
         '''net biomass production '''
         Bn = (0.36 * bgm * l)/((1/cycle_len)+0.25*Ct)
         
-        return np.array([Ac_mean, bc_mean, bo_mean, meanT_mean, dT_mean, Rg, f_day_clouded, iPm, c, Ct, l, bgm, Bn])
+        return (np.array([Ac_mean, bc_mean, bo_mean, meanT_mean, dT_mean, Rg, f_day_clouded, iPm, c, Ct, l, bgm, Bn]), [Ac_interp, Bc_interp, Bo_interp], [Ac_interp1, Bc_interp1, Bo_interp1])
     
     def biomassinter(self):
-        return self.calculateBioMassinterNumba(self.cycle_begin, self.cycle_end, self.cycle_len, self.lat, self.lat_index1, self.lat_index2, self.lat_t, self.lat_b,  self.minT_daily, self.maxT_daily, 
-                                               self.shortRad_daily, self.meanT_daily, self.dT_daily, self.LAi, self.HI, self.legume, self.adaptability)
+        return self.calculateBioMassinterNumba(self.cycle_begin, self.cycle_end, self.cycle_len, self.lat, self.lat_t, self.lat_b, 
+                                               self.shortRad_daily, self.meanT_daily, self.dT_daily, self.LAi, self.legume, self.adaptability)
 
         
 

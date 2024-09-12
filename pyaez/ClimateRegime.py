@@ -1,45 +1,98 @@
 """
-PyAEZ version 2.2 (Dec 2023)
+PyAEZ version 2.2 (4 JAN 2024)
 This ClimateRegime Class read/load and calculates the agro-climatic indicators
 required to run PyAEZ.  
 2021: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet and Kittiphon Boonma
-
+2024: Kerrie Geil (vectorize and parallelize with dask)
 """
 
 import numpy as np
 from pyaez import UtilitiesCalc, ETOCalc, LGPCalc
-np.seterr(divide='ignore', invalid='ignore') # ignore "divide by zero" or "divide by NaN" warning
+from collections import OrderedDict
+import sys
 
 # Initiate ClimateRegime Class instance
 class ClimateRegime(object):
-    def setLocationTerrainData(self, lat_min, lat_max, elevation):
+    def setParallel(self,var3D,parallel=False,nchunks=None,reduce_mem_used=False,ram=0,threads=0):
+        """Determine if user wants scripts to run in parallel (with dask) 
+            and assign some additional parameters associated with 
+            parallelization to the Class
+
+        Args:
+            var3D (3D float array): any of the 3-dimensional data inputs e.g. max_temp
+                min_temp, precipitation, rel_humidity, wind_speed, or short_rad
+            parallel (boolean): user input flag for whether to run in parallel, defaults to False    
+            nchunks (integer): user override for total number of chunks. Use for debugging only. 
+                Defaults to None here and then nchunks is set based on the user's computer resources
+                in UtilitiesCalc.setChunks
+            reduce_mem_used (boolean): user option to reduce the chunk size by a factor of 2, which
+                reduces RAM usage. Use for debugging only. Defaults to False.
+        """
+        if parallel:
+            # if parallel=True, we parallelize by only chunking the longitude dimension
+            self.parallel=True
+            self.chunk2D,self.chunk3D,self.chunksize3D_MB,self.nchunks=UtilitiesCalc.UtilitiesCalc().setChunks(nchunks,var3D.shape,reduce_mem_used,ram,threads)    
+        else:
+            # if parallel=False, we don't parallelize. Scripts will be run without using dask.
+            self.parallel=False
+            self.chunk3D=None
+            self.chunk2D=None
+            self.chunksize3D_MB=None
+            self.nchunks=None
+
+    def setLocationTerrainData(self, lat_min, lat_max, location, elevation,lats=None,lons=None):           
         """Load geographical extents and elevation data in to the Class, 
            and create a latitude map
 
         Args:
             lat_min (float): the minimum latitude of the AOI in decimal degrees
             lat_max (float): the maximum latitude of the AOI in decimal degrees
-            elevation (2D NumPy): elevation map in metres
-        """        
-        self.elevation = elevation
+            location (boolean): True = lat_min and lat_max values are located at the center of a grid cell. 
+                False = lat_min and lat_max values are located at the exterior edge of a grid cell.
+            elevation (2D float array): elevation map in metres
+            lats (1D float array): optional user input, center unique (1D) latitudes of the input data grid 
+            lons (1D float array): optional user input, center unique (1D) longitudes of the input data grid
+        """
+        if self.parallel:
+            import dask
+            import dask.array as da
+            if np.nanmin(elevation)<=-999:
+                elevation=da.where(elevation<=-999,np.nan,elevation)
+            self.elevation = elevation.rechunk(chunks=self.chunk2D) # convert to dask array
+            
+        else:        
+            if np.nanmin(elevation)<=-999:
+                elevation=np.where(elevation<=-999,np.nan,elevation)            
+            self.elevation = elevation
+
         self.im_height = elevation.shape[0]
         self.im_width = elevation.shape[1]
-        self.latitude = UtilitiesCalc.UtilitiesCalc().generateLatitudeMap(lat_min, lat_max, self.im_height, self.im_width)
-        
+        self.latitude = UtilitiesCalc.UtilitiesCalc(self.chunk2D,self.chunk3D).generateLatitudeMap(lat_min, lat_max, location, self.im_height, self.im_width)  
+ 
+        # instead of above, why not take in an array of all latitudes here instead of regenerating lats from min/max?
+        # can avoid slight shifts/precision problems with the grid          
+        # self.latitude = UtilitiesCalc.UtilitiesCalc().generateLatitudeMap(lats, location)  # option to take all lats as an input
+
+        self.lats=lats
+        self.lons=lons
         
     
     def setStudyAreaMask(self, admin_mask, no_data_value):
         """Set clipping mask of the area of interest (optional)
 
         Args:
-            admin_mask (2D NumPy/Binary): mask to extract only region of interest
+            admin_mask (2D integer array): 0/1 mask to extract only region of interest
             no_data_value (int): pixels with this value will be omitted during PyAEZ calculations
         """    
-        self.im_mask = admin_mask
+        if self.parallel:
+            import dask            
+            self.im_mask = admin_mask.rechunk(chunks=self.chunk2D).astype('int8') # convert to dask array
+        else:
+            self.im_mask = admin_mask.astype('int8')
+
         self.nodata_val = no_data_value
         self.set_mask = True
-
   
 
     def setMonthlyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity):
@@ -53,43 +106,20 @@ class ClimateRegime(object):
             wind_speed (3D NumPy): Monthly windspeed at 2m altitude [m/s]
             rel_humidity (3D NumPy): Monthly relative humidity [percentage decimal, 0-1]
         """    
+        #################################################################
+        ##### THIS FUNCTION HAS NOT BEEN UPDATED TO RUN IN PARALLEL #####
+        #################################################################
+        self.doy_start=1 
+        self.doy_end=min_temp.shape[2] 
+        
         rel_humidity[rel_humidity > 0.99] = 0.99
         rel_humidity[rel_humidity < 0.05] = 0.05
         short_rad[short_rad < 0] = 0
         wind_speed[wind_speed < 0] = 0
 
-        self.meanT_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.totalPrec_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.pet_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.minT_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.maxT_daily = np.zeros((self.im_height, self.im_width, 365))
-
-
         # Interpolate monthly to daily data
         obj_utilities = UtilitiesCalc.UtilitiesCalc()
-
         meanT_monthly = (min_temp+max_temp)/2
-
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
-
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
-
-                self.meanT_daily[i_row, i_col, :] = obj_utilities.interpMonthlyToDaily(meanT_monthly[i_row, i_col,:], 1, 365)
-                self.totalPrec_daily[i_row, i_col, :] = obj_utilities.interpMonthlyToDaily(precipitation[i_row, i_col,:], 1, 365, no_minus_values=True)
-                self.minT_daily[i_row, i_col, :] = obj_utilities.interpMonthlyToDaily(min_temp[i_row, i_col,:], 1, 365)
-                self.maxT_daily[i_row, i_col, :] = obj_utilities.interpMonthlyToDaily(max_temp[i_row, i_col,:], 1, 365)
-                radiation_daily = obj_utilities.interpMonthlyToDaily(short_rad[i_row, i_col,:], 1, 365, no_minus_values=True)
-                wind_daily = obj_utilities.interpMonthlyToDaily(wind_speed[i_row, i_col,:], 1, 365, no_minus_values=True)
-                rel_humidity_daily = obj_utilities.interpMonthlyToDaily(rel_humidity[i_row, i_col,:], 1, 365, no_minus_values=True)
-
-                # calculation of reference evapotranspiration (ETo)
-                obj_eto = ETOCalc.ETOCalc(1, 365, self.latitude[i_row, i_col], self.elevation[i_row, i_col])
-                shortrad_daily_MJm2day = (radiation_daily*3600*24)/1000000 # convert w/m2 to MJ/m2/day
-                obj_eto.setClimateData(self.minT_daily[i_row, i_col, :], self.maxT_daily[i_row, i_col, :], wind_daily, shortrad_daily_MJm2day, rel_humidity_daily)
-                self.pet_daily[i_row, i_col, :] = obj_eto.calculateETO()
                 
         # Sea-level adjusted mean temperature
         self.meanT_daily_sealevel = self.meanT_daily + np.tile(np.reshape(self.elevation/100*0.55, (self.im_height,self.im_width,1)), (1,1,365))
@@ -98,51 +128,181 @@ class ClimateRegime(object):
         self.set_monthly = True
 
     def setDailyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity):
-        """Load DAILY climate data into the Class and calculate the Reference Evapotranspiration (ETo)
+        """Load DAILY climate data into the Class as either numpy arrays (if parallel=False) or
+            dask arrays (if parallel=True). Also calculate and assign to the Class the following quantities:
+            
+            pet_daily: daily Reference Evapotranspiration (ETo)
+            meanT_monthly_sealevel: the monthly mean T from min_temp and max_temp interpolated to sea level
+            P_by_PET_monthly: the monthly mean ratio of P/PET where P is daily precipitation and PET 
+                is daily reference evapotranspiration
+            meanT_monthly: the monthly mean T from daily min_temp and max_temp
+            totalPrec_monthly: monthly accumulated precipitaion
+            annual_Tmean: the annual mean T from daily min_temp and max_temp
+            annual_accPrec: annual accumulated precipitation
+            annual_accPET: annual accumulated reference evapotranspiration
 
         Args:
-            min_temp (3D NumPy): Daily minimum temperature [Celcius]
-            max_temp (3D NumPy): Daily maximum temperature [Celcius]
-            precipitation (3D NumPy): Daily total precipitation [mm/day]
-            short_rad (3D NumPy): Daily solar radiation [W/m2]
-            wind_speed (3D NumPy): Daily windspeed at 2m altitude [m/s]
-            rel_humidity (3D NumPy): Daily relative humidity [percentage decimal, 0-1]
+            min_temp (3D float array): Daily minimum temperature [Celcius]
+            max_temp (3D float array): Daily maximum temperature [Celcius]
+            precipitation (3D float array): Daily total precipitation [mm/day]
+            short_rad (3D float array): Daily solar radiation [W/m2]
+            wind_speed (3D float array): Daily windspeed at 2m altitude [m/s]
+            rel_humidity (3D float array): Daily relative humidity [percentage decimal, 0-1]
         """
 
-        rel_humidity[rel_humidity > 0.99] = 0.99
-        rel_humidity[rel_humidity < 0.05] = 0.05
-        short_rad[short_rad < 0] = 0
-        wind_speed[wind_speed < 0] = 0
-        
-        
-        self.meanT_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.totalPrec_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.pet_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.maxT_daily = max_temp
-        self.minT_daily = min_temp
-        
-
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
-
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
-
-                self.meanT_daily[i_row, i_col, :] = 0.5*(min_temp[i_row, i_col, :]+max_temp[i_row, i_col, :])
-                self.totalPrec_daily[i_row, i_col, :] = precipitation[i_row, i_col, :]
-                
-                # calculation of reference evapotranspiration (ETo)
-                obj_eto = ETOCalc.ETOCalc(1, 365, self.latitude[i_row, i_col], self.elevation[i_row, i_col])
-                shortrad_daily_MJm2day = (short_rad[i_row, i_col, :]*3600*24)/1000000 # convert w/m2 to MJ/m2/day
-                obj_eto.setClimateData(min_temp[i_row, i_col, :], max_temp[i_row, i_col, :], wind_speed[i_row, i_col, :], shortrad_daily_MJm2day, rel_humidity[i_row, i_col, :])
-                self.pet_daily[i_row, i_col, :] = obj_eto.calculateETO()
-                
-        # sea level temperature
-        self.meanT_daily_sealevel = self.meanT_daily + np.tile(np.reshape(self.elevation/100*0.55, (self.im_height,self.im_width,1)), (1,1,365))
-        # P over PET ratio (to eliminate nan in the result, nan is replaced with zero)
-        self.P_by_PET_daily = np.nan_to_num(self.totalPrec_daily / self.pet_daily)
+        self.doy_start=1  
+        self.doy_end=min_temp.shape[2] 
         self.set_monthly = False
+
+        if self.parallel:
+            import dask.array as da
+            import dask  
+
+            precipitation = precipitation.rechunk(chunks=self.chunk3D) # convert to dask array
+
+            ### CALCULATE PET_DAILY ###
+            # chunk (convert to dask array) and delay inputs
+            min_temp=min_temp.rechunk(chunks=self.chunk3D)  # chunk
+            max_temp=max_temp.rechunk(chunks=self.chunk3D)  # chunk
+            tmn_delay=min_temp.to_delayed().ravel()         # delay
+            tmx_delay=max_temp.to_delayed().ravel()         # delay
+
+            short_rad=short_rad.rechunk(chunks=self.chunk3D) # chunk
+            short_rad=da.where(short_rad < 0, 0, short_rad)  # elim negatives
+            short_rad = short_rad*3600.*24./1000000.         # convert units
+            srad_delay=short_rad.to_delayed().ravel()        # delay
+
+            wind_speed=wind_speed.rechunk(chunks=self.chunk3D)     # chunk
+            wind_speed=da.where(wind_speed < 0.5, 0.5, wind_speed) # elim negative and small values
+            wind_delay=wind_speed.to_delayed().ravel()             # delay
+
+            rel_humidity=rel_humidity.rechunk(chunks=self.chunk3D)        # chunk
+            rel_humidity=da.where(rel_humidity > 0.99, 0.99,rel_humidity) # elim high values
+            rel_humidity=da.where(rel_humidity < 0.05, 0.05,rel_humidity) # elim low values
+            rh_delay=rel_humidity.to_delayed().ravel()                    # delay
+
+            lat_delay=self.latitude.to_delayed().ravel()    # delay
+            elev_delay=self.elevation.to_delayed().ravel()  # delay
+
+            zipvars=zip(lat_delay,elev_delay,tmn_delay,tmx_delay,wind_delay,srad_delay,rh_delay)  # zip all calculateETO function inputs
+            obj_eto=ETOCalc.ETOCalc()
+
+            # compute pet_daily in parallel with dask.delayed 
+            task_list=[dask.delayed(obj_eto.calculateETO)(self.doy_start,self.doy_end,lat,el,tmn,tmx,u,srad,rh) for lat,el,tmn,tmx,u,srad,rh in zipvars] # lazy list of compute tasks
+            result_chunks=dask.compute(*task_list)  # do the computing in parallel
+            self.pet_daily=np.concatenate(result_chunks,axis=1) # concatenate the resulting chunks along the longitude dimension
+            del result_chunks,tmn_delay,tmx_delay,srad_delay,short_rad,wind_delay,wind_speed,rh_delay,rel_humidity,lat_delay,elev_delay,zipvars,task_list  # clean up
+        else:
+            ### CALCULATE PET_DAILY (not using dask) ###
+            rel_humidity[rel_humidity > 0.99] = 0.99
+            rel_humidity[rel_humidity < 0.05] = 0.05
+            short_rad[short_rad < 0] = 0
+            short_rad=short_rad**3600.*24./1000000.
+            wind_speed[wind_speed < 0.5] = 0.5
+            
+            obj_eto=ETOCalc.ETOCalc()
+            self.pet_daily= obj_eto.calculateETO(self.doy_start,self.doy_end,self.latitude,self.elevation,min_temp,max_temp,wind_speed,short_rad,rel_humidity)
+        
+        ### CALCULATE MEANT_DAILY ###
+        self.meanT_daily = 0.5*(min_temp + max_temp)  # lazy if parallel=True, immediate if False 
+        
+        obj_utilities = UtilitiesCalc.UtilitiesCalc(self.chunk2D,self.chunk3D)   
+
+        if self.parallel:
+            ### CALCULATE MEANT_MONTHLY_SEALEVEL ###
+            # (we only ever use monthly mean sea level so it's pointless to carry daily data in RAM)
+            meanT_daily_sealevel = self.meanT_daily + (da.broadcast_to(self.elevation[:,:,np.newaxis]/100*.55,(self.im_height,self.im_width,self.doy_end)))
+            self.meanT_monthly_sealevel = obj_utilities.averageDailyToMonthly(meanT_daily_sealevel)   
+            del meanT_daily_sealevel
+
+            if self.set_mask:
+                mask_monthly=da.broadcast_to(self.im_mask[:,:,np.newaxis],(self.im_height,self.im_width,12))
+                self.meanT_monthly_sealevel = da.where(mask_monthly,self.meanT_monthly_sealevel,np.float32(np.nan)).compute()
+            
+            ### CALCULATE P_BY_PET_MONTHLY ####
+            # same for P_by_PET_monthly, we only use monthly later
+            pr=precipitation.rechunk(chunks=self.chunk3D) # chunk/convert to dask array
+            pet=da.from_array(self.pet_daily,chunks=self.chunk3D)  # chunk/convert to dask array
+
+            with np.errstate(divide='ignore', invalid='ignore'):
+                self.P_by_PET_daily = np.nan_to_num(pr/pet)  # dask array
+                P_by_PET_monthly = obj_utilities.averageDailyToMonthly(self.P_by_PET_daily)  # compute monthly values (np array)
+
+            if self.set_mask:
+                mask_monthly=mask_monthly.compute() # numpy array
+                self.P_by_PET_monthly = np.where(mask_monthly,P_by_PET_monthly,np.float32(np.nan)) # implement mask
+            else:
+                self.P_by_PET_monthly=P_by_PET_monthly
+
+            del pr, pet, P_by_PET_daily,P_by_PET_monthly
+
+        else:
+            ### PARALLEL=FALSE, NOT USING DASK ###
+            ### CALCULATE MEANT_MONTHLY_SEALEVEL ###
+            meanT_daily_sealevel = self.meanT_daily + np.expand_dims(self.elevation/100*.55,axis=2)      
+            self.meanT_monthly_sealevel = obj_utilities.averageDailyToMonthly(meanT_daily_sealevel)   
+            del meanT_daily_sealevel          
+
+            ### CALCULATE P_BY_PET_MONTHLY ####
+            with np.errstate(invalid='ignore',divide='ignore'):
+                self.P_by_PET_daily = np.nan_to_num(precipitation / self.pet_daily)
+                self.P_by_PET_monthly = obj_utilities.averageDailyToMonthly(P_by_PET_daily)
+
+            if self.set_mask:
+                mask_monthly=np.broadcast_to(self.im_mask[:,:,np.newaxis],(self.im_height,self.im_width,12))
+                self.meanT_monthly_sealevel = np.where(mask_monthly,self.meanT_monthly_sealevel,np.float32(np.nan))                  
+                self.P_by_PET_monthly = np.where(mask_monthly,self.P_by_PET_monthly,np.float32(np.nan))
+
+        ### SET DAILY VARIABLES TO CLASS OBJECT ###
+         ### SET DAILY VARIABLES TO CLASS OBJECT ###
+        self.maxT_daily = max_temp            # dask array if parallel=True, numpy if False
+        self.minT_daily = min_temp
+        self.short_rad_mj= short_rad
+        self.rel_humidity=rel_humidity
+        self.wind_speed=wind_speed
+        self.totalPrec_daily = precipitation  # dask array if parallel=True, numpy if False
+        del precipitation
+
+        ### CALCULATE MONTHLY AND ANNUAL VALUES ###
+        # adding these other small things to RAM will save compute time later
+
+        # get the mask if there is one        
+        if self.set_mask:
+            if self.parallel:
+                mask=self.im_mask.compute()
+            else:
+                mask=self.im_mask
+
+        # monthly mean T and precip
+        self.meanT_monthly = obj_utilities.averageDailyToMonthly(self.meanT_daily)
+        self.totalPrec_monthly = obj_utilities.averageDailyToMonthly(self.totalPrec_daily) 
+        if self.set_mask:
+            self.meanT_monthly=np.where(mask_monthly,self.meanT_monthly,np.float32(np.nan))
+            self.totalPrec_monthly=np.where(mask_monthly,self.totalPrec_monthly,np.float32(np.nan))
+
+        # annual mean T
+        if self.parallel:
+            self.annual_Tmean = da.mean(self.meanT_daily, axis = 2).compute()      
+        else:
+            self.annual_Tmean = np.mean(self.meanT_daily, axis = 2)
+
+        if self.set_mask:
+            self.annual_Tmean=np.where(mask,self.annual_Tmean,np.float32(np.nan))                         
+
+        # annual accumulated precip
+        if self.parallel:
+            self.annual_accPrec = da.sum(self.totalPrec_daily, axis = 2).compute()           
+        else:
+            self.annual_accPrec = np.sum(self.totalPrec_daily, axis = 2) 
+
+        if self.set_mask:
+            self.annual_accPrec=np.where(mask,self.annual_accPrec,np.float32(np.nan))                                
+
+        # annual accumulated pet
+        self.annual_accPET = np.sum(self.pet_daily, axis = 2)
+        if self.set_mask:
+            self.annual_accPET=np.where(mask,self.annual_accPET,np.float32(np.nan))                                
+
 
     def getThermalClimate(self):
         """Classification of rainfall and temperature seasonality into thermal climate classes
@@ -151,192 +311,80 @@ class ClimateRegime(object):
             2D NumPy: Thermal Climate classification
         """        
         # Note that currently, this thermal climate is designed only for the northern hemisphere, southern hemisphere is not implemented yet.
-        thermal_climate = np.zeros((self.im_height, self.im_width), dtype= np.int8)
+        if self.parallel:
+            import dask
 
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
+        thermal_climate = np.zeros((self.im_height,self.im_width),dtype='int8') # initialize to zero   
 
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
-                
-                # converting daily to monthly
-                obj_utilities = UtilitiesCalc.UtilitiesCalc()
-                meanT_monthly_sealevel = obj_utilities.averageDailyToMonthly(self.meanT_daily_sealevel[i_row,i_col,:])
-                meanT_monthly = obj_utilities.averageDailyToMonthly(self.meanT_daily[i_row,i_col,:])
-                P_by_PET_monthly = obj_utilities.averageDailyToMonthly(self.P_by_PET_daily[i_row,i_col,:])
+        # get monthly/annual variables
+        meanT_monthly_sealevel=self.meanT_monthly_sealevel
+        meanT_monthly=self.meanT_monthly        
+        P_by_PET_monthly=self.P_by_PET_monthly
+        prsum=self.annual_accPrec
 
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
-                    
-                # Seasonal parameters            
-                summer_PET0 = np.sum(P_by_PET_monthly[3:9])
-                winter_PET0 = np.sum([P_by_PET_monthly[9::], P_by_PET_monthly[0:3]])
-                Ta_diff = np.max(meanT_monthly_sealevel) - \
-                    np.min(meanT_monthly_sealevel)
-                
-                # Tropics
-                if np.min(meanT_monthly_sealevel) >= 18. and Ta_diff < 15.:
-                    if np.mean(meanT_monthly) < 20.:
-                        thermal_climate[i_row, i_col] = 2  # Tropical highland
-                    else:
-                        thermal_climate[i_row, i_col] = 1  # Tropical lowland
-                        
-                # SubTropic
-                elif np.min(meanT_monthly_sealevel) >= 5. and np.sum(meanT_monthly_sealevel >= 10) >= 8:
-                    if np.sum(self.totalPrec_daily[i_row,i_col,:]) < 250:
-                        # 'Subtropics Low Rainfall
-                        thermal_climate[i_row,i_col] = 3
-                    elif self.latitude[i_row,i_col]>=0: 
-                        if summer_PET0 >= winter_PET0:
-                            # Subtropics Summer Rainfall
-                            thermal_climate[i_row,i_col] = 4
-                        else:
-                            # Subtropics Winter Rainfall
-                            thermal_climate[i_row,i_col] = 5
-                    else:
-                        if summer_PET0 >= winter_PET0:
-                            # Subtropics Winter Rainfall
-                            thermal_climate[i_row,i_col] = 5                     
-                        else:
-                            # Subtropics Summer Rainfall
-                            thermal_climate[i_row,i_col] = 4
+        # other things we need to assign thermal_climate values   
+        # compute them here for readability below   
+        summer_PET0=P_by_PET_monthly[:,:,3:9].sum(axis=2) # Apr-Sep accumulation    
+        JFMSON=[0,1,2,9,10,11]   
+        winter_PET0=P_by_PET_monthly[:,:,JFMSON].sum(axis=2) # Oct-Mar accumulation   
+        min_sealev_meanT=meanT_monthly_sealevel.min(axis=2)  # the minimum monthly meanT at sea level
+        Ta_diff=meanT_monthly_sealevel.max(axis=2) - meanT_monthly_sealevel.min(axis=2) # the range in monthly meanT at sea level   
+        meanT=meanT_monthly.mean(axis=2) # following the original code but I think this should be the mean of daily values (self.annual_Tmean) not the mean of monthly values   
+        nmo_ge_10C=(meanT_monthly_sealevel >= 10).sum(axis=2) # the number of months that monthly meanT at sea level is >= 10C   
+        
+        if self.chunk3D:
+            latitude=self.latitude.compute() # dask compute/convert to numpy
+        else:
+            latitude=self.latitude
 
-                        
-                # Temperate
-                elif np.sum(meanT_monthly_sealevel >= 10) >= 4:
-                    if Ta_diff <= 20:
-                        # Oceanic Temperate
-                        thermal_climate[i_row, i_col] = 6
-                    elif Ta_diff <= 35:
-                        # Sub-Continental Temperate
-                        thermal_climate[i_row, i_col] = 7
-                    else:
-                        # Continental Temperate
-                        thermal_climate[i_row, i_col] = 8
+        # Tropics   
+        # Tropical lowland   
+        thermal_climate=np.where((min_sealev_meanT>18.) & (Ta_diff<15.) & (meanT>=20.),1,thermal_climate)   
+        # Tropical highland   
+        thermal_climate=np.where((min_sealev_meanT>18.) & (Ta_diff<15.) & (meanT<20.) & (thermal_climate==0),2,thermal_climate)   
+        
+        # SubTropic   
+        # Subtropics Low Rainfall   
+        thermal_climate=np.where((min_sealev_meanT>5.) & (nmo_ge_10C>=8) & (prsum<250) & (thermal_climate==0),3,thermal_climate)   # was 5
+        # NH Subtropics Summer and Winter Rainfall   
+        thermal_climate=np.where((min_sealev_meanT>5.) & (nmo_ge_10C>=8) & (prsum>=250)& (latitude>=0) & (summer_PET0>=winter_PET0) & (thermal_climate==0),4,thermal_climate) # was 3  
+        thermal_climate=np.where((min_sealev_meanT>5.) & (nmo_ge_10C>=8) & (prsum>=250)& (latitude>=0) & (summer_PET0<winter_PET0) & (thermal_climate==0),5,thermal_climate)  # was 4 
+        # SH Subtropics Summer and Winter Rainfall
+        thermal_climate=np.where((min_sealev_meanT>5.) & (nmo_ge_10C>=8) & (prsum>=250)& (latitude<0) & (summer_PET0>=winter_PET0) & (thermal_climate==0),5,thermal_climate)  # was 4 
+        thermal_climate=np.where((min_sealev_meanT>5.) & (nmo_ge_10C>=8) & (prsum>=250)& (latitude<0) & (summer_PET0<winter_PET0) & (thermal_climate==0),4,thermal_climate)   # was 3
+        
+        # Temperate   
+        # Oceanic Temperate   
+        thermal_climate=np.where((nmo_ge_10C>=4) & (Ta_diff<=20) & (thermal_climate==0),6,thermal_climate)   
+        # Sub-Continental Temperate   
+        thermal_climate=np.where((nmo_ge_10C>=4) & (Ta_diff<=35) & (thermal_climate==0),7,thermal_climate)   
+        # Continental Temperate   
+        thermal_climate=np.where((nmo_ge_10C>=4) & (Ta_diff>35) & (thermal_climate==0),8,thermal_climate)   
+        
+        # Boreal   
+        # Oceanic Boreal   
+        thermal_climate=np.where((nmo_ge_10C>=1) & (Ta_diff<=20) & (thermal_climate==0),9,thermal_climate)   
+        # Sub-Continental Boreal   
+        thermal_climate=np.where((nmo_ge_10C>=1) & (Ta_diff<=35) & (thermal_climate==0),10,thermal_climate)   
+        # Continental Boreal   
+        thermal_climate=np.where((nmo_ge_10C>=1) & (Ta_diff>35) & (thermal_climate==0),11,thermal_climate)   
+        
+        # Arctic   
+        thermal_climate=np.where((thermal_climate==0),12,thermal_climate)   
 
-                elif np.sum(meanT_monthly_sealevel >= 10) >= 1:
-                    # Boreal
-                    if Ta_diff <= 20:
-                        # Oceanic Boreal
-                        thermal_climate[i_row, i_col] = 9
-                    elif Ta_diff <= 35:
-                        # Sub-Continental Boreal
-                        thermal_climate[i_row, i_col] = 10
-                    else:
-                        # Continental Boreal
-                        thermal_climate[i_row, i_col] = 11
-                else:
-                    # Arctic
-                    thermal_climate[i_row, i_col] = 12
-                    
         if self.set_mask:
-            return np.where(self.im_mask, thermal_climate, np.nan)
+            if self.parallel:
+                mask=self.im_mask.compute() # dask compute/convert to numpy
+            else:
+                mask=self.im_mask
+                
+            thermal_climate=np.where(mask, thermal_climate.astype('float32'), np.float32(np.nan))   
+            return thermal_climate
         else:
             return thermal_climate
+
     
-    def getThermalClimatePixel(self, row, col):
-        """Classification of rainfall and temperature seasonality into thermal climate classes for a pixel location
 
-        Returns:
-            2D NumPy: Thermal Climate classification
-        """        
-        # Note that currently, this thermal climate is designed only for the northern hemisphere, southern hemisphere is not implemented yet.
-        thermal_climate = 0
-
-
-        if self.set_mask:
-            if self.im_mask[row, col] == self.nodata_val:
-                thermal_climate = 0
-                
-        # converting daily to monthly
-        obj_utilities = UtilitiesCalc.UtilitiesCalc()
-        meanT_monthly_sealevel = obj_utilities.averageDailyToMonthly(self.meanT_daily_sealevel[row,col,:])
-        meanT_monthly = obj_utilities.averageDailyToMonthly(self.meanT_daily[row,col,:])
-        P_by_PET_monthly = obj_utilities.averageDailyToMonthly(self.P_by_PET_daily[row,col,:])
-
-            
-        # Seasonal parameters            
-        summer_PET0 = np.sum(P_by_PET_monthly[3:9])
-        winter_PET0 = np.sum([P_by_PET_monthly[9::], P_by_PET_monthly[0:3]])
-        Ta_diff = np.max(meanT_monthly_sealevel) - \
-            np.min(meanT_monthly_sealevel)
-        
-        # Tropics
-        if np.min(meanT_monthly_sealevel) >= 18. and Ta_diff < 15.:
-            if np.mean(meanT_monthly) < 20.:
-                thermal_climate = 2  # Tropical highland
-            else:
-                thermal_climate = 1  # Tropical lowland
-                
-        # SubTropic
-        elif np.min(meanT_monthly_sealevel) >= 5. and np.sum(meanT_monthly_sealevel >= 10) >= 8:
-            if np.sum(self.totalPrec_daily[row,col,:]) < 250:
-                # 'Subtropics Low Rainfall
-                thermal_climate = 3
-            elif self.latitude[row,col]>=0: 
-                if summer_PET0 >= winter_PET0:
-                    # Subtropics Summer Rainfall
-                    thermal_climate = 4
-                else:
-                    # Subtropics Winter Rainfall
-                    thermal_climate = 5
-            else:
-                if summer_PET0 >= winter_PET0:
-                    # Subtropics Winter Rainfall
-                    thermal_climate = 5                     
-                else:
-                    # Subtropics Summer Rainfall
-                    thermal_climate = 4
-
-                
-        # Temperate
-        elif np.sum(meanT_monthly_sealevel >= 10) >= 4:
-            if Ta_diff <= 20:
-                # Oceanic Temperate
-                thermal_climate = 6
-            elif Ta_diff <= 35:
-                # Sub-Continental Temperate
-                thermal_climate= 7
-            else:
-                # Continental Temperate
-                thermal_climate= 8
-
-        elif np.sum(meanT_monthly_sealevel >= 10) >= 1:
-            # Boreal
-            if Ta_diff <= 20:
-                # Oceanic Boreal
-                thermal_climate = 9
-            elif Ta_diff <= 35:
-                # Sub-Continental Boreal
-                thermal_climate = 10
-            else:
-                # Continental Boreal
-                thermal_climate = 11
-        else:
-            # Arctic
-            thermal_climate = 12
-
-        meanT_monthly_sealevel = obj_utilities.averageDailyToMonthly(self.meanT_daily_sealevel[row,col,:])
-        meanT_monthly = obj_utilities.averageDailyToMonthly(self.meanT_daily[row,col,:])
-        P_by_PET_monthly = obj_utilities.averageDailyToMonthly(self.P_by_PET_daily[row,col,:])
-
-        para = {'Months': np.arange(1,13),
-                'Monthly sea-level adjusted Temperature': meanT_monthly_sealevel,
-                'Monthly mean average temperature':meanT_monthly,
-                'Monthly P/PET': P_by_PET_monthly}
-        
-        single = {'row': float(row), 'col': float(col),
-                'Temperature amplitude': Ta_diff,
-                  'Latitude': self.latitude[row,col],
-                  'Final Thermal Climate Class': float(thermal_climate),
-                  'Elevation': float(self.elevation[row,col]),
-                  'summer_PET0 Summation': summer_PET0,
-                  'winter_PET0 Summation': winter_PET0}
-        
-        return [para, single]
-    
     def getThermalZone(self):
         """The thermal zone is classified based on actual temperature which reflects 
         on the temperature regimes of major thermal climates
@@ -344,56 +392,61 @@ class ClimateRegime(object):
         Returns:
             2D NumPy: Thermal Zones classification
         """        
-        thermal_zone = np.zeros((self.im_height, self.im_width))
-    
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
-                
-                obj_utilities = UtilitiesCalc.UtilitiesCalc()
+        if self.parallel:
+            import dask
 
-                meanT_monthly = obj_utilities.averageDailyToMonthly(self.meanT_daily[i_row, i_col, :])
-                meanT_monthly_sealevel =  obj_utilities.averageDailyToMonthly(self.meanT_daily_sealevel[i_row, i_col, :])
-    
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
-    
-                if np.min(meanT_monthly_sealevel) >= 18 and np.max(meanT_monthly)-np.min(meanT_monthly) < 15:
-                    if np.mean(meanT_monthly) > 20:
-                        thermal_zone[i_row,i_col] = 1 # Tropics Warm
-                    else:
-                        thermal_zone[i_row,i_col] = 2 # Tropics cool/cold/very cold
-                
-                elif np.min(meanT_monthly_sealevel) > 5 and np.sum(meanT_monthly_sealevel > 10) >= 8:
-                    if np.sum(meanT_monthly<5) >= 1 and np.sum(meanT_monthly>10) >= 4:
-                        thermal_zone[i_row,i_col] =  4 # Subtropics, cool
-                    elif np.sum(meanT_monthly<5) >= 1 and np.sum(meanT_monthly>10) >= 1:
-                        thermal_zone[i_row,i_col] =  5 # Subtropics, cold
-                    elif np.sum(meanT_monthly<10) == 12:
-                        thermal_zone[i_row,i_col] =  6 # Subtropics, very cold
-                    else:
-                        thermal_zone[i_row,i_col] =  3 # Subtropics, warm/mod. cool
-    
-                elif np.sum(meanT_monthly_sealevel >= 10) >= 4:
-                    if np.sum(meanT_monthly<5) >= 1 and np.sum(meanT_monthly>10) >= 4:
-                        thermal_zone[i_row,i_col] =  7 # Temperate, cool
-                    elif np.sum(meanT_monthly<5) >= 1 and np.sum(meanT_monthly>10) >= 1:
-                        thermal_zone[i_row,i_col] =  8 # Temperate, cold
-                    elif np.sum(meanT_monthly<10) == 12:
-                        thermal_zone[i_row,i_col] =  9 # Temperate, very cold
-    
-                elif np.sum(meanT_monthly_sealevel >= 10) >= 1:
-                    if np.sum(meanT_monthly<5) >= 1 and np.sum(meanT_monthly>10) >= 1:
-                        thermal_zone[i_row,i_col] = 10 # Boreal, cold
-                    elif np.sum(meanT_monthly<10) == 12:
-                        thermal_zone[i_row,i_col] = 11 # Boreal, very cold
-                else:
-                        thermal_zone[i_row,i_col] = 12 # Arctic
+        thermal_zone = np.zeros((self.im_height,self.im_width),dtype='int8')  # initialize to zero   
+
+        # get monthly variables
+        meanT_monthly=self.meanT_monthly
+        meanT_monthly_sealevel=self.meanT_monthly_sealevel
+
+        # things we need to determine the classes
+        # compute them here for readability below
+        min_sealev_meanT=meanT_monthly_sealevel.min(axis=2) # the minimum monthly meanT at sea level
+        range_meanT=meanT_monthly.max(axis=2) - meanT_monthly.min(axis=2)  # the range in monthly meanT at sea level 
+        meanT=meanT_monthly.mean(axis=2)  # following the original code but I think this should be the mean of daily values (self.annual_Tmean) not the mean of monthly values
+        # following original code but do we need both of the next two (>10 and >=10)?
+        nmo_gt_10C_sealev=(meanT_monthly_sealevel > 10).sum(axis=2)  # the number of months that monthly meanT at sea level is > 10C 
+        nmo_ge_10C_sealev=(meanT_monthly_sealevel >= 10).sum(axis=2) # the number of months that monthly meanT at sea level is >= 10C 
+        nmo_lt_5C=(meanT_monthly < 5).sum(axis=2)    # the number of months that monthly meanT is <5C
+        nmo_gt_10C=(meanT_monthly > 10).sum(axis=2)  # the number of months that monthly meanT is >10C
+        nmo_lt_10C=(meanT_monthly < 10).sum(axis=2)  # the number of months that monthly meanT is <10C  
+
+        # Tropics, warm
+        thermal_zone=np.where((min_sealev_meanT>=18) & (range_meanT<15) & (meanT>20),1,thermal_zone)
+        # Tropics, cool/cold/very cold
+        thermal_zone=np.where((min_sealev_meanT>=18) & (range_meanT<15) & (meanT<=20) & (thermal_zone==0),2,thermal_zone)
+        # Subtropics, cool
+        thermal_zone=np.where((min_sealev_meanT>5) & (nmo_gt_10C_sealev>=8) & (nmo_lt_5C>=1) & (nmo_gt_10C>=4) & (thermal_zone==0),4,thermal_zone)
+        # Subtropics, cold
+        thermal_zone=np.where((min_sealev_meanT>5) & (nmo_gt_10C_sealev>=8) & (nmo_lt_5C>=1) & (nmo_gt_10C>=1) & (thermal_zone==0),5,thermal_zone)
+        #Subtropics, very cold
+        thermal_zone=np.where((min_sealev_meanT>5) & (nmo_gt_10C_sealev>=8) & (nmo_lt_10C==12) & (thermal_zone==0),6,thermal_zone)
+        # Subtropics, warm/mod. cool
+        thermal_zone=np.where((min_sealev_meanT>5) & (nmo_gt_10C_sealev>=8) & (thermal_zone==0),3,thermal_zone)        
+        # Temperate, cool
+        thermal_zone=np.where((nmo_ge_10C_sealev>=4) & (nmo_lt_5C>=1) & (nmo_gt_10C>=4) & (thermal_zone==0),7,thermal_zone)
+        # Temperate, cold
+        thermal_zone=np.where((nmo_ge_10C_sealev>=4) & (nmo_lt_5C>=1) & (nmo_gt_10C>=1) & (thermal_zone==0),8,thermal_zone)
+        # Temperate, very cold
+        thermal_zone=np.where((nmo_ge_10C_sealev>=4) & (nmo_lt_10C==12) & (thermal_zone==0),9,thermal_zone)
+        # Boreal, cold
+        thermal_zone=np.where((nmo_ge_10C_sealev>=1) & (nmo_lt_5C>=1) & (nmo_gt_10C>=1) & (thermal_zone==0),10,thermal_zone)
+        # Boreal, very cold
+        thermal_zone=np.where((nmo_ge_10C_sealev>=1) & (nmo_lt_10C==12) & (thermal_zone==0),11,thermal_zone)
+        # Arctic
+        thermal_zone=np.where((thermal_zone==0),12,thermal_zone)
     
         if self.set_mask:
-            return np.where(self.im_mask, thermal_zone, np.nan)
+            if self.parallel:
+                mask=self.im_mask.compute() # dask compute/convert to numpy
+            else:
+                mask=self.im_mask            
+            return np.where(mask, thermal_zone.astype('float32'), np.float32(np.nan))   
         else:
-            return thermal_zone
+            return thermal_zone  
+
 
     def getThermalLGP0(self):
         """Calculate Thermal Length of Growing Period (LGPt) with 
@@ -401,16 +454,21 @@ class ClimateRegime(object):
 
         Returns:
             2D numpy: The accumulated number of days with daily mean 
-                      temperature is above 0 degree Celcius
+                      temperature above 0 degree Celcius
         """        
-        # Adding interpolation to the dataset
-        # interp_daily_temp = np.zeros((self.im_height, self.im_width, 365))
+        if self.parallel:
+            import dask
 
-        lgpt0 = np.sum(self.meanT_daily>=0, axis=2)
+        lgpt0 = np.sum(self.meanT_daily>=0, axis=2,dtype='float32')
+
         if self.set_mask:
-            lgpt0 = np.where(self.im_mask,lgpt0,np.nan)
+            lgpt0 = np.where(self.im_mask,lgpt0,np.float32(np.nan))
         
-        self.lgpt0=lgpt0.copy()
+        if self.parallel:
+            lgpt0=lgpt0.compute()  # dask compute/convert to numpy
+
+        self.lgpt0=lgpt0
+
         return lgpt0
 
 
@@ -420,14 +478,23 @@ class ClimateRegime(object):
 
         Returns:
             2D numpy: The accumulated number of days with daily mean 
-                      temperature is above 5 degree Celcius
-        """          
-        lgpt5 = np.sum(self.meanT_daily>=5, axis=2)
-        if self.set_mask:
-            lgpt5 = np.where(self.im_mask,lgpt5,np.nan)
+                      temperature above 5 degree Celcius
+        """  
+        if self.parallel:
+            import dask
 
-        self.lgpt5 = lgpt5.copy()
+        lgpt5 = np.sum(self.meanT_daily>=5, axis=2,dtype='float32')
+
+        if self.set_mask:
+            lgpt5 = np.where(self.im_mask,lgpt5,np.float32(np.nan))
+        
+        if self.parallel:
+            lgpt5=lgpt5.compute() # dask compute/convert to numpy
+
+        self.lgpt5 = lgpt5
+
         return lgpt5
+
 
     def getThermalLGP10(self):
         """Calculate Thermal Length of Growing Period (LGPt) with
@@ -435,46 +502,67 @@ class ClimateRegime(object):
 
         Returns:
             2D numpy: The accumulated number of days with daily mean
-                      temperature is above 10 degree Celcius
+                      temperature above 10 degree Celcius
         """
+        if self.parallel:
+            import dask
 
-        lgpt10 = np.sum(self.meanT_daily >= 10, axis=2)
+        lgpt10 = np.sum(self.meanT_daily >= 10, axis=2,dtype='float32')
+
         if self.set_mask:
-            lgpt10 = np.where(self.im_mask, lgpt10, np.nan)
+            lgpt10 = np.where(self.im_mask, lgpt10, np.float32(np.nan))
+        
+        if self.parallel:
+            lgpt10=lgpt10.compute()  # dask compute/convert to numpy
 
-        self.lgpt10 = lgpt10.copy()
+        self.lgpt10 = lgpt10
+
         return lgpt10
+
 
     def getTemperatureSum0(self):
         """Calculate temperature summation at temperature threshold 
         of 0 degree Celcius
 
         Returns:
-            2D numpy: Accumulative daily average temperature (Ta) for days
-                      when Ta is above the thresholds of 0 degree Celcius
+            2D numpy: Cumulative daily average temperature (Ta) for days
+                      when Ta is above 0 degree Celcius
         """
-        tempT = self.meanT_daily.copy()
-        tempT[tempT<0] = 0
-        tsum0 = np.round(np.sum(tempT, axis=2), decimals = 0) 
-        # masking
+        if self.parallel:
+            import dask
+
+        tempT=np.where(self.meanT_daily<0,0,self.meanT_daily)
+        tsum0 = np.round(np.sum(tempT, axis=2,dtype='float32'), decimals = 0) 
+
         if self.set_mask:
-            tsum0 = np.where(self.im_mask, tsum0, np.nan)
+            tsum0 = np.where(self.im_mask, tsum0, np.float32(np.nan))
+        
+        if self.parallel:
+            tsum0=tsum0.compute()  # dask compute/convert to numpy
+
         return tsum0
+
 
     def getTemperatureSum5(self):
         """Calculate temperature summation at temperature threshold 
         of 5 degree Celcius
 
         Returns:
-            2D numpy: Accumulative daily average temperature (Ta) for days
-                      when Ta is above the thresholds of 5 degree Celcius
+            2D numpy: Cumulative daily average temperature (Ta) for days
+                      when Ta is above 5 degree Celcius
         """
-        tempT = self.meanT_daily.copy()
-        tempT[tempT<5] = 0
-        tsum5 = np.round(np.sum(tempT, axis=2), decimals = 0) 
-        # masking
+        if self.parallel:
+            import dask
+
+        tempT=np.where(self.meanT_daily<5,0,self.meanT_daily)
+        tsum5 = np.round(np.sum(tempT, axis=2,dtype='float32'), decimals = 0) 
+
         if self.set_mask: 
-            tsum5 = np.where(self.im_mask, tsum5, np.nan)
+            tsum5 = np.where(self.im_mask, tsum5, np.float32(np.nan))
+
+        if self.parallel:
+            tsum5=tsum5.compute()  # dask compute/convert to numpy
+
         return tsum5
         
 
@@ -483,79 +571,113 @@ class ClimateRegime(object):
         of 10 degree Celcius
 
         Returns:
-            2D numpy: Accumulative daily average temperature (Ta) for days
-                      when Ta is above the thresholds of 10 degree Celcius
+            2D numpy: Cumulative daily average temperature (Ta) for days
+                      when Ta is above 10 degree Celcius
         """
-        tempT = self.meanT_daily.copy()
-        tempT[tempT<10] = 0
-        tsum10 = np.round(np.sum(tempT, axis=2), decimals = 0) 
-        # masking
+        if self.parallel:
+            import dask
+
+        tempT=np.where(self.meanT_daily<10,0,self.meanT_daily)
+        tsum10 = np.round(np.sum(tempT, axis=2,dtype='float32'), decimals = 0) 
+
         if self.set_mask: 
-            tsum10 = np.where(self.im_mask, tsum10, np.nan)
+            tsum10 = np.where(self.im_mask, tsum10, np.float32(np.nan))
+
+        if self.parallel:
+            tsum10=tsum10.compute()  # dask compute/convert to numpy
+
         return tsum10
+
 
     def getTemperatureProfile(self):
         """Classification of temperature ranges for temperature profile
 
         Returns:
             2D NumPy: 18 2D arrays [A1-A9, B1-B9] correspond to each Temperature Profile class [days]
-        """        
-        # Smoothening the temperature curve
-        interp_daily_temp = np.zeros((self.im_height, self.im_width, 365))
-        days = np.arange(1,366)
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
-                temp_1D = self.meanT_daily[i_row, i_col, :]
-                # Creating quadratic spline fit to smoothen the time series along time dimension
-                quad_spl = np.poly1d(np.polyfit(days, temp_1D, 5))
-                interp_daily_temp[i_row, i_col, :] = quad_spl(days)
-        
-        # we will use the interpolated temperature time series to decide and count
-        meanT_daily_add1day = np.concatenate((interp_daily_temp, interp_daily_temp[:,:,0:1]), axis=-1)
-        meanT_first = meanT_daily_add1day[:,:,:-1]
-        meanT_diff = meanT_daily_add1day[:,:,1:] - meanT_daily_add1day[:,:,:-1]
+        """    
+        if self.parallel:
+            import dask
+            import dask.array as da
 
-        A9 = np.sum( np.logical_and(meanT_diff>0, meanT_first<-5), axis=2 )
-        A8 = np.sum( np.logical_and(meanT_diff>0, np.logical_and(meanT_first>=-5, meanT_first<0)), axis=2 )
-        A7 = np.sum( np.logical_and(meanT_diff>0, np.logical_and(meanT_first>=0, meanT_first<5)), axis=2 )
-        A6 = np.sum( np.logical_and(meanT_diff>0, np.logical_and(meanT_first>=5, meanT_first<10)), axis=2 )
-        A5 = np.sum( np.logical_and(meanT_diff>0, np.logical_and(meanT_first>=10, meanT_first<15)), axis=2 )
-        A4 = np.sum( np.logical_and(meanT_diff>0, np.logical_and(meanT_first>=15, meanT_first<20)), axis=2 )
-        A3 = np.sum( np.logical_and(meanT_diff>0, np.logical_and(meanT_first>=20, meanT_first<25)), axis=2 )
-        A2 = np.sum( np.logical_and(meanT_diff>0, np.logical_and(meanT_first>=25, meanT_first<30)), axis=2 )
-        A1 = np.sum( np.logical_and(meanT_diff>0, meanT_first>=30), axis=2 )
+        # a nested ordered dictionary containing info needed to compute for each t profile class
+        tclass_info = OrderedDict({ 'A1':{'tendency':'warming','lim_lo':30,'lim_hi':999},
+                                    'A2':{'tendency':'warming','lim_lo':25,'lim_hi':30},
+                                    'A3':{'tendency':'warming','lim_lo':20,'lim_hi':25},
+                                    'A4':{'tendency':'warming','lim_lo':15,'lim_hi':20},
+                                    'A5':{'tendency':'warming','lim_lo':10,'lim_hi':15},
+                                    'A6':{'tendency':'warming','lim_lo':5,'lim_hi':10},
+                                    'A7':{'tendency':'warming','lim_lo':0,'lim_hi':5},
+                                    'A8':{'tendency':'warming','lim_lo':-5,'lim_hi':0},
+                                    'A9':{'tendency':'warming','lim_lo':-999,'lim_hi':-5},
+                                    'B1':{'tendency':'cooling','lim_lo':30,'lim_hi':999},
+                                    'B2':{'tendency':'cooling','lim_lo':25,'lim_hi':30},
+                                    'B3':{'tendency':'cooling','lim_lo':20,'lim_hi':25},
+                                    'B4':{'tendency':'cooling','lim_lo':15,'lim_hi':20},
+                                    'B5':{'tendency':'cooling','lim_lo':10,'lim_hi':15},
+                                    'B6':{'tendency':'cooling','lim_lo':5,'lim_hi':10},
+                                    'B7':{'tendency':'cooling','lim_lo':0,'lim_hi':5},
+                                    'B8':{'tendency':'cooling','lim_lo':-5,'lim_hi':0},
+                                    'B9':{'tendency':'cooling','lim_lo':-999,'lim_hi':-5} })
 
-        B9 = np.sum( np.logical_and(meanT_diff<0, meanT_first<-5), axis=2 )
-        B8 = np.sum( np.logical_and(meanT_diff<0, np.logical_and(meanT_first>=-5, meanT_first<0)), axis=2 )
-        B7 = np.sum( np.logical_and(meanT_diff<0, np.logical_and(meanT_first>=0, meanT_first<5)), axis=2 )
-        B6 = np.sum( np.logical_and(meanT_diff<0, np.logical_and(meanT_first>=5, meanT_first<10)), axis=2 )
-        B5 = np.sum( np.logical_and(meanT_diff<0, np.logical_and(meanT_first>=10, meanT_first<15)), axis=2 )
-        B4 = np.sum( np.logical_and(meanT_diff<0, np.logical_and(meanT_first>=15, meanT_first<20)), axis=2 )
-        B3 = np.sum( np.logical_and(meanT_diff<0, np.logical_and(meanT_first>=20, meanT_first<25)), axis=2 )
-        B2 = np.sum( np.logical_and(meanT_diff<0, np.logical_and(meanT_first>=25, meanT_first<30)), axis=2 )
-        B1 = np.sum( np.logical_and(meanT_diff<0, meanT_first>=30), axis=2 )
+        # for parallel=True we will use dask delayed
+        # put the computations inside a function so they can be parallelized
+        def sum_ndays_per_tprof_class(diff,meanT,tendency,lim_lo,lim_hi,mask):
+            if tendency=='warming':
+                tclass_ndays = np.sum( (diff>0)&(meanT>=lim_lo)&(meanT<lim_hi), axis=2 ) 
+            if tendency=='cooling':
+                tclass_ndays = np.sum( (diff<0)&(meanT>=lim_lo)&(meanT<lim_hi), axis=2 )
 
+            # apply mask
+            tclass_ndays=np.where(mask, tclass_ndays.astype('float32'), np.float32(np.nan))
+            return tclass_ndays 
+
+        # create a mask of all 1's if the user doesn't provide a mask
         if self.set_mask:
-            return [np.ma.masked_where(self.im_mask == 0, A1),
-                    np.ma.masked_where(self.im_mask == 0, A2),
-                    np.ma.masked_where(self.im_mask == 0, A3),
-                    np.ma.masked_where(self.im_mask == 0, A4),
-                    np.ma.masked_where(self.im_mask == 0, A5),
-                    np.ma.masked_where(self.im_mask == 0, A6),
-                    np.ma.masked_where(self.im_mask == 0, A7),
-                    np.ma.masked_where(self.im_mask == 0, A8),
-                    np.ma.masked_where(self.im_mask == 0, A9),
-                    np.ma.masked_where(self.im_mask == 0, B1),
-                    np.ma.masked_where(self.im_mask == 0, B2),
-                    np.ma.masked_where(self.im_mask == 0, B3),
-                    np.ma.masked_where(self.im_mask == 0, B4),
-                    np.ma.masked_where(self.im_mask == 0, B5),
-                    np.ma.masked_where(self.im_mask == 0, B6),
-                    np.ma.masked_where(self.im_mask == 0, B7),
-                    np.ma.masked_where(self.im_mask == 0, B8),
-                    np.ma.masked_where(self.im_mask == 0, B9)]
+            mask=self.im_mask 
         else:
-            return [A1, A2, A3, A4, A5, A6, A7, A8, A9, B1, B2, B3, B4, B5, B6, B7, B8, B9]
+            mask=np.ones((self.im_height,self.im_width),dtype='int8')
+
+        # compute 5th order spline smoothed daily temperature and attach to class object   
+        obj_utilities = UtilitiesCalc.UtilitiesCalc(self.chunk2D,self.chunk3D)   
+        try:
+            self.interp_daily_temp=obj_utilities.smoothDailyTemp(self.doy_start,self.doy_end, mask, self.meanT_daily)
+        except:
+            sys.exit('Not enough RAM available to complete calculation. Try restarting notebook with parallel=True. \
+                If you are already using parallel=True, try adding reduce_mem_usage=True when calling clim_reg.setParallel')
+
+        if self.parallel:
+            meanT_first=da.from_array(self.interp_daily_temp,chunks=self.chunk3D)
+            meanT_diff=da.diff(meanT_first,n=1,axis=2,append=meanT_first[:,:,0:1]).rechunk(self.chunk3D)    
+
+            # delay the input data so it's copied once instead of at each call of the function
+            meanT_diff=meanT_diff.to_delayed().ravel()
+            meanT_first=meanT_first.to_delayed().ravel()
+            mask=mask.to_delayed().ravel() 
+
+            # in a regular (non-delayed) loop, call delayed function and compile list of compute tasks
+            task_list=[] 
+            for class_inputs in tclass_info.values():
+                for d,t,m in zip(meanT_diff,meanT_first,mask):
+                    task=dask.delayed(sum_ndays_per_tprof_class)(d,t,class_inputs['tendency'],class_inputs['lim_lo'],class_inputs['lim_hi'],m)
+                    task_list.append(task)
+
+            # compute tasks in parallel
+            data_out=dask.compute(*task_list) # a list of arrays in the same order as tclass_info  
+
+            # concatenate chunks
+            tprofiles=[]
+            for i,key in enumerate(tclass_info.keys()):
+                # print(key)
+                tprofiles.append(np.concatenate(data_out[i*self.nchunks:i*self.nchunks+self.nchunks],axis=1))
+        else:
+            ### if parallel=False COMPUTE WITHOUT DASK ###
+            meanT_diff=np.diff(self.interp_daily_temp,n=1,axis=2,append=self.interp_daily_temp[:,:,0:1])
+
+            tprofiles=[]
+            for class_inputs in tclass_info.values():
+                tprofiles.append(sum_ndays_per_tprof_class(meanT_diff,self.interp_daily_temp,class_inputs['tendency'],class_inputs['lim_lo'],class_inputs['lim_hi'],mask))
+        
+        return tprofiles   
 
 
     def getLGP(self, Sa=100., D=1.):
@@ -567,91 +689,146 @@ class ClimateRegime(object):
 
         Returns:
            2D NumPy: Length of Growing Period
-        """        
-        #============================
-        kc_list = np.array([0.0, 0.1, 0.2, 0.5, 1.0])
-        #============================
-        Txsnm = 0.  # Txsnm - snow melt temperature threshold
-        Fsnm = 5.5  # Fsnm - snow melting coefficient
-        Sb_old = 0.
-        Wb_old = 0.
-        #============================
-        Tx365 = self.maxT_daily.copy()
-        Ta365 = self.meanT_daily.copy()
-        Pcp365 = self.totalPrec_daily.copy()
-        self.Eto365 = self.pet_daily.copy()  # Eto
-        self.Etm365 = np.zeros(Tx365.shape)
-        self.Eta365 = np.zeros(Tx365.shape)
-        self.Sb365 = np.zeros(Tx365.shape)
-        self.Wb365 = np.zeros(Tx365.shape)
-        self.Wx365 = np.zeros(Tx365.shape)
-        self.kc365 = np.zeros(Tx365.shape)
-        meanT_daily_new = np.zeros(Tx365.shape)
-        self.maxT_daily_new = np.zeros(Tx365.shape)
-        lgp_tot = np.zeros((self.im_height, self.im_width))
-        #============================
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
+        """   
+        if self.parallel:
+            import dask
+            import dask.array as da
 
-                lgpt5_point = self.lgpt5[i_row, i_col]
+        # constants
+        Txsnm = 0. 
+        Fsnm = 5.5
+        kc_list = np.array([0.0, 0.1, 0.2, 0.5, 1.0],dtype='float32')  
 
-                totalPrec_monthly = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(self.totalPrec_daily[i_row, i_col, :])
-                meanT_daily_point = Ta365[i_row, i_col, :]
-                istart0, istart1 = LGPCalc.rainPeak(totalPrec_monthly, meanT_daily_point, lgpt5_point)
-                #----------------------------------
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
+        if self.parallel:
+            # generalized workflow:
+            # 1) prep inputs chunked like (all y, x chunk, all days)
+            # 2) call function LGPCalc.EtaCalc (contains the daily loop) on chunks, return lgp_tot in numpy arrays (1 array per chunk) (in RAM)
+            # 3) concat lgp_tot to shape (ny,nx)
 
-                for doy in range(0, 365):
-                    p = LGPCalc.psh(
-                        0., self.Eto365[i_row, i_col, doy])
-                    Eta_new, Etm_new, Wb_new, Wx_new, Sb_new, kc_new = LGPCalc.EtaCalc(
-                        np.float64(Tx365[i_row, i_col, doy]), np.float64(
-                            Ta365[i_row, i_col, doy]),
-                            # Ta365[i_row, i_col, doy]),
-                        np.float64(Pcp365[i_row, i_col, doy]), Txsnm, Fsnm, np.float64(
-                            self.Eto365[i_row, i_col, doy]),
-                        Wb_old, Sb_old, doy, istart0, istart1,
-                        Sa, D, p, kc_list, lgpt5_point)
+            # set up larger chunks for quicker processing
+            nlons=int(np.ceil(self.chunk2D[1]*4))  # consider adding a user override for this
+            bigchunk2D=(-1,nlons)
+            bigchunk3D=(-1,nlons,-1)
+            nchunks=int(np.ceil(self.im_width/nlons))    
+            print('using larger chunks:',nchunks,'total chunks instead of',self.nchunks,'for speedier calculation of LGP')      
 
-                    if Eta_new <0.: Eta_new = 0.
+            # set up inputs
+            lgpt5=da.from_array(self.lgpt5,chunks=bigchunk2D) # convert to dask array
+            istart0,istart1=LGPCalc.rainPeak(self.meanT_daily.rechunk(chunks=bigchunk3D),lgpt5) # dask arrays
+            ng=da.zeros(self.pet_daily.shape,chunks=bigchunk3D,dtype='float32')  # dask array initialization
+            pet=da.from_array(self.pet_daily,chunks=bigchunk3D)  # dask array
 
-                    self.Eta365[i_row, i_col, doy] = Eta_new
-                    self.Etm365[i_row, i_col, doy] = Etm_new
-                    self.Wb365[i_row, i_col, doy] = Wb_new
-                    self.Wx365[i_row, i_col, doy] = Wx_new
-                    self.Sb365[i_row, i_col, doy] = Sb_new
-                    self.kc365[i_row, i_col, doy] = kc_new
+            # compute eta_class
+            # the task graph for eta_class is so complex that it's faster to compute it outside of any loops and hold the result in RAM
+            
+            # create chunked dask arrays, delay them, and collapse to chunks to a list (ravel)
+            lgpt5_3D=da.broadcast_to(self.lgpt5[:,:,np.newaxis].astype('float16'),(self.im_height,self.im_width,self.doy_end)).rechunk(chunks=bigchunk3D).to_delayed().ravel()
+            mask_3D=da.broadcast_to(self.im_mask[:,:,np.newaxis],(self.im_height,self.im_width,self.doy_end)).rechunk(chunks=bigchunk3D).to_delayed().ravel()
+            Tmean=self.meanT_daily.rechunk(chunks=bigchunk3D).astype('float16').to_delayed().ravel()
+            Tmax=self.maxT_daily.rechunk(chunks=bigchunk3D).astype('float16').to_delayed().ravel()
 
-                    Wb_old = Wb_new
-                    Sb_old = Sb_new
-        #============================================
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
-                Etm365X = np.append(self.Etm365[i_row, i_col, :], self.Etm365[i_row, i_col, :])
-                Eta365X = np.append(self.Eta365[i_row, i_col, :], self.Eta365[i_row, i_col, :])
-                islgp = LGPCalc.islgpt(self.meanT_daily[i_row, i_col, :])
-                xx = LGPCalc.val10day(Eta365X)
-                yy = LGPCalc.val10day(Etm365X)
-                lgp_whole = xx[:365]/yy[:365]
-                count = 0
-                for i in range(len(lgp_whole)):
-                    if islgp[i] == 1 and lgp_whole[i] >= 0.4:
-                        count = count+1
+            zipvars=zip(mask_3D,lgpt5_3D,Tmean,Tmax)  # zip inputs
 
-                lgp_tot[i_row, i_col] = count
+            # use dask.delayed to build a list of lazy computational tasks
+            task_list=[dask.delayed(LGPCalc.Eta_class)(m,l5,Tbar,Tmx,Txsnm) for m,l5,Tbar,Tmx in zipvars]
+            
+            results=dask.compute(*task_list)         # do the actual computing
+            eta_class=np.concatenate(results,axis=1) # concatenate resulting arrays along longitude dimension
 
-        
-        if self.set_mask:
-            return np.where(self.im_mask, lgp_tot, np.nan)
+            del lgpt5_3D,mask_3D,Tmean,Tmax,zipvars,task_list,results  # clean up
+
+            islgp=da.where(self.meanT_daily>=5,np.int8(1),np.int8(0)).rechunk(chunks=bigchunk3D)   # dask array
+
+            # chunk all inputs to big chunks as defined above, these are all lazy dask arrays
+            lgpt5_c=lgpt5  # already big chunked
+            mask_c=self.im_mask.rechunk(chunks=bigchunk2D)
+            istart0_c = istart0  # already big chunked
+            istart1_c = istart1  # already big chunked
+            Sb_old_c = da.zeros((self.im_height,self.im_width),chunks=bigchunk2D,dtype='float32')
+            Wb_old_c = da.zeros((self.im_height,self.im_width),chunks=bigchunk2D,dtype='float32')
+            Pet365_c = pet # already big chunked
+            p_c = LGPCalc.psh(ng,pet)
+            eta_class_c=da.from_array(eta_class,chunks=bigchunk3D)
+            Tx365_c = self.maxT_daily.rechunk(chunks=bigchunk3D)
+            Pcp365_c = self.totalPrec_daily.rechunk(chunks=bigchunk3D)
+            islgp_c = islgp  # already big chunked
+
+            # this is not a normal way to compute with dask
+            # our functions are so complicated that allowing dask to automate the parallel 
+            # computation is much slower and/or crashes due to high memory use
+            # here we loop thru chunks one at a time, compute the inputs ahead 
+            # of time to reduce passing many/large task graphs, and call the EtaCalc 
+            # func (which includes some parallelism) on each chunk, then concat the resulting lgp_tot chunks
+            results=[]
+            for i in range(nchunks):
+                if (i%10 == 0) and (nchunks>10): print('loop',(i+1),'of',nchunks,', this message prints every 10 chunks')
+                # convert input chunks to numpy arrays in memory
+                mask_np=mask_c.blocks[0,i].compute().copy()
+                Tx365_np=Tx365_c.blocks[0,i,0].compute().copy()
+                islgp_np=islgp_c.blocks[0,i,0].compute().copy()
+                Pcp365_np=Pcp365_c.blocks[0,i,0].compute().copy()
+                Pet365_np=Pet365_c.blocks[0,i,0].compute().copy()
+                Wb_old_np=Wb_old_c.blocks[0,i].compute().copy()
+                Sb_old_np=Sb_old_c.blocks[0,i].compute().copy()
+                istart0_np=istart0_c.blocks[0,i].compute().copy()
+                istart1_np=istart1_c.blocks[0,i].compute().copy()
+                lgpt5_np=lgpt5_c.blocks[0,i].compute().copy()
+                eta_class_np=eta_class_c.blocks[0,i].compute().copy()
+                p_np=p_c.blocks[0,i,0].compute().copy()
+
+                # compute lgp_tot in chunks
+                results.append(LGPCalc.EtaCalc(mask_np,Tx365_np,islgp_np,Pcp365_np,\
+                                            Txsnm,Fsnm,Pet365_np,Wb_old_np,Sb_old_np,\
+                                            istart0_np,istart1_np,Sa,D,p_np,kc_list,\
+                                            lgpt5_np,eta_class_np,self.doy_start,self.doy_end,self.parallel))
+
+            del self.pet_daily # free up RAM
+
+            # concatenate result chunks
+            lgp_tot=np.concatenate(results,axis=1)
+
+            if self.set_mask:
+                return np.where(self.im_mask.compute(), lgp_tot.astype('float32'), np.float32(np.nan))   
+            else:
+                return lgp_tot.astype('float32')
+
         else:
-            return lgp_tot
-  
-    def getLGPClassified(self, lgp): # Original PyAEZ source code
+            ### IF parallel=False, COMPUTE WITHOUT DASK ###
+            try:
+                istart0,istart1=LGPCalc.rainPeak(self.meanT_daily,self.lgpt5)
+                ng=np.zeros(self.pet_daily.shape,dtype='float32')
+                p = LGPCalc.psh(ng,self.pet_daily)
+                self.p=p
+
+                # compute eta_class
+                lgpt5_3D=np.broadcast_to(self.lgpt5[:,:,np.newaxis].astype('float16'),(self.im_height,self.im_width,self.doy_end))
+                mask_3D=np.broadcast_to(self.im_mask[:,:,np.newaxis],(self.im_height,self.im_width,self.doy_end))
+                Tmean=self.meanT_daily.astype('float16')
+                Tmax=self.maxT_daily.astype('float16')
+                eta_class = LGPCalc.Eta_class(mask_3D,lgpt5_3D,Tmean,Tmax,Txsnm)
+                del lgpt5_3D,mask_3D,Tmean,Tmax
+
+                islgp=np.where(self.meanT_daily>=5,np.int8(1),np.int8(0))
+
+                Sb_old = np.zeros((self.im_height,self.im_width),dtype='float32')
+                Wb_old = np.zeros((self.im_height,self.im_width),dtype='float32')
+
+                # compute lgp_tot                     
+                lgp_tot=LGPCalc.EtaCalc(self.im_mask,self.maxT_daily,islgp,self.totalPrec_daily,\
+                                        Txsnm,Fsnm,self.pet_daily,Wb_old,Sb_old,istart0,istart1,\
+                                        Sa,D,p,kc_list,self.lgpt5,eta_class,self.doy_start,self.doy_end,self.parallel)
+
+                if self.set_mask:
+                    return np.where(self.im_mask, lgp_tot.astype('float32'), np.float32(np.nan))   
+                else:
+                    return lgp_tot.astype('float32')                                           
+            except:
+                # the user's computer may not have enough RAM to complete this RAM-hungry calculation without parallelizing
+                # if the above doesn't succeed, issue a message with the likely solution
+                sys.exit('Not enough RAM available to complete calculation. Try restarting notebook with parallel=True')
+
+
+    def getLGPClassified(self, lgp): 
         """This function calculates the classification of moisture regime using LGP.
 
         Args:
@@ -660,20 +837,26 @@ class ClimateRegime(object):
         Returns:
             2D NumPy: Classified Length of Growing Period
         """        
-        # 
+        if self.parallel:
+            import dask
 
-        lgp_class = np.zeros(lgp.shape)
+        lgp_class = np.zeros(lgp.shape,dtype='float32')  # initialization   
 
-        lgp_class[lgp>=365] = 7 # Per-humid
-        lgp_class[np.logical_and(lgp>=270, lgp<365)] = 6 # Humid
-        lgp_class[np.logical_and(lgp>=180, lgp<270)] = 5 # Sub-humid
-        lgp_class[np.logical_and(lgp>=120, lgp<180)] = 4 # Moist semi-arid
-        lgp_class[np.logical_and(lgp>=60, lgp<120)] = 3 # Dry semi-arid
-        lgp_class[np.logical_and(lgp>0, lgp<60)] = 2 # Arid
-        lgp_class[lgp<=0] = 1 # Hyper-arid
+        lgp_class=np.where(lgp>=365,7,lgp_class)             # Per-humid
+        lgp_class=np.where((lgp>=270)&(lgp<365),6,lgp_class) # Humid
+        lgp_class=np.where((lgp>=180)&(lgp<270),5,lgp_class) # Sub-humid
+        lgp_class=np.where((lgp>=120)&(lgp<180),4,lgp_class) # Moist semi-arid
+        lgp_class=np.where((lgp>=60)&(lgp<120),3,lgp_class)  # Dry semi-arid
+        lgp_class=np.where((lgp>0)&(lgp<60),2,lgp_class)     # Arid
+        lgp_class=np.where(lgp<=0,1,lgp_class)               # Hyper-arid
 
         if self.set_mask:
-            return np.where(self.im_mask, lgp_class, np.nan)
+            if self.parallel:
+                mask=self.im_mask.compute() # dask compute/convert to numpy
+            else:
+                mask=self.im_mask
+
+            return np.where(mask, lgp_class.astype('float32'), np.float32(np.nan))
         else:
             return lgp_class
         
@@ -684,24 +867,29 @@ class ClimateRegime(object):
         Returns:
             2D NumPy: LGP Equivalent 
         """        
-        moisture_index = np.sum(self.totalPrec_daily,
-                                axis=2)/np.sum(self.pet_daily, axis=2)
+        if self.parallel:
+            import dask
+
+        moisture_index = self.annual_accPrec/self.annual_accPET
 
         lgp_equv = 14.0 + 293.66*moisture_index - 61.25*moisture_index*moisture_index
-        lgp_equv[moisture_index > 2.4] = 366
+        lgp_equv=np.where(moisture_index>2.4,366,lgp_equv)
 
         if self.set_mask:
-            return np.where(self.im_mask, lgp_equv, np.nan)
+            if self.parallel:
+                mask=self.im_mask.compute()  # dask compute/convert to numpy
+            else:
+                mask=self.im_mask
+
+            return np.where(mask, lgp_equv.astype('float32'), np.float32(np.nan))   
         else:
             return lgp_equv
 
-        '''
-        Existing Issue: The moisture index calculation is technical aligned with FORTRAN routine, 
-        results are still different from GAEZ; causing large discrepancy. 
-        Overall, there are no changes with the calculation steps and logics.
-        '''
-      
-
+        # '''
+        # Existing Issue: The moisture index calculation is technical aligned with FORTRAN routine, 
+        # results are still different from GAEZ; causing large discrepancy. 
+        # Overall, there are no changes with the calculation steps and logics.
+        # '''
 
 
     def TZoneFallowRequirement(self, tzone):
@@ -711,64 +899,45 @@ class ClimateRegime(object):
         mask out pixels by the mask layer. (NEW FUNCTION)
 
         Args:
-        tzone : a 2-D numpy array
-            THERMAL ZONE.
+            tzone : a 2-D numpy array THERMAL ZONE.
 
         Returns:
-        A 2-D numpy array, corresponding to thermal zone for fallow requirement.
+            A 2-D numpy array, corresponding to thermal zone for fallow requirement.
 
         """
+        if self.parallel:
+            import dask
+            
+        tzonefallow = np.zeros((self.im_height, self.im_width), dtype= 'int8')  # initialization        
+        
+        annual_Tmean=self.annual_Tmean
+        max_meanTmonthly=self.meanT_monthly.max(axis=2)  # the maximum monthly meanT
 
-        # the algorithm needs to calculate the annual mean temperature.
-        tzonefallow = np.zeros((self.im_height, self.im_width), dtype= int)
-        annual_Tmean = np.mean(self.meanT_daily, axis = 2)
-        obj_utilities = UtilitiesCalc.UtilitiesCalc()
-
-        # thermal zone class definitions for fallow requirement
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
-
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
-                # Checking tropics thermal zone
-                if tzone[i_row, i_col] == 1 or tzone[i_row, i_col] == 2:
-                    
-                    # Class 1: tropics, mean annual T > 25 deg C
-                    if annual_Tmean[i_row, i_col] > 25:
-                        tzonefallow[i_row, i_col] = 1
-                    
-                    # Class 2: tropics, mean annual T 20-25 deg C
-                    elif annual_Tmean[i_row, i_col] > 20:
-                        tzonefallow[i_row, i_col] = 2
-                    
-                    # Class 3: tropics, mean annual T 15-20 deg C
-                    elif annual_Tmean[i_row, i_col] > 15:
-                        tzonefallow[i_row, i_col] = 3
-                    
-                    # Class 4: tropics, mean annual T < 15 deg C
-                    else:
-                        tzonefallow[i_row, i_col] = 4
-                
-                # Checking the non-tropical zones
-                else:
-                    meanT_monthly = obj_utilities.averageDailyToMonthly(self.meanT_daily[i_row, i_col, :])
-                    # Class 5: mean T of the warmest month > 20 deg C
-                    if np.max(meanT_monthly) > 20:
-                        tzonefallow[i_row, i_col] = 5
-                        
-                    else:
-                        tzonefallow[i_row, i_col] = 6
+        # tropical thermal zones
+        # Class 1: tropics, mean annual T > 25 deg C
+        tzonefallow=np.where(((tzone==1)|(tzone==2))&(annual_Tmean>25),1,tzonefallow)   
+        # Class 2: tropics, mean annual T 20-25 deg C   
+        tzonefallow=np.where(((tzone==1)|(tzone==2))&(annual_Tmean>20)&(tzonefallow==0),2,tzonefallow)   
+        # Class 3: tropics, mean annual T 15-20 deg C   
+        tzonefallow=np.where(((tzone==1)|(tzone==2))&(annual_Tmean>15)&(tzonefallow==0),3,tzonefallow)   
+        # Class 4: tropics, mean annual T < 15 deg C   
+        tzonefallow=np.where(((tzone==1)|(tzone==2))&(annual_Tmean<=15)&(tzonefallow==0),4,tzonefallow)   
+        # non-tropical zones   
+        # Class 5: mean T of the warmest month > 20 deg C   
+        tzonefallow=np.where((tzone!=1)&(tzone!=2)&(max_meanTmonthly>20)&(tzonefallow==0),5,tzonefallow)   
+        tzonefallow=np.where((tzone!=1)&(tzone!=2)&(max_meanTmonthly<=20)&(tzonefallow==0),6,tzonefallow)     
                             
         if self.set_mask:
-            return np.where(self.im_mask, tzonefallow, np.nan)
+            if self.parallel:
+                mask=self.im_mask.compute()  # dask compute/convert to numpy
+            else:
+                mask=self.im_mask      
+
+            return np.where(mask, tzonefallow.astype('float32'), np.float32(np.nan))  
         else:
-            return tzonefallow
-    
+            return tzonefallow     
   
-    
    
-    
     def AirFrostIndexandPermafrostEvaluation(self):
         """
         The function calculates the air frost index which is used for evaluation of 
@@ -778,55 +947,51 @@ class ClimateRegime(object):
         automatically mask user-defined pixels out of the calculation 
 
         Returns:
-        air_frost_index/permafrost : a python list: [air frost number, permafrost classes]
+            air_frost_index/permafrost : a python list: [air frost number, permafrost classes]
 
         """
-        fi = np.zeros((self.im_height, self.im_width), dtype=float)
-        permafrost = np.zeros((self.im_height, self.im_width), dtype=int)
-        ddt = np.zeros((self.im_height, self.im_width), dtype=float) # thawing index
-        ddf = np.zeros((self.im_height, self.im_width), dtype=float) # freezing index
-        meanT_gt_0 = self.meanT_daily.copy()
-        meanT_le_0 = self.meanT_daily.copy()
+        if self.parallel:
+            import dask
+                    
+        permafrost = np.zeros((self.im_height, self.im_width), dtype='int8') # initialization
+
+        if self.parallel:
+            meanT_gt_0 = self.meanT_daily.copy()
+            meanT_le_0 = meanT_gt_0.copy()            
+        else:
+            meanT_gt_0 = self.meanT_daily.copy()
+            meanT_le_0 = self.meanT_daily.copy()
         
-        meanT_gt_0[meanT_gt_0 <=0] = 0 # removing all negative temperatures for summation
-        meanT_le_0[meanT_gt_0 >0] = 0 # removing all positive temperatures for summation 
-        ddt = np.sum(meanT_gt_0, axis = 2)
-        ddf = - np.sum(meanT_le_0, axis = 2)  
-        fi = np.sqrt(ddf)/(np.sqrt(ddf) + np.sqrt(ddt)) 
-        # now, we will classify the permafrost zones (Reference: GAEZ v4 model documentation: Pg35 -37)
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue         
-                # Continuous Permafrost Class
-                if fi[i_row, i_col]> 0.625:
-                    permafrost[i_row, i_col] = 1
-                
-                # Discontinuous Permafrost Class
-                if fi[i_row, i_col]> 0.57 and fi[i_row, i_col]< 0.625:
-                    permafrost[i_row, i_col] = 2
-                
-                # Sporadic Permafrost Class
-                if fi[i_row, i_col]> 0.495 and fi[i_row, i_col]< 0.57:
-                    permafrost[i_row, i_col] = 3
-                
-                # No Permafrost Class
-                if fi[i_row, i_col]< 0.495:
-                    permafrost[i_row, i_col] = 4
-        # to remove the division by zero, the nan values will be converted into
+        meanT_gt_0=np.where(meanT_gt_0 <=0, 0, meanT_gt_0)   # removing all negative temperatures for summation
+        meanT_le_0=np.where(meanT_le_0 >0, 0, meanT_le_0)    # removing all positive temperatures for summation  
+        ddt = np.sum(meanT_gt_0, axis = 2,dtype='float32')   # thawing index
+        ddf = - np.sum(meanT_le_0, axis = 2,dtype='float32') # freezing index
+        fi = np.sqrt(ddf)/(np.sqrt(ddf) + np.sqrt(ddt))      # frost index
+
+        # classify the permafrost zones (Reference: GAEZ v4 model documentation: Pg35 -37)
+        permafrost=np.where(fi>0.625,1,permafrost)              # Continuous Permafrost Class   
+        permafrost=np.where((fi>0.57)&(fi<=0.625),2,permafrost) # Discontinuous Permafost Class   
+        permafrost=np.where((fi>0.495)&(fi<=0.57),3,permafrost) # Sporadic Permafrost Class   
+        permafrost=np.where(fi<=0.495,4,permafrost)             # No Permafrost Class  
+
         fi = np.nan_to_num(fi)
 
         if self.set_mask:
-            return [np.where(self.im_mask, fi, np.nan), np.where(self.im_mask, permafrost , np.nan)]
+            if self.parallel:
+                fi=np.where(self.im_mask, fi, np.float32(np.nan)).compute()  # dask compute/convert to numpy
+                permafrost=np.where(self.im_mask, permafrost.astype('float32'), np.float32(np.nan)).compute() # dask compute/convert to numpy
+            else:
+                fi=np.where(self.im_mask, fi, np.float32(np.nan))
+                permafrost=np.where(self.im_mask, permafrost.astype('float32'), np.float32(np.nan))
+
+            return [fi,permafrost]
         else:
-            return [fi, permafrost]
-        
-  
+            return [fi.astype('float32'), permafrost.astype('float32')]   
 
     
     def AEZClassification(self, tclimate, lgp, lgp_equv, lgpt_5, soil_terrain_lulc, permafrost):
-        """The AEZ inventory combines spatial layers of thermal and moisture regimes 
+        """
+        The AEZ inventory combines spatial layers of thermal and moisture regimes 
         with broad categories of soil/terrain qualities.
 
         Args:
@@ -839,8 +1004,8 @@ class ClimateRegime(object):
 
         Returns:
            2D NumPy: 57 classes of AEZ
-        """        
-        
+        """    
+        ##################################################################################################    
         #1st step: reclassifying the existing 12 classes of thermal climate into 6 major thermal climate.
         # Class 1: Tropics, lowland
         # Class 2: Tropics, highland
@@ -848,99 +1013,58 @@ class ClimateRegime(object):
         # Class 4: Temperate Climate
         # Class 5: Boreal Climate
         # Class 6: Arctic Climate
-    
-        aez_tclimate = np.zeros((self.im_height, self.im_width), dtype=int)
-        obj_utilities = UtilitiesCalc.UtilitiesCalc()
 
-        for i_r in range(self.im_height):
-            for i_c in range(self.im_width):
-                if self.set_mask:
-                    if self.im_mask[i_r, i_c] == self.nodata_val:
-                        continue
+        aez_tclimate = np.zeros((self.im_height, self.im_width), dtype='int8') # initialization
+        
+        # tropics highland
+        aez_tclimate=np.where((tclimate==1),1,aez_tclimate)
+        aez_tclimate=np.where((tclimate==2),2,aez_tclimate)
+        aez_tclimate=np.where((tclimate==3),3,aez_tclimate)
+        aez_tclimate=np.where((tclimate==4),3,aez_tclimate)
+        aez_tclimate=np.where((tclimate==5),3,aez_tclimate)
+        # grouping all the temperate classes into a single class 4    
+        aez_tclimate=np.where((tclimate==6),4,aez_tclimate)
+        aez_tclimate=np.where((tclimate==7),4,aez_tclimate)
+        aez_tclimate=np.where((tclimate==8),4,aez_tclimate)
+        # grouping all the boreal classes into a single class 5
+        aez_tclimate=np.where((tclimate==9),5,aez_tclimate)
+        aez_tclimate=np.where((tclimate==10),5,aez_tclimate)
+        aez_tclimate=np.where((tclimate==11),5,aez_tclimate)
+        # changing the arctic class into class 6
+        aez_tclimate=np.where((tclimate==12),6,aez_tclimate)
+        ##################################################################################################    
 
-                    else:
-
-                        # tropics highland
-                        if tclimate[i_r, i_c] == 1:
-                            aez_tclimate[i_r, i_c] = 1
-
-                        elif tclimate[i_r, i_c] == 2:
-                            aez_tclimate[i_r, i_c] = 2
-
-                        elif tclimate[i_r, i_c] == 3:
-                            aez_tclimate[i_r, i_c] = 3
-
-                        elif tclimate[i_r, i_c] == 4:
-                            aez_tclimate[i_r, i_c] = 3
-
-                        elif tclimate[i_r, i_c] == 5:
-                            aez_tclimate[i_r, i_c] = 3
-
-                        # grouping all the temperate classes into a single class 4
-                        elif tclimate[i_r, i_c] == 6:
-                            aez_tclimate[i_r, i_c] = 4
-
-                        elif tclimate[i_r, i_c] == 7:
-                            aez_tclimate[i_r, i_c] = 4
-
-                        elif tclimate[i_r, i_c] == 8:
-                            aez_tclimate[i_r, i_c] = 4
-
-                        # grouping all the boreal classes into a single class 5
-                        elif tclimate[i_r, i_c] == 9:
-                            aez_tclimate[i_r, i_c] = 5
-
-                        elif tclimate[i_r, i_c] == 10:
-                            aez_tclimate[i_r, i_c] = 5
-
-                        elif tclimate[i_r, i_c] == 11:
-                            aez_tclimate[i_r, i_c] = 5
-
-                        # changing the arctic class into class 6
-                        elif tclimate[i_r, i_c] == 12:
-                            aez_tclimate[i_r, i_c] = 6
-
+        ##################################################################################################    
         # 2nd Step: Classification of Thermal Zones
-        aez_tzone = np.zeros((self.im_height, self.im_width), dtype=int)
 
+        aez_tzone = np.zeros((self.im_height, self.im_width), dtype='int8')  # initialization
 
-        for i_r in range(self.im_height):
-            for i_c in range(self.im_width):
-                if self.set_mask:
-                    if self.im_mask[i_r, i_c] == self.nodata_val:
-                        continue
-                    else:
-                        mean_temp = np.copy(self.meanT_daily[i_r, i_c, :])
-                        meanT_monthly = obj_utilities.averageDailyToMonthly(
-                            mean_temp)
-                        # one conditional parameter for temperature accumulation
-                        temp_acc_10deg = np.copy(self.meanT_daily[i_r, i_c, :])
-                        temp_acc_10deg[temp_acc_10deg < 10] = 0
+        # things we need for the conditional statements
+        nmo_ge_10=np.sum(self.meanT_monthly>=10,axis=2)  # number of months where monthly meanT is >=10C
+        nmo_lt_10=np.sum(self.meanT_monthly<10,axis=2)   # number of months where monthly meanT is <10C
+        nmo_ge_5=np.sum(self.meanT_monthly>=5,axis=2)    # number of months where monthly meanT is >=5C
+        temp_acc_10deg = np.where(self.meanT_daily<10,0,self.meanT_daily).sum(axis=2)  # accumulated temperature from days where meanT is >=10C
+        nday_gt_20=np.sum(self.meanT_daily>20,axis=2)    # number of days where meanT is >20C
 
-                        # Warm Tzone (TZ1)
-                        if np.sum(meanT_monthly >= 10) == 12 and np.mean(mean_temp) >= 20:
-                            aez_tzone[i_r, i_c] = 1
+        if self.parallel:
+            temp_acc_10deg=temp_acc_10deg.compute()  # dask compute/convert to numpy   
+            nday_gt_20=nday_gt_20.compute()  # dask compute/convert to numpy
+        
+        # Warm Tzone (TZ1)
+        aez_tzone=np.where((nmo_ge_10==12)&(self.annual_Tmean>=20),1,aez_tzone)
+        # Moderately cool Tzone (TZ2)
+        aez_tzone=np.where((nmo_ge_5==12)&(nmo_ge_10>=8)&(aez_tzone==0),2,aez_tzone)
+        # TZ3 Moderate
+        aez_tzone=np.where((aez_tclimate==4)&(nmo_ge_10>=5)&(nday_gt_20>=75)&(temp_acc_10deg>3000)&(aez_tzone==0),3,aez_tzone)
+        # TZ4 Cool
+        aez_tzone=np.where((nmo_ge_10>=4)&(self.annual_Tmean>=0)&(aez_tzone==0),4,aez_tzone)
+        # TZ5 Cold
+        aez_tzone=np.where((nmo_ge_10>=1)&(nmo_ge_10<=3)&(self.annual_Tmean>=0)&(aez_tzone==0),5,aez_tzone)
+        # TZ6 Very cold
+        aez_tzone=np.where((nmo_lt_10==12)|(self.annual_Tmean<0)&(aez_tzone==0),6,aez_tzone)
+        ##################################################################################################    
 
-                        # Moderately cool Tzone (TZ2)
-                        elif np.sum(meanT_monthly >= 5) == 12 and np.sum(meanT_monthly >= 10) >= 8:
-                            aez_tzone[i_r, i_c] = 2
-
-                        # TZ3 Moderate
-                        elif aez_tclimate[i_r, i_c] == 4 and np.sum(meanT_monthly >= 10) >= 5 and np.sum(mean_temp > 20) >= 75 and np.sum(temp_acc_10deg) > 3000:
-                            aez_tzone[i_r, i_c] = 3
-
-                        # TZ4 Cool
-                        elif np.sum(meanT_monthly >= 10) >= 4 and np.mean(mean_temp) >= 0:
-                            aez_tzone[i_r, i_c] = 4
-
-                        # TZ5 Cold
-                        elif np.sum(meanT_monthly >= 10) in range(1, 4) and np.mean(mean_temp) >= 0:
-                            aez_tzone[i_r, i_c] = 5
-
-                        # TZ6 Very cold
-                        elif np.sum(meanT_monthly < 10) == 12 or np.mean(mean_temp) < 0:
-                            aez_tzone[i_r, i_c] = 6
-
+        ##################################################################################################   
         # 3rd Step: Creation of Temperature Regime Classes
         # Temperature Regime Class Definition
         # 1 = Tropics, lowland (TRC1)
@@ -954,49 +1078,20 @@ class ClimateRegime(object):
         # 9 = Boreal, cold, with continuous or discontinuous occurrence of permafrost (TRC9)
         # 10 = Arctic, very cold (TRC10)
 
-        aez_temp_regime = np.zeros((self.im_height, self.im_width), dtype=int)
+        aez_temp_regime = np.zeros((self.im_height, self.im_width), dtype='int8') # initialization
+        aez_temp_regime = np.where((aez_tclimate==1)&(aez_tzone==1),1,aez_temp_regime) # Tropics, lowland
+        aez_temp_regime = np.where((aez_tclimate==2)&((aez_tzone==2)|(aez_tzone==4))&(aez_temp_regime==0),2,aez_temp_regime) # Tropics, highland
+        aez_temp_regime = np.where((aez_tclimate==3)&(aez_tzone==1)&(aez_temp_regime==0),3,aez_temp_regime) # Subtropics, warm
+        aez_temp_regime = np.where((aez_tclimate==3)&(aez_tzone==2)&(aez_temp_regime==0),4,aez_temp_regime) # Subtropics,moderate cool
+        aez_temp_regime = np.where((aez_tclimate==3)&(aez_tzone==4)&(aez_temp_regime==0),5,aez_temp_regime) # Subtropics,cool
+        aez_temp_regime = np.where((aez_tclimate==4)&(aez_tzone==3)&(aez_temp_regime==0),6,aez_temp_regime) # Temperate, moderate
+        aez_temp_regime = np.where((aez_tclimate==4)&(aez_tzone==4)&(aez_temp_regime==0),7,aez_temp_regime) # Temperate, cool
+        aez_temp_regime = np.where((aez_tclimate>=2)&(aez_tclimate<=6)&(aez_tzone==5)&(permafrost>=3)&(aez_temp_regime==0),8,aez_temp_regime) # Boreal/Cold, no permafrost
+        aez_temp_regime = np.where((aez_tclimate>=2)&(aez_tclimate<=6)&(aez_tzone==5)&(permafrost<=2)&(aez_temp_regime==0),9,aez_temp_regime) # Boreal/Cold, with permafrost
+        aez_temp_regime = np.where((aez_tclimate>=2)&(aez_tclimate<=7)&(aez_tzone==6)&(aez_temp_regime==0),10,aez_temp_regime) # Arctic/Very Cold
+        ##################################################################################################    
 
-        for i_r in range(self.im_height):
-            for i_c in range(self.im_width):
-                if self.set_mask:
-                    if self.im_mask[i_r, i_c] == self.nodata_val:
-                        continue
-                    else:
-
-                        if aez_tclimate[i_r, i_c] == 1 and aez_tzone[i_r, i_c] == 1:
-                            aez_temp_regime[i_r, i_c] = 1  # Tropics, lowland
-
-                        elif aez_tclimate[i_r, i_c] == 2 and aez_tzone[i_r, i_c] in [2, 4]:
-                            aez_temp_regime[i_r, i_c] = 2  # Tropics, highland
-
-                        elif aez_tclimate[i_r, i_c] == 3 and aez_tzone[i_r, i_c] == 1:
-                            aez_temp_regime[i_r, i_c] = 3  # Subtropics, warm
-
-                        elif aez_tclimate[i_r, i_c] == 3 and aez_tzone[i_r, i_c] == 2:
-                            # Subtropics,moderate cool
-                            aez_temp_regime[i_r, i_c] = 4
-
-                        elif aez_tclimate[i_r, i_c] == 3 and aez_tzone[i_r, i_c] == 4:
-                            aez_temp_regime[i_r, i_c] = 5  # Subtropics,cool
-
-                        elif aez_tclimate[i_r, i_c] == 4 and aez_tzone[i_r, i_c] == 3:
-                            # Temperate, moderate
-                            aez_temp_regime[i_r, i_c] = 6
-
-                        elif aez_tclimate[i_r, i_c] == 4 and aez_tzone[i_r, i_c] == 4:
-                            aez_temp_regime[i_r, i_c] = 7  # Temperate, cool
-
-                        elif aez_tclimate[i_r, i_c] in range(2, 6) and aez_tzone[i_r, i_c] == 5:
-                            if np.logical_or(permafrost[i_r, i_c] == 1, permafrost[i_r, i_c] == 2) == False:
-                                # Boreal/Cold, no
-                                aez_temp_regime[i_r, i_c] = 8
-                            else:
-                                # Boreal/Cold, with permafrost
-                                aez_temp_regime[i_r, i_c] = 9
-
-                        elif aez_tclimate[i_r, i_c] in range(2, 7) and aez_tzone[i_r, i_c] == 6:
-                            aez_temp_regime[i_r, i_c] = 10  # Arctic/Very Cold
-
+        ##################################################################################################   
         # 4th Step: Moisture Regime classes
         # Moisture Regime Class Definition
         # 1 = M1 (desert/arid areas, 0 <= LGP* < 60)
@@ -1004,251 +1099,109 @@ class ClimateRegime(object):
         # 3 = M3 (sub-humid/moist areas, 180 <= LGP* < 270)
         # 4 = M4 (humid/wet areas, LGP* >= 270)
 
-        aez_moisture_regime = np.zeros(
-            (self.im_height, self.im_width), dtype=int)
+        aez_moisture_regime = np.zeros((self.im_height, self.im_width), dtype='int8') # initialization
+        
+        # check if LGP t>5 is greater or less than 330 days. If greater, LGP will be used; otherwise, LGP_equv will be used.
+        aez_moisture_regime=np.where((lgpt_5>330)&(lgp>=270),4,aez_moisture_regime) # Class 4 (M4)
+        aez_moisture_regime=np.where((lgpt_5>330)&(lgp>=180)&(lgp<270)&(aez_moisture_regime==0),3,aez_moisture_regime) # Class 3 (M3)
+        aez_moisture_regime=np.where((lgpt_5>330)&(lgp>=60)&(lgp<180)&(aez_moisture_regime==0),2,aez_moisture_regime) # Class 2 (M2)
+        aez_moisture_regime=np.where((lgpt_5>330)&(lgp>=0)&(lgp<60)&(aez_moisture_regime==0),1,aez_moisture_regime) # Class 1 (M1)
+        aez_moisture_regime=np.where((lgpt_5<=330)&(lgp_equv>=270)&(aez_moisture_regime==0),4,aez_moisture_regime) # Class 4 (M4)
+        aez_moisture_regime=np.where((lgpt_5<=330)&(lgp_equv>=180)&(lgp_equv<270)&(aez_moisture_regime==0),3,aez_moisture_regime) # Class 3 (M3)
+        aez_moisture_regime=np.where((lgpt_5<=330)&(lgp_equv>=60)&(lgp_equv<180)&(aez_moisture_regime==0),2,aez_moisture_regime) # Class 2 (M2)
+        aez_moisture_regime=np.where((lgpt_5<=330)&(lgp_equv>=0)&(lgp_equv<60)&(aez_moisture_regime==0),1,aez_moisture_regime) # Class 1 (M1)
+        ##################################################################################################    
 
-        for i_r in range(self.im_height):
-            for i_c in range(self.im_width):
-                if self.set_mask:
-                    if self.im_mask[i_r, i_c] == self.nodata_val:
-                        continue
-                    else:
-
-                        # check if LGP t>5 is greater or less than 330 days. If greater, LGP will be used; otherwise, LGP_equv will be used.
-                        if lgpt_5[i_r, i_c] > 330:
-
-                            # Class 4 (M4)
-                            if lgp[i_r, i_c] >= 270:
-                                aez_moisture_regime[i_r, i_c] = 4
-
-                            # Class 3 (M3)
-                            elif lgp[i_r, i_c] >= 180 and lgp[i_r, i_c] < 270:
-                                aez_moisture_regime[i_r, i_c] = 3
-
-                            # Class 2 (M2)
-                            elif lgp[i_r, i_c] >= 60 and lgp[i_r, i_c] < 180:
-                                aez_moisture_regime[i_r, i_c] = 2
-
-                            # Class 1 (M1)
-                            elif lgp[i_r, i_c] >= 0 and lgp[i_r, i_c] < 60:
-                                aez_moisture_regime[i_r, i_c] = 1
-
-                        elif lgpt_5[i_r, i_c] <= 330:
-
-                            # Class 4 (M4)
-                            if lgp_equv[i_r, i_c] >= 270:
-                                aez_moisture_regime[i_r, i_c] = 4
-
-                            # Class 3 (M3)
-                            elif lgp_equv[i_r, i_c] >= 180 and lgp_equv[i_r, i_c] < 270:
-                                aez_moisture_regime[i_r, i_c] = 3
-
-                            # Class 2 (M2)
-                            elif lgp_equv[i_r, i_c] >= 60 and lgp_equv[i_r, i_c] < 180:
-                                aez_moisture_regime[i_r, i_c] = 2
-
-                            # Class 1 (M1)
-                            elif lgp_equv[i_r, i_c] >= 0 and lgp_equv[i_r, i_c] < 60:
-                                aez_moisture_regime[i_r, i_c] = 1
-
+        ##################################################################################################  
         # Now, we will classify the agro-ecological zonation
         # By GAEZ v4 Documentation, there are prioritized sequential assignment of AEZ classes in order to ensure the consistency of classification
-        aez = np.zeros((self.im_height, self.im_width), dtype=int)
+        if self.parallel:
+            soil_terrain_lulc=soil_terrain_lulc.compute() # dask compute/convert to numpy
 
-        for i_r in range(self.im_height):
-            for i_c in range(self.im_width):
-                if self.set_mask:
-                    if self.im_mask[i_r, i_c] == self.nodata_val:
-                        continue
-                    else:
-                        # if it's urban built-up lulc, Dominantly urban/built-up land
-                        if soil_terrain_lulc[i_r, i_c] == 8:
-                            aez[i_r, i_c] = 56
+        # debug
+        # self.soil_terrain_lulc=soil_terrain_lulc
+        # self.aez_moisture_regime=aez_moisture_regime
+        # self.aez_temp_regime=aez_temp_regime
+        # self.aez_tzone=aez_tzone
+        # self.aez_tclimate=aez_tclimate
 
-                        # if it's water/ dominantly water
-                        elif soil_terrain_lulc[i_r, i_c] == 7:
-                            aez[i_r, i_c] = 57
-
-                        # if it's dominantly very steep terrain/Dominantly very steep terrain
-                        elif soil_terrain_lulc[i_r, i_c] == 1:
-                            aez[i_r, i_c] = 49
-
-                        # if it's irrigated soils/ Land with ample irrigated soils
-                        elif soil_terrain_lulc[i_r, i_c] == 6:
-                            aez[i_r, i_c] = 51
-
-                        # if it's hydromorphic soils/ Dominantly hydromorphic soils
-                        elif soil_terrain_lulc[i_r, i_c] == 2:
-                            aez[i_r, i_c] = 52
-
-                        # Desert/Arid climate
-                        elif aez_moisture_regime[i_r, i_c] == 1:
-                            aez[i_r, i_c] = 53
-
-                        # BO/Cold climate, with Permafrost
-                        elif aez_temp_regime[i_r, i_c] == 9 and aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4] == True:
-                            aez[i_r, i_c] = 54
-
-                        # Arctic/ Very cold climate
-                        elif aez_temp_regime[i_r, i_c] == 10 and aez_moisture_regime[i_r, i_c] in [1, 2, 3, 4] == True:
-                            aez[i_r, i_c] = 55
-
-                        # Severe soil/terrain limitations
-                        elif soil_terrain_lulc[i_r, i_c] == 5:
-                            aez[i_r, i_c] = 50
-
-                        #######
-                        elif aez_temp_regime[i_r, i_c] == 1 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 1
-
-                        elif aez_temp_regime[i_r, i_c] == 1 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 2
-
-                        elif aez_temp_regime[i_r, i_c] == 1 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 3
-
-                        elif aez_temp_regime[i_r, i_c] == 1 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 4
-
-                        elif aez_temp_regime[i_r, i_c] == 1 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 5
-
-                        elif aez_temp_regime[i_r, i_c] == 1 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 6
-                        ####
-                        elif aez_temp_regime[i_r, i_c] == 2 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 7
-
-                        elif aez_temp_regime[i_r, i_c] == 2 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 8
-
-                        elif aez_temp_regime[i_r, i_c] == 2 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 9
-
-                        elif aez_temp_regime[i_r, i_c] == 2 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 10
-
-                        elif aez_temp_regime[i_r, i_c] == 2 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 11
-
-                        elif aez_temp_regime[i_r, i_c] == 2 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 12
-                        ###
-                        elif aez_temp_regime[i_r, i_c] == 3 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 13
-
-                        elif aez_temp_regime[i_r, i_c] == 3 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 14
-
-                        elif aez_temp_regime[i_r, i_c] == 3 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 15
-
-                        elif aez_temp_regime[i_r, i_c] == 3 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 16
-
-                        elif aez_temp_regime[i_r, i_c] == 3 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 17
-
-                        elif aez_temp_regime[i_r, i_c] == 3 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 18
-                        #####
-                        elif aez_temp_regime[i_r, i_c] == 4 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 19
-
-                        elif aez_temp_regime[i_r, i_c] == 4 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 20
-
-                        elif aez_temp_regime[i_r, i_c] == 4 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 21
-
-                        elif aez_temp_regime[i_r, i_c] == 4 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 22
-
-                        elif aez_temp_regime[i_r, i_c] == 4 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 23
-
-                        elif aez_temp_regime[i_r, i_c] == 4 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 24
-                        #####
-                        elif aez_temp_regime[i_r, i_c] == 5 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 25
-
-                        elif aez_temp_regime[i_r, i_c] == 5 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 26
-
-                        elif aez_temp_regime[i_r, i_c] == 5 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 27
-
-                        elif aez_temp_regime[i_r, i_c] == 5 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 28
-
-                        elif aez_temp_regime[i_r, i_c] == 5 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 29
-
-                        elif aez_temp_regime[i_r, i_c] == 5 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 30
-                        ######
-
-                        elif aez_temp_regime[i_r, i_c] == 6 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 31
-
-                        elif aez_temp_regime[i_r, i_c] == 6 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 32
-
-                        elif aez_temp_regime[i_r, i_c] == 6 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 33
-
-                        elif aez_temp_regime[i_r, i_c] == 6 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 34
-
-                        elif aez_temp_regime[i_r, i_c] == 6 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 35
-
-                        elif aez_temp_regime[i_r, i_c] == 6 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 36
-
-                        ###
-                        elif aez_temp_regime[i_r, i_c] == 7 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 37
-
-                        elif aez_temp_regime[i_r, i_c] == 7 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 38
-
-                        elif aez_temp_regime[i_r, i_c] == 7 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 39
-
-                        elif aez_temp_regime[i_r, i_c] == 7 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 40
-
-                        elif aez_temp_regime[i_r, i_c] == 7 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 41
-
-                        elif aez_temp_regime[i_r, i_c] == 7 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 42
-                        #####
-
-                        elif aez_temp_regime[i_r, i_c] == 8 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 43
-
-                        elif aez_temp_regime[i_r, i_c] == 8 and aez_moisture_regime[i_r, i_c] == 2 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 44
-
-                        elif aez_temp_regime[i_r, i_c] == 8 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 45
-
-                        elif aez_temp_regime[i_r, i_c] == 8 and aez_moisture_regime[i_r, i_c] == 3 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 46
-
-                        elif aez_temp_regime[i_r, i_c] == 8 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 3:
-                            aez[i_r, i_c] = 47
-
-                        elif aez_temp_regime[i_r, i_c] == 8 and aez_moisture_regime[i_r, i_c] == 4 and soil_terrain_lulc[i_r, i_c] == 4:
-                            aez[i_r, i_c] = 48          
+        aez = np.zeros((self.im_height, self.im_width), dtype='int8') # initialization
+        aez=np.where((soil_terrain_lulc==8)&(aez==0),56,aez) # urban built-up lulc, Dominantly urban/built-up land
+        aez=np.where((soil_terrain_lulc==7)&(aez==0),57,aez) # water/ dominantly water
+        aez=np.where((soil_terrain_lulc==1)&(aez==0),49,aez) # dominantly very steep terrain/Dominantly very steep terrain 
+        aez=np.where((soil_terrain_lulc==6)&(aez==0),51,aez) # irrigated soils/ Land with ample irrigated soils
+        aez=np.where((soil_terrain_lulc==2)&(aez==0),52,aez) # hydromorphic soils/ Dominantly hydromorphic soils
+        aez=np.where((aez_moisture_regime==1)&(aez==0),53,aez) # Desert/Arid climate
+        aez=np.where((aez_temp_regime==9)&(aez_moisture_regime>=1)&(aez_moisture_regime<=4)&(aez==0),54,aez) # BO/Cold climate, with Permafrost
+        aez=np.where((aez_temp_regime==10)&(aez_moisture_regime>=1)&(aez_moisture_regime<=4)&(aez==0),55,aez) # Arctic/ Very cold climate
+        aez=np.where((soil_terrain_lulc==5)&(aez==0),50,aez) # Severe soil/terrain limitations
+        #######
+        aez=np.where((aez_temp_regime==1)&(aez_moisture_regime==2)&(soil_terrain_lulc==3)&(aez==0),1,aez) 
+        aez=np.where((aez_temp_regime==1)&(aez_moisture_regime==2)&(soil_terrain_lulc==4)&(aez==0),2,aez) 
+        aez=np.where((aez_temp_regime==1)&(aez_moisture_regime==3)&(soil_terrain_lulc==3)&(aez==0),3,aez) 
+        aez=np.where((aez_temp_regime==1)&(aez_moisture_regime==3)&(soil_terrain_lulc==4)&(aez==0),4,aez) 
+        aez=np.where((aez_temp_regime==1)&(aez_moisture_regime==4)&(soil_terrain_lulc==3)&(aez==0),5,aez) 
+        aez=np.where((aez_temp_regime==1)&(aez_moisture_regime==4)&(soil_terrain_lulc==4)&(aez==0),6,aez) 
+        #######
+        aez=np.where((aez_temp_regime==2)&(aez_moisture_regime==2)&(soil_terrain_lulc==3)&(aez==0),7,aez) 
+        aez=np.where((aez_temp_regime==2)&(aez_moisture_regime==2)&(soil_terrain_lulc==4)&(aez==0),8,aez) 
+        aez=np.where((aez_temp_regime==2)&(aez_moisture_regime==3)&(soil_terrain_lulc==3)&(aez==0),9,aez) 
+        aez=np.where((aez_temp_regime==2)&(aez_moisture_regime==3)&(soil_terrain_lulc==4)&(aez==0),10,aez) 
+        aez=np.where((aez_temp_regime==2)&(aez_moisture_regime==4)&(soil_terrain_lulc==3)&(aez==0),11,aez) 
+        aez=np.where((aez_temp_regime==2)&(aez_moisture_regime==4)&(soil_terrain_lulc==4)&(aez==0),12,aez) 
+        #######
+        aez=np.where((aez_temp_regime==3)&(aez_moisture_regime==2)&(soil_terrain_lulc==3)&(aez==0),13,aez) 
+        aez=np.where((aez_temp_regime==3)&(aez_moisture_regime==2)&(soil_terrain_lulc==4)&(aez==0),14,aez) 
+        aez=np.where((aez_temp_regime==3)&(aez_moisture_regime==3)&(soil_terrain_lulc==3)&(aez==0),15,aez) 
+        aez=np.where((aez_temp_regime==3)&(aez_moisture_regime==3)&(soil_terrain_lulc==4)&(aez==0),16,aez) 
+        aez=np.where((aez_temp_regime==3)&(aez_moisture_regime==4)&(soil_terrain_lulc==3)&(aez==0),17,aez) 
+        aez=np.where((aez_temp_regime==3)&(aez_moisture_regime==4)&(soil_terrain_lulc==4)&(aez==0),18,aez)    
+        #######
+        aez=np.where((aez_temp_regime==4)&(aez_moisture_regime==2)&(soil_terrain_lulc==3)&(aez==0),19,aez) 
+        aez=np.where((aez_temp_regime==4)&(aez_moisture_regime==2)&(soil_terrain_lulc==4)&(aez==0),20,aez) 
+        aez=np.where((aez_temp_regime==4)&(aez_moisture_regime==3)&(soil_terrain_lulc==3)&(aez==0),21,aez) 
+        aez=np.where((aez_temp_regime==4)&(aez_moisture_regime==3)&(soil_terrain_lulc==4)&(aez==0),22,aez) 
+        aez=np.where((aez_temp_regime==4)&(aez_moisture_regime==4)&(soil_terrain_lulc==3)&(aez==0),23,aez) 
+        aez=np.where((aez_temp_regime==4)&(aez_moisture_regime==4)&(soil_terrain_lulc==4)&(aez==0),24,aez)    
+        #######
+        aez=np.where((aez_temp_regime==5)&(aez_moisture_regime==2)&(soil_terrain_lulc==3)&(aez==0),25,aez) 
+        aez=np.where((aez_temp_regime==5)&(aez_moisture_regime==2)&(soil_terrain_lulc==4)&(aez==0),26,aez) 
+        aez=np.where((aez_temp_regime==5)&(aez_moisture_regime==3)&(soil_terrain_lulc==3)&(aez==0),27,aez) 
+        aez=np.where((aez_temp_regime==5)&(aez_moisture_regime==3)&(soil_terrain_lulc==4)&(aez==0),28,aez) 
+        aez=np.where((aez_temp_regime==5)&(aez_moisture_regime==4)&(soil_terrain_lulc==3)&(aez==0),29,aez) 
+        aez=np.where((aez_temp_regime==5)&(aez_moisture_regime==4)&(soil_terrain_lulc==4)&(aez==0),30,aez)    
+        #######
+        aez=np.where((aez_temp_regime==6)&(aez_moisture_regime==2)&(soil_terrain_lulc==3)&(aez==0),31,aez) 
+        aez=np.where((aez_temp_regime==6)&(aez_moisture_regime==2)&(soil_terrain_lulc==4)&(aez==0),32,aez) 
+        aez=np.where((aez_temp_regime==6)&(aez_moisture_regime==3)&(soil_terrain_lulc==3)&(aez==0),33,aez) 
+        aez=np.where((aez_temp_regime==6)&(aez_moisture_regime==3)&(soil_terrain_lulc==4)&(aez==0),34,aez) 
+        aez=np.where((aez_temp_regime==6)&(aez_moisture_regime==4)&(soil_terrain_lulc==3)&(aez==0),35,aez) 
+        aez=np.where((aez_temp_regime==6)&(aez_moisture_regime==4)&(soil_terrain_lulc==4)&(aez==0),36,aez)    
+        #######  
+        aez=np.where((aez_temp_regime==7)&(aez_moisture_regime==2)&(soil_terrain_lulc==3)&(aez==0),37,aez) 
+        aez=np.where((aez_temp_regime==7)&(aez_moisture_regime==2)&(soil_terrain_lulc==4)&(aez==0),38,aez) 
+        aez=np.where((aez_temp_regime==7)&(aez_moisture_regime==3)&(soil_terrain_lulc==3)&(aez==0),39,aez) 
+        aez=np.where((aez_temp_regime==7)&(aez_moisture_regime==3)&(soil_terrain_lulc==4)&(aez==0),40,aez) 
+        aez=np.where((aez_temp_regime==7)&(aez_moisture_regime==4)&(soil_terrain_lulc==3)&(aez==0),41,aez) 
+        aez=np.where((aez_temp_regime==7)&(aez_moisture_regime==4)&(soil_terrain_lulc==4)&(aez==0),42,aez)    
+        #######  
+        aez=np.where((aez_temp_regime==8)&(aez_moisture_regime==2)&(soil_terrain_lulc==3)&(aez==0),43,aez) 
+        aez=np.where((aez_temp_regime==8)&(aez_moisture_regime==2)&(soil_terrain_lulc==4)&(aez==0),44,aez) 
+        aez=np.where((aez_temp_regime==8)&(aez_moisture_regime==3)&(soil_terrain_lulc==3)&(aez==0),45,aez) 
+        aez=np.where((aez_temp_regime==8)&(aez_moisture_regime==3)&(soil_terrain_lulc==4)&(aez==0),46,aez) 
+        aez=np.where((aez_temp_regime==8)&(aez_moisture_regime==4)&(soil_terrain_lulc==3)&(aez==0),47,aez) 
+        aez=np.where((aez_temp_regime==8)&(aez_moisture_regime==4)&(soil_terrain_lulc==4)&(aez==0),48,aez)    
+        #######   
 
         if self.set_mask:
-            return np.where(self.im_mask, aez, np.nan)
-        else:        
-            return aez
+            if self.parallel:
+                mask=self.im_mask.compute() # dask compute/convert to numpy
+            else:
+                mask=self.im_mask
+
+            return np.where(mask, aez.astype('float32'), np.float32(np.nan))
+        else:
+            return aez                
     
     """ 
     Note from Swun: In this code, the logic of temperature amplitude is not added 
@@ -1257,205 +1210,312 @@ class ClimateRegime(object):
     according to Gunther's agreement and the documentation.
     """
          
-    def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t10, ts_t0):
-        
+    def getMultiCroppingZones(self, t_climate, lgp, lgp_t5, lgp_t10, ts_t0, ts_t10):
+        """
+        This function refers to the assessment of multiple cropping potential
+        across the area through matching both growth cycle and temperature
+        requirements for individual suitable crops with time avaiability of 
+        crop growth. The logic considers crop suitability for rainfed and 
+        irrigated conditions.
+
+        Args:
+        ----------
+        t_climate : a 2-D numpy array
+            Thermal Climate.
+        lgp : a 2-D numpy array
+            Length of Growing Period.
+        lgp_t5 : a 2-D numpy array
+            Thermal growing period in days with mean daily temperatures above 5 degree Celsius.
+        lgp_t10 : a 2-D numpy array
+            Thermal growing period in days with mean daily temperatures above 10 degree Celsius.
+        ts_t0 : a 2-D numpy array
+            Accumulated temperature (degree-days) on days when mean daily temperature is greater or equal to 0 degree Celsius.
+        ts_t10 : a 2-D numpy array
+            Accumulated temperature (degree-days) on days when mean daily temperature is greater or equal to 10 degree Celsius.
+
+        Returns
+        -------
+        A list of two 2-D numpy arrays. The first array refers to multi-cropping
+        zone for rainfed condition, and the second refers to multi-cropping zone
+        for irrigated condition.
+
+        """    
+        if self.parallel:
+            import dask.array as da
+            
+            # interp_daily_np=UtilitiesCalc.UtilitiesCalc(self.chunk2D,self.chunk3D).smoothDailyTemp(self.doy_start-1,self.doy_end-1, self.im_mask, self.meanT_daily)
+            interp_daily_np=UtilitiesCalc.UtilitiesCalc(self.chunk2D,self.chunk3D).smoothDailyTemp(self.doy_start,self.doy_end, self.im_mask, self.meanT_daily)
+            interp_daily_da=da.from_array(interp_daily_np,chunks=self.chunk3D)  # convert to dask
+            
+            interp_meanT_veg_T5=np.where(interp_daily_da>=5.,interp_daily_da,np.nan)    # dask array   
+            interp_meanT_veg_T10=np.where(interp_daily_da>=10.,interp_daily_da,np.nan)  # dask array 
+            ts_g_t5=np.nansum(interp_meanT_veg_T5,axis=2).compute()   # accumulated interpolated daily T during growing period when interpolated meanT >=5    
+            ts_g_t10=np.nansum(interp_meanT_veg_T10,axis=2).compute() # accumulated interpolated daily T during growing period when interpolated meanT >=10  
+        else:
+            interp_meanT_veg_T5=np.where(self.interp_daily_temp>=5.,self.interp_daily_temp,np.float32(np.nan))   
+            interp_meanT_veg_T10=np.where(self.interp_daily_temp>=10.,self.interp_daily_temp,np.float32(np.nan))   
+            ts_g_t5=np.nansum(interp_meanT_veg_T5,axis=2)   # accumulated interpolated daily T during growing period when interpolated meanT >=5
+            ts_g_t10=np.nansum(interp_meanT_veg_T10,axis=2) # accumulated interpolated daily T during growing period when interpolated meanT >=10
+
+        del interp_meanT_veg_T5, interp_meanT_veg_T10 # clean up          
+
         # defining the constant arrays for rainfed and irrigated conditions, all pixel values start with 1
-        multi_crop_rain = np.zeros((self.im_height, self.im_width), dtype = int) # all values started with Zone A
-        multi_crop_irr = np.zeros((self.im_height, self.im_width), dtype = int) # all vauels starts with Zone A
-        
-        ts_g_t5 = np.zeros((self.im_height, self.im_width))
-        ts_g_t10 = np.zeros((self.im_height, self.im_width))
-        
-        # Calculation of Accumulated temperature during the growing period at specific temperature thresholds: 5 and 10 degree Celsius
-        
-        for i_r in range(self.im_height):
-            for i_c in range(self.im_width):
-                
-                if self.set_mask:
-                    
-                    if self.im_mask[i_r, i_c]== self.nodata_val:
-                        continue
-                    
-                    else:
-                        
-                        temp_1D = self.meanT_daily[i_r, i_c, :]
-                        days = np.arange(0,365)
-                        
-                        deg = 5 # order of polynomical fit
-                        
-                        # creating the function of polyfit
-                        polyfit = np.poly1d(np.polyfit(days,temp_1D,deg))
-                        
-                        # getting the interpolated value at each DOY
-                        interp_daily_temp = polyfit(days)
-                        
-                        # Getting the start and end day of vegetative period
-                        # The crop growth requires minimum temperature of at least 5 deg Celsius
-                        # If not, the first DOY and the lst DOY of a year will be considered
-                        try:
-                            veg_period = days[interp_daily_temp >=5]
-                            start_veg = veg_period[0]
-                            end_veg = veg_period[-1]
-                        except:
-                            start_veg = 0
-                            end_veg = 364
-                        
-                        # Slicing the temperature within the vegetative period
-                        interp_meanT_veg_T5 = interp_daily_temp[start_veg:end_veg]
-                        interp_meanT_veg_T10 =  interp_daily_temp[start_veg:end_veg] *1
-                        
-                        # Removing the temperature of 5 and 10 deg Celsius thresholds
-                        interp_meanT_veg_T5[interp_meanT_veg_T5 < 5] = 0
-                        interp_meanT_veg_T10[interp_meanT_veg_T10 <10] = 0
-                        
-                        # Calculation of Accumulated temperatures during growing period
-                        ts_g_t5[i_r, i_c] = np.sum(interp_meanT_veg_T5)
-                        ts_g_t10[i_r, i_c] = np.sum(interp_meanT_veg_T10)
-        
+        multi_crop_rain = np.ones((self.im_height, self.im_width), dtype = 'int8') # all values started with Zone A (intialization to 1)   
+        multi_crop_irr = np.ones((self.im_height, self.im_width), dtype = 'int8') # all vauels starts with Zone A (initialization to 1)  
+              
         """Multi cropping zonation for rainfed conditions"""
-        for i_r in range(self.im_height):
-            for i_c in range(self.im_width):
-                
-                if self.set_mask:
-                    
-                    if self.im_mask[i_r, i_c]== self.nodata_val:
-                        continue
-                    
-                    else:
-                        
-                        if t_climate[i_r, i_c]== 1:
-                            
-                            if np.all([lgp[i_r, i_c]>=360, lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=360, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])== True:
-                                multi_crop_rain[i_r, i_c] = 8
-                            
-                            elif np.all([lgp[i_r, i_c]>=300, lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])== True:
-                                multi_crop_rain[i_r, i_c] = 6
-                            
-                            elif np.all([lgp[i_r, i_c]>=270, lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                                multi_crop_rain[i_r, i_c] = 4 # Ok
-                                
-                            elif np.all([lgp[i_r, i_c]>=240, lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                                multi_crop_rain[i_r, i_c] = 4 # Ok
-                            
-                            elif np.all([lgp[i_r, i_c]>=210, lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                                multi_crop_rain[i_r, i_c] = 4 # OK
-                            
-                            elif np.all([lgp[i_r, i_c]>=220, lgp_t5[i_r, i_c]>=220, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                                multi_crop_rain[i_r, i_c] = 3 #OK
-                            
-                            elif np.all([lgp[i_r, i_c]>=200, lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                                multi_crop_rain[i_r, i_c] = 3# OK
-                            
-                            elif np.all([lgp[i_r, i_c]>=180, lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                                multi_crop_rain[i_r, i_c] = 3 # OK
-                            
-                            elif np.all([lgp[i_r, i_c]>=45, lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200]) == True:
-                                multi_crop_rain[i_r, i_c] = 2 # Ok
-                                
-                            else:
-                                multi_crop_rain[i_r, i_c] = 1 # Ok
-                            
-                        elif t_climate[i_r, i_c] != 1:
-                            
-                            if np.all([lgp[i_r, i_c]>=360, lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=330, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])== True:
-                                multi_crop_rain[i_r, i_c] = 8 # Ok
-                            
-                            elif np.all([lgp[i_r, i_c]>=330, lgp_t5[i_r, i_c]>=330, lgp_t10[i_r, i_c]>=270, ts_t0[i_r, i_c]>=5700, ts_t10[i_r, i_c]>=5500])== True:
-                                multi_crop_rain[i_r, i_c] = 7 # Ok
-                            
-                            elif np.all([lgp[i_r, i_c]>=300, lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=5400, ts_t10[i_r, i_c]>=5100, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])== True:
-                                multi_crop_rain[i_r, i_c] = 6 # Ok
-                            
-                            elif np.all([lgp[i_r, i_c]>=240, lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=180, ts_t0[i_r, i_c]>=4800, ts_t10[i_r, i_c]>=4500, ts_g_t5[i_r, i_c]>=4300, ts_g_t10[i_r, i_c]>=4000])== True:
-                                multi_crop_rain[i_r, i_c] = 5 # Ok
-                            
-                            elif np.all([lgp[i_r, i_c]>=210, lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=4500, ts_t10[i_r, i_c]>=3600, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                                multi_crop_rain[i_r, i_c] = 4 #OK
-                            
-                            elif np.all([lgp[i_r, i_c]>=180, lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=3600, ts_t10[i_r, i_c]>=3000, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                                multi_crop_rain[i_r, i_c] = 3 # Ok
-                            
-                            elif np.all([lgp[i_r, i_c]>=45, lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200]) == True:
-                                multi_crop_rain[i_r, i_c] = 2 #Ok
-                            
-                            else:
-                                multi_crop_rain[i_r, i_c] = 1 #Ok
-                            
+        multi_crop_rain=np.where((t_climate==1)&(lgp>=360)&(lgp_t5>=360)&(lgp_t10>=360)&(ts_t0>=7200)&(ts_t10>=7000),8,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate==1)&(lgp>=300)&(lgp_t5>=300)&(lgp_t10>=240)&(ts_t0>=7200)&(ts_g_t5>=5100)&(ts_g_t10>=4800)&(multi_crop_rain==1),6,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate==1)&(lgp>=270)&(lgp_t5>=270)&(lgp_t10>=165)&(ts_t0>=5500)&(ts_g_t5>=4000)&(ts_g_t10>=3200)&(multi_crop_rain==1),4,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate==1)&(lgp>=240)&(lgp_t5>=240)&(lgp_t10>=165)&(ts_t0>=6400)&(ts_g_t5>=4000)&(ts_g_t10>=3200)&(multi_crop_rain==1),4,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate==1)&(lgp>=210)&(lgp_t5>=240)&(lgp_t10>=165)&(ts_t0>=7200)&(ts_g_t5>=4000)&(ts_g_t10>=3200)&(multi_crop_rain==1),4,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate==1)&(lgp>=220)&(lgp_t5>=220)&(lgp_t10>=120)&(ts_t0>=5500)&(ts_g_t5>=3200)&(ts_g_t10>=2700)&(multi_crop_rain==1),3,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate==1)&(lgp>=200)&(lgp_t5>=200)&(lgp_t10>=120)&(ts_t0>=6400)&(ts_g_t5>=3200)&(ts_g_t10>=2700)&(multi_crop_rain==1),3,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate==1)&(lgp>=180)&(lgp_t5>=200)&(lgp_t10>=120)&(ts_t0>=7200)&(ts_g_t5>=3200)&(ts_g_t10>=2700)&(multi_crop_rain==1),3,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate==1)&(lgp>=45)&(lgp_t5>=120)&(lgp_t10>=90)&(ts_t0>=1600)&(ts_t10>=1200)&(multi_crop_rain==1),2,multi_crop_rain)    
+
+        multi_crop_rain=np.where((t_climate!=1)&(lgp>=360)&(lgp_t5>=360)&(lgp_t10>=330)&(ts_t0>=7200)&(ts_t10>=7000)&(multi_crop_rain==1),8,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate!=1)&(lgp>=330)&(lgp_t5>=330)&(lgp_t10>=270)&(ts_t0>=5700)&(ts_t10>=5500)&(multi_crop_rain==1),7,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate!=1)&(lgp>=300)&(lgp_t5>=300)&(lgp_t10>=240)&(ts_t0>=5400)&(ts_t10>=5100)&(ts_g_t5>=5100)&(ts_g_t10>=4800)&(multi_crop_rain==1),6,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate!=1)&(lgp>=240)&(lgp_t5>=270)&(lgp_t10>=180)&(ts_t0>=4800)&(ts_t10>=4500)&(ts_g_t5>=4300)&(ts_g_t10>=4000)&(multi_crop_rain==1),5,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate!=1)&(lgp>=210)&(lgp_t5>=240)&(lgp_t10>=165)&(ts_t0>=4500)&(ts_t10>=3600)&(ts_g_t5>=4000)&(ts_g_t10>=3200)&(multi_crop_rain==1),4,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate!=1)&(lgp>=180)&(lgp_t5>=200)&(lgp_t10>=120)&(ts_t0>=3600)&(ts_t10>=3000)&(ts_g_t5>=3200)&(ts_g_t10>=2700)&(multi_crop_rain==1),3,multi_crop_rain)   
+        multi_crop_rain=np.where((t_climate!=1)&(lgp>=45)&(lgp_t5>=120)&(lgp_t10>=90)&(ts_t0>=1600)&(ts_t10>=1200)&(multi_crop_rain==1),2,multi_crop_rain)                               
         
         """Multi cropping zonation for irrigated conditions"""
-        for i_r in range(self.im_height):
-            for i_c in range(self.im_width):
-                
-                if self.set_mask:
-                    
-                    if self.im_mask[i_r, i_c]== self.nodata_val:
-                        continue
-                    
-                    else:
-                        
-                        if t_climate[i_r, i_c]== 1:
-                            
-                            if np.all([lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=360, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])==True:
-                                multi_crop_irr[i_r, i_c] =8 # ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])==True:
-                                multi_crop_irr[i_r, i_c] =6 # ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200]) == True:
-                                multi_crop_irr[i_r, i_c] =4 # Ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                                multi_crop_irr[i_r, i_c] =4 #ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])== True:
-                                multi_crop_irr[i_r, i_c] =4 # ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=220, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=5500, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700]) == True:
-                                multi_crop_irr[i_r, i_c] =3 #Ok
-                                
-                            elif np.all([lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=6400, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])== True:
-                                multi_crop_irr[i_r, i_c] =3 #ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=7200, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])==True:
-                                multi_crop_irr[i_r, i_c] =3 # Ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200]) == True:
-                                multi_crop_irr[i_r, i_c] =2 # Ok
-                            
-                            else:
-                                multi_crop_irr[i_r, i_c] =1 # Ok
-                        
-                        elif t_climate[i_r, i_c] != 1:
-                            
-                            if np.all([lgp_t5[i_r, i_c]>=360, lgp_t10[i_r, i_c]>=330, ts_t0[i_r, i_c]>=7200, ts_t10[i_r, i_c]>=7000])==True:
-                                multi_crop_irr[i_r, i_c] = 8
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=330, lgp_t10[i_r, i_c]>=270, ts_t0[i_r, i_c]>=5700, ts_t10[i_r, i_c]>=5500])==True:
-                                multi_crop_irr[i_r, i_c] = 7 # ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=300, lgp_t10[i_r, i_c]>=240, ts_t0[i_r, i_c]>=5400, ts_t10[i_r, i_c]>=5100, ts_g_t5[i_r, i_c]>=5100, ts_g_t10[i_r, i_c]>=4800])==True:
-                                multi_crop_irr[i_r, i_c] = 6 #ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=270, lgp_t10[i_r, i_c]>=180, ts_t0[i_r, i_c]>=4800, ts_t10[i_r, i_c]>=4500, ts_g_t5[i_r, i_c]>=4300, ts_g_t10[i_r, i_c]>=4000])==True:
-                                multi_crop_irr[i_r, i_c] = 5 #ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=240, lgp_t10[i_r, i_c]>=165, ts_t0[i_r, i_c]>=4500, ts_t10[i_r, i_c]>=3600, ts_g_t5[i_r, i_c]>=4000, ts_g_t10[i_r, i_c]>=3200])==True:
-                                multi_crop_irr[i_r, i_c] = 4 #ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=200, lgp_t10[i_r, i_c]>=120, ts_t0[i_r, i_c]>=3600, ts_t10[i_r, i_c]>=3000, ts_g_t5[i_r, i_c]>=3200, ts_g_t10[i_r, i_c]>=2700])==True:
-                                multi_crop_irr[i_r, i_c] = 3 # ok
-                            
-                            elif np.all([lgp_t5[i_r, i_c]>=120, lgp_t10[i_r, i_c]>=90, ts_t0[i_r, i_c]>=1600, ts_t10[i_r, i_c]>=1200])==True:
-                                multi_crop_irr[i_r, i_c] = 2 #ok
-                            
-                            else:
-                                multi_crop_irr[i_r, i_c] = 1
+        multi_crop_irr=np.where((t_climate==1)&(lgp_t5>=360)&(lgp_t10>=360)&(ts_t0>=7200)&(ts_t10>=7000),8,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate==1)&(lgp_t5>=300)&(lgp_t10>=240)&(ts_t0>=7200)&(ts_g_t5>=5100)&(ts_g_t10>=4800)&(multi_crop_irr==1),6,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate==1)&(lgp_t5>=270)&(lgp_t10>=165)&(ts_t0>=5500)&(ts_g_t5>=4000)&(ts_g_t10>=3200)&(multi_crop_irr==1),4,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate==1)&(lgp_t5>=240)&(lgp_t10>=165)&(ts_t0>=6400)&(ts_g_t5>=4000)&(ts_g_t10>=3200)&(multi_crop_irr==1),4,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate==1)&(lgp_t5>=240)&(lgp_t10>=165)&(ts_t0>=7200)&(ts_g_t5>=4000)&(ts_g_t10>=3200)&(multi_crop_irr==1),4,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate==1)&(lgp_t5>=220)&(lgp_t10>=120)&(ts_t0>=5500)&(ts_g_t5>=3200)&(ts_g_t10>=2700)&(multi_crop_irr==1),3,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate==1)&(lgp_t5>=200)&(lgp_t10>=120)&(ts_t0>=6400)&(ts_g_t5>=3200)&(ts_g_t10>=2700)&(multi_crop_irr==1),3,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate==1)&(lgp_t5>=200)&(lgp_t10>=120)&(ts_t0>=7200)&(ts_g_t5>=3200)&(ts_g_t10>=2700)&(multi_crop_irr==1),3,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate==1)&(lgp_t5>=120)&(lgp_t10>=90)&(ts_t0>=1600)&(ts_t10>=1200)&(multi_crop_irr==1),2,multi_crop_irr)   
+
+        multi_crop_irr=np.where((t_climate!=1)&(lgp_t5>=360)&(lgp_t10>=330)&(ts_t0>=7200)&(ts_t10>=7000)&(multi_crop_irr==1),8,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate!=1)&(lgp_t5>=330)&(lgp_t10>=270)&(ts_t0>=5700)&(ts_t10>=5500)&(multi_crop_irr==1),7,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate!=1)&(lgp_t5>=300)&(lgp_t10>=240)&(ts_t0>=5400)&(ts_t10>=5100)&(ts_g_t5>=5100)&(ts_g_t10>=4800)&(multi_crop_irr==1),6,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate!=1)&(lgp_t5>=270)&(lgp_t10>=180)&(ts_t0>=4800)&(ts_t10>=4500)&(ts_g_t5>=4300)&(ts_g_t10>=4000)&(multi_crop_irr==1),5,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate!=1)&(lgp_t5>=240)&(lgp_t10>=165)&(ts_t0>=4500)&(ts_t10>=3600)&(ts_g_t5>=4000)&(ts_g_t10>=3200)&(multi_crop_irr==1),4,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate!=1)&(lgp_t5>=200)&(lgp_t10>=120)&(ts_t0>=3600)&(ts_t10>=3000)&(ts_g_t5>=3200)&(ts_g_t10>=2700)&(multi_crop_irr==1),3,multi_crop_irr)   
+        multi_crop_irr=np.where((t_climate!=1)&(lgp_t5>=120)&(lgp_t10>=90)&(ts_t0>=1600)&(ts_t10>=1200)&(multi_crop_irr==1),2,multi_crop_irr)   
 
         if self.set_mask:
-            return [np.where(self.im_mask, multi_crop_rain, np.nan), np.where(self.im_mask, multi_crop_irr, np.nan)]
-        else:        
-            return [multi_crop_rain, multi_crop_irr]
-                        
-    
+            if self.parallel:
+                mask=self.im_mask.compute()  # dask compute/convert to numpy
+            else:
+                mask=self.im_mask 
 
-#----------------- End of file -------------------------#
+            return [np.where(mask, multi_crop_rain.astype('float32'), np.float32(np.nan)), np.where(mask, multi_crop_irr.astype('float32'), np.float32(np.nan))]   
+        else:        
+            return [multi_crop_rain, multi_crop_irr]   
+                        
+    #----------------- End of Kerrie's Code -------------------------#
+
+#----------------- Start of KoKo's Code -------------------------#
+    def getAnnualTemperatureAmplitude(self):
+            """Calculate temperature difference between warmest month and coldest month in a year
+
+            Returns:
+                2D numpy: Annual Temperature Amplitude (td2)                       
+            """
+            if self.parallel:
+                import dask
+                
+            
+            max_meanTmonthly=self.meanT_monthly.max(axis=2)  # the maximum monthly meanT
+            min_meanTmonthly=self.meanT_monthly.max(axis=2)  # the manimum monthly meanT
+            annual_Tamplitude= max_meanTmonthly- min_meanTmonthly     
+            
+            if self.set_mask:
+                if self.parallel:
+                    annual_Tamplitude=np.where(self.im_mask, annual_Tamplitude, np.float32(np.nan)).compute()  # dask compute/convert to numpy
+                else:
+                    annual_Tamplitude=np.where(self.im_mask, annual_Tamplitude, np.float32(np.nan))
+                    
+                return annual_Tamplitude
+            
+            else:
+                return annual_Tamplitude.astype('float32')
+            
+    def getEToDaily(self):
+        """Calculate Daily Reference Evapotranspiration (ETo)
+
+        Args:
+            min_temp (3D NumPy): Daily minimum temperature [Celcius]
+            max_temp (3D NumPy): Daily maximum temperature [Celcius]
+            precipitation (3D NumPy): Daily total precipitation [mm/day]
+            short_rad (3D NumPy): Daily solar radiation [W/m2]
+            wind_speed (3D NumPy): Daily windspeed at 2m altitude [m/s]
+            rel_humidity (3D NumPy): Daily relative humidity [percentage decimal, 0-1]
+        Returns:
+           2D NumPy: Length of Potential Evapotranspiration
+        """
+
+        eto_daily = np.zeros((self.im_height, self.im_width, 365))
+                
+
+        # calculation of reference evapotranspiration (ETo)
+        obj_eto = ETOCalc.ETOCalc()
+        eto_daily=obj_eto.calculateETO(1, 365,  self.latitude, self.elevation,self.minT_daily, self.minT_daily, self.wind_speed, self.short_rad_mj, self.rel_humidity)
+                                
+        self.eto_daily=eto_daily
+                
+        return eto_daily
+    
+    def getETaDaily(self):
+        """Calculate Actual Evapotranspiration (ETa)
+
+        Args:
+            Sa (float, optional): Available soil moisture holding capacity [mm/m]. Defaults to 100..
+            D (float, optional): Rooting depth. Defaults to 1..
+
+        Returns:
+           2D NumPy: Length of Actual Evapotranspiration
+        """        
+        kc=1.0 #when average daily temperature stays above 5⁰C for the entire year, the Kc value applied for the reference crop is always 1.0.
+        #============================
+        Txsnm = 0.  # Txsnm - snow melt temperature threshold
+        Fsnm = 5.5  # Fsnm - snow melting coefficient
+        Sa=100.
+        D=1.
+        doy_start=1
+        doy_end = 365
+        #============================
+        Ta365 = self.meanT_daily.copy()
+        Pcp365 = self.totalPrec_daily.copy()
+        Eto365 = self.getEToDaily()
+        lgpt5 = self.lgpt5 #lgp5 is taken as deafault
+        #totalPrec_monthly = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(Pcp365)
+        #islgp=np.where(Ta365>=5,np.int8(1),np.int8(0))
+        #Sb_old = np.zeros((self.height,self.width),dtype='float32')
+        Wb_old = np.zeros((self.height,self.width),dtype='float32')
+        mask_3D=np.broadcast_to(self.im_mask[:,:,np.newaxis],(self.im_height,self.im_width,doy_end))
+        #============================
+        eta_daily = np.zeros(Pcp365.shape)
+        #========ETM Computation==============
+        Etm365 = kc * Eto365  
+        #==========Daily Share of Excess Water (p) Computation==================
+        for i_row in range(self.im_height):
+            for i_col in range(self.im_width):
+                Sb_old = 0.
+                Wb_old = 0.
+                lgpt5_point = lgpt5[i_row, i_col]
+                meanT_daily_point = Ta365[i_row, i_col,:]
+                istart0, istart1 = LGPCalc.rainPeak(meanT_daily_point, lgpt5_point)
+           
+                if self.set_mask:
+                    if self.im_mask[i_row, i_col] == 0:
+                        continue
+                for doy in range(0, 365):
+                    p = LGPCalc.psh(0., Eto365[i_row, i_col, doy])
+           
+        p=np.broadcast_to(p[:,:,np.newaxis],(self.im_height,self.im_width,doy_end)) #change the shape of p into 3 dimensional array to compute daily eta
+        #============================================
+        # call the eta subroutine
+        wb365, wx365, eta_daily= LGPCalc.eta(mask_3D,Wb_old, Etm365, Sa, D, p, Pcp365)
+                
+        if self.set_mask:
+            return np.where(self.im_mask, eta_daily, np.nan)
+        else:
+            return eta_daily
+            
+    def getAnnualP_by_PET100 (self):
+            """AnnualP_by_PET: Annual mean ratio of P/PET where P is daily precipitation and PET 
+                    is daily reference evapotranspiration
+
+            Returns:
+                2D numpy: Annual P/PET (*100) (rid)                       
+            """
+            if self.parallel:
+                import dask
+                            
+            annualP_by_PET=(np.mean(self.P_by_PET_daily,axis=2)) * 100
+            
+            if self.set_mask:
+                if self.parallel:
+                    annualP_by_PET=np.where(self.im_mask, annualP_by_PET, np.float32(np.nan)).compute()  # dask compute/convert to numpy
+                else:
+                    annualP_by_PET=np.where(self.im_mask, annualP_by_PET, np.float32(np.nan))
+                    
+                return annualP_by_PET
+            
+            else:
+                return annualP_by_PET.astype('float32')
+
+    def getAnnualWaterDeficit(self):
+            """Annual Water Deficit WDe (mm): Annual mean of the difference between annual potential and actual evapotranspiration 
+            as simulated in the reference water balance
+            
+            Reference Annual water Deficit (WDe, mm), WDe = ETm-ETa
+            
+            In this wde computation, Kc value is considered as 1 and lgpt value as 5 by default. Definition: For locations 
+            with a year-round temperature growing period, i.e., when average daily temperature stays above 5⁰C for the entire 
+            year, the Kc value applied for the reference crop is always 1.0.
+
+            Returns:
+                2D numpy: Annual Water Deficit (mm, AWC=100) (wde)                       
+            """
+            if self.parallel:
+                import dask
+                
+            
+            Kc=1.0
+            Eto_daily = self.getEToDaily()
+            Eta_daily = self.getEToDaily()
+            #=============ETM Computation====================
+            Etm_daily=Kc * Eto_daily
+            #================================================
+            Wde_daily=Etm_daily - Eta_daily
+            annualWde=(np.mean(Wde_daily,axis=2))
+            
+            if self.set_mask:
+                if self.parallel:
+                    annualWde=np.where(self.im_mask, annualWde, np.float32(np.nan)).compute()  # dask compute/convert to numpy
+                else:
+                    annualWde=np.where(self.im_mask, annualWde, np.float32(np.nan))
+                    
+                return annualWde
+            
+            else:
+                return annualWde.astype('float32')
+            
+    def getNetPrimaryProduction(self):
+            """Annual Water Deficit WDe (mm): Annual mean of the difference between annual potential and actual evapotranspiration 
+            as simulated in the reference water balance
+            
+            Reference Annual water Deficit (WDe, mm), WDe = ETm-ETa
+            
+            In this wde computation, Kc value is considered as 1 and lgpt value as 5 by default. Definition: For locations 
+            with a year-round temperature growing period, i.e., when average daily temperature stays above 5⁰C for the entire 
+            year, the Kc value applied for the reference crop is always 1.0.
+
+            Returns:
+                2D numpy: Annual Water Deficit (mm, AWC=100) (wde)                       
+            """
+            if self.parallel:
+                import dask
+                
+            
+            Kc=1.0
+            Eto_daily = self.getEToDaily()
+            Eta_daily = self.getEToDaily()
+            #=============ETM Computation====================
+            Etm_daily=Kc * Eto_daily
+            #================================================
+            Wde_daily=Etm_daily - Eta_daily
+            
+            annualWde=(np.mean(Wde_daily,axis=2))
+            
+            if self.set_mask:
+                if self.parallel:
+                    annualWde=np.where(self.im_mask, annualWde, np.float32(np.nan)).compute()  # dask compute/convert to numpy
+                else:
+                    annualWde=np.where(self.im_mask, annualWde, np.float32(np.nan))
+                    
+                return annualWde
+            
+            else:
+                return annualWde.astype('float32')
+#----------------- End of KoKo's Code -------------------------#

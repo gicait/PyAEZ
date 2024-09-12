@@ -5,6 +5,7 @@ required to run PyAEZ.
 2021: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet and Kittiphon Boonma
 2024: Kerrie Geil (vectorize and parallelize with dask)
+2024: Htet Yamin Ko Ko (Implement new functions)
 """
 
 import numpy as np
@@ -1463,7 +1464,7 @@ class ClimateRegime(object):
             
             Kc=1.0
             Eto_daily = self.getEToDaily()
-            Eta_daily = self.getEToDaily()
+            Eta_daily = self.getETaDaily()
             #=============ETM Computation====================
             Etm_daily=Kc * Eto_daily
             #================================================
@@ -1482,40 +1483,50 @@ class ClimateRegime(object):
                 return annualWde.astype('float32')
             
     def getNetPrimaryProduction(self):
-            """Annual Water Deficit WDe (mm): Annual mean of the difference between annual potential and actual evapotranspiration 
-            as simulated in the reference water balance
+            """Net Primary Productivity (NPP Irrigation and NPP Rain_fed) (mm): Net primary productivity (NPP) is estimated as a function of incoming solar radiation and soil
+               moisture at the rhizosphere.
             
-            Reference Annual water Deficit (WDe, mm), WDe = ETm-ETa
+                                  NPP=Sum(ETa * RDI * exp(-sqrt(9.87+6.25*RDI)))
             
-            In this wde computation, Kc value is considered as 1 and lgpt value as 5 by default. Definition: For locations 
-            with a year-round temperature growing period, i.e., when average daily temperature stays above 5⁰C for the entire 
-            year, the Kc value applied for the reference crop is always 1.0.
+            For an NPP estimate applicable under Irrigation,  ETa = ETm and Radiative Dryness Index (RDI) of 1.375 are used.
+            
+            For an NPP estimate under natural (rain_fed), RDI is calculated from prevailing net radiation and precipitation of a grid cell and ETa is determined by the
+            GAEZ reference water balance. When water are not limiting, ETa = ETm.
+            RDI= total yearly solar radiation/total yearly precipitation
 
             Returns:
-                2D numpy: Annual Water Deficit (mm, AWC=100) (wde)                       
+                2D numpy: NPP_IR(np2) and NPP_RF (np1)               
             """
             if self.parallel:
                 import dask
                 
             
-            Kc=1.0
-            Eto_daily = self.getEToDaily()
-            Eta_daily = self.getEToDaily()
-            #=============ETM Computation====================
-            Etm_daily=Kc * Eto_daily
-            #================================================
-            Wde_daily=Etm_daily - Eta_daily
+            Eta_daily = self.getETaDaily()
+            #=============Radiative Dryness Index (RDI) Computation====================
+            obj_utilities = UtilitiesCalc.UtilitiesCalc()
+            short_rad_monthly = obj_utilities.averageDailyToMonthly(self.short_rad_mj)
+            annual_total_short_rad=np.sum(short_rad_monthly)
+            annual_total_precipitation=np.sum(self.totalPrec_monthly)
+            rdi=annual_total_short_rad/annual_total_precipitation
+            #==========================NPP with Irrigation and NPP Rain Fed======================
+            npp_ir_daily=Eta_daily * 1.375 * np.exp((-1) * np.sqrt(9.87+(6.25*1.375)))
+            npp_rf_daily=Eta_daily * rdi * np.exp((-1) * np.sqrt(9.87+(6.25*rdi)))
             
-            annualWde=(np.mean(Wde_daily,axis=2))
+            
+            annual_total_npp_ir=(np.sum(npp_ir_daily,axis=2))
+            annual_total_npp_rf=(np.sum(npp_rf_daily,axis=2))
+            
             
             if self.set_mask:
                 if self.parallel:
-                    annualWde=np.where(self.im_mask, annualWde, np.float32(np.nan)).compute()  # dask compute/convert to numpy
+                    annual_total_npp_ir=np.where(self.im_mask, annual_total_npp_rf, np.float32(np.nan)).compute()
+                    annual_total_npp_rf=np.where(self.im_mask, annual_total_npp_rf, np.float32(np.nan)).compute()  # dask compute/convert to numpy
                 else:
-                    annualWde=np.where(self.im_mask, annualWde, np.float32(np.nan))
+                    annual_total_npp_ir=np.where(self.im_mask, annual_total_npp_rf, np.float32(np.nan))
+                    annual_total_npp_rf=np.where(self.im_mask, annual_total_npp_rf, np.float32(np.nan))
                     
-                return annualWde
+                return [annual_total_npp_ir,annual_total_npp_rf]
             
             else:
-                return annualWde.astype('float32')
+                return [annual_total_npp_ir.astype('float32'),annual_total_npp_rf.astype('float32')]
 #----------------- End of KoKo's Code -------------------------#

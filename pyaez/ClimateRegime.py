@@ -1344,12 +1344,7 @@ class ClimateRegime(object):
         """Calculate Daily Reference Evapotranspiration (ETo)
 
         Args:
-            min_temp (3D NumPy): Daily minimum temperature [Celcius]
-            max_temp (3D NumPy): Daily maximum temperature [Celcius]
-            precipitation (3D NumPy): Daily total precipitation [mm/day]
-            short_rad (3D NumPy): Daily solar radiation [W/m2]
-            wind_speed (3D NumPy): Daily windspeed at 2m altitude [m/s]
-            rel_humidity (3D NumPy): Daily relative humidity [percentage decimal, 0-1]
+            
         Returns:
            2D NumPy: Length of Potential Evapotranspiration
         """
@@ -1369,9 +1364,7 @@ class ClimateRegime(object):
         """Calculate Actual Evapotranspiration (ETa)
 
         Args:
-            Sa (float, optional): Available soil moisture holding capacity [mm/m]. Defaults to 100..
-            D (float, optional): Rooting depth. Defaults to 1..
-
+           
         Returns:
            2D NumPy: Length of Actual Evapotranspiration
         """        

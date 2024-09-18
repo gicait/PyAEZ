@@ -1,12 +1,14 @@
 """
-PyAEZ version 2.2 (Dec 2023)
+PyAEZ version 2.4 (Dec 2023)
 Additional calculations used throughout AEZ modules
 2020: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet, K. Boonma
 2023 (Dec): Swun Wunna Htet
+2024 (Dec): Swun Wunna Htet
 
 Modification:
 1. Latitude calculated revised according to GAEZ Fortran routine.
+2. New function added: Yield Gap calculation.
 """
 
 import numpy as np
@@ -164,3 +166,15 @@ class UtilitiesCalc(object):
         """        
         # this function converts wind speed from a particular altitude to wind speed at 2m altitude. wind_speed can be a numpy array (can be 1D, 2D or 3D)
         return wind_speed * (4.87/np.log(67.8*altitude-5.42))
+    
+    def getYieldGap(self, potential, actual):
+        """
+        Calculates the yield gap production (Difference between
+        potential yield and the actual yield production)
+        
+        Args:
+            potential (2-D NumPy Arry, kg/ha): potential yield production
+            actual (2-D NumPy Array, kg/ha): actual yield production
+        """
+
+        return np.subtract(potential, actual)

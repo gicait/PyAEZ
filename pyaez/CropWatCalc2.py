@@ -346,7 +346,14 @@ def YieldReductionByWaterDeficit(yloss_f, eta_cycle, etm_cycle, cycle_len, d_per
     """
 
     '''Convert Percentage of stage in the crop cycle to cumulative number of days'''
-    d_days = np.round(cycle_len * (np.cumsum(d_per)/100) ).astype('int')
+    sum = 0
+    cumu_arr =  np.zeros(4,dtype= 'int8')
+
+    for i in range(cumu_arr.shape[0]):
+        sum += d_per[i]
+        cumu_arr[i] = sum
+
+    d_days = np.round(cycle_len * (np.cumsum(cumu_arr)/100) ).astype('int')
 
     eta_d1 = np.sum( eta_cycle[0:d_days[0]] )
     eta_d2 = np.sum( eta_cycle[d_days[0]:d_days[1]] )
@@ -551,7 +558,6 @@ def calculateMoistureLimitedYieldNumba(irr_or_rain, kc, d_per, cycle_len, Prec, 
     fc2_all = 0.
     fc2_final = 0.
     eta_total = 0.
-    Sb_cycle, Wx_cycle, Wb_cycle,  eta_stage, etm_stage = 0., 0., 0., 0., 0.,
 
 
     # Kc factor adjustment based on local climate conditions are done to rainfed condition only
@@ -561,9 +567,19 @@ def calculateMoistureLimitedYieldNumba(irr_or_rain, kc, d_per, cycle_len, Prec, 
     else:
         adj_kc = kc
     
-    # Start water balance calculation using crop-stage specific kc factors
-    Sb_cycle, Wx_cycle, Wb_cycle, eta_stage, etm_stage = WaterBalance(eto, adj_kc, d_per, cycle_len, Sa, D1, D2, mean_temp, max_temp, Prec, pc)
+    Sb_cycle = None
+    Wx_cycle = None
+    Wb_cycle = None
+    eta_stage = None
+    etm_stage = None
     
+    # Start water balance calculation using crop-stage specific kc factors
+    water_balance_results = WaterBalance(eto, adj_kc, d_per, cycle_len, Sa, D1, D2, mean_temp, max_temp, Prec, pc)
+    Sb_cycle =  water_balance_results[0]
+    Wx_cycle = water_balance_results[1]
+    Wb_cycle = water_balance_results[2]
+    eta_stage =water_balance_results[3]
+    etm_stage = water_balance_results[4]
 
     # calculate total cycle deficit and cumulative over crop stages
     sum_eta_stage = np.sum(eta_stage)
@@ -586,9 +602,9 @@ def calculateMoistureLimitedYieldNumba(irr_or_rain, kc, d_per, cycle_len, Prec, 
         fc2_cycle = YieldReductionByWaterDeficit(yloss_f, eta_stage, etm_stage, cycle_len, d_per)
     
     fc2_final = min(fc2_cycle, fc2_all)
-    if fc2_final < 0: fc2_final = 0.
-
-
-    yld_w = y_potential * fc2_final
+    if fc2_final < 0.01: 
+        fc2_final, yld_w  = 0., 0.
+    else:
+        yld_w = y_potential * fc2_final
 
     return wde, fc2_final, eta_total,  yld_w

@@ -15,6 +15,8 @@ Modification:
     10 and 20 deg Celsius to extract fc3 constraint factor.
 3. Adding missing logic of linear interpolation for wetness-day-specific agro-climatic constraints
 4. Excel sheets of agro-climatic constraint factors are required to provide into the system instead of python file.
+5. Fixed an bug where rel_humidity returns zero array by default.
+6. Fixed an bug where conversion factor applying to shortwave radiation twice.
     
 """
 
@@ -24,7 +26,7 @@ from pyaez import ETOCalc, UtilitiesCalc
 
 class ClimaticConstraints(object):
 
-    def __init__(self, lat_min, lat_max, elevation, mask = None, no_mask_value = None):
+    def __init__(self, lat_min:float, lat_max:float, elevation:int, mask, no_mask_value:int):
         """Calling object class of Climate Constraints. Providing minimum and maximum latitudes, and mask layer.
         
         Args:
@@ -87,7 +89,7 @@ class ClimaticConstraints(object):
                     totalPrec_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(precip[i_row, i_col,:], 1, 365, no_minus_values=True)
                     minT_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(min_temp[i_row, i_col,:], 1, 365)
                     maxT_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(max_temp[i_row, i_col,:], 1, 365)
-                    radiation_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(short_rad[i_row, i_col,:], 1, 365, no_minus_values=True)
+                    radiation_daily[i_row, i_col, :] = (UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(short_rad[i_row, i_col,:], 1, 365, no_minus_values=True)* 3600 * 24)/1000000 # conversion from W/m2 to MJ/m2/day
                     wind_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(wind_speed[i_row, i_col,:], 1, 365, no_minus_values=True)
                     rel_humidity_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(rel_humidity[i_row, i_col,:], 1, 365, no_minus_values=True)
             
@@ -96,32 +98,25 @@ class ClimaticConstraints(object):
             minT_daily = min_temp
             maxT_daily = max_temp
             radiation_daily = (short_rad * 3600 * 24)/1000000 # conversion from W/m2 to MJ/m2/day
-            rel_humidity_daily = np.zeros((self.im_height, self.im_width, 365))
-            wind_daily = np.zeros((self.im_height, self.im_width, 365))
+            rel_humidity_daily = rel_humidity
+            wind_daily = wind_speed
 
-
-            
         mean_temp = (minT_daily + maxT_daily)/2
-        
-        # self.ann_mean = np.mean(mean_temp, 2) # minimum temp of monthly mean temperature it should be
+        # minimum temp of monthly mean temperature it should be
         self.min_T = np.zeros((self.im_height, self.im_width))
 
-        # The minimum temperature of the 12 monthly mean temperatures
         for i in range(self.im_height):
             for j in range(self.im_width):
                 month12_temp = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(mean_temp[i,j,:])
                 self.min_T[i,j] = np.min(month12_temp)
 
-
-
-        shrt_MJ_m2_day = (radiation_daily * 3600 * 24)/1000000 # conversion from W/m2 to MJ/m2/day
-
+        # ETO calculation
         self.eto_daily = np.zeros((self.im_height, self.im_width, 365))
 
         for i in range(self.im_height):
             for j in range(self.im_width):
                 obj_eto = ETOCalc.ETOCalc(1, 365, self.latitude[i,j], self.elevation[i,j])
-                obj_eto.setClimateData(minT_daily[i,j,:], maxT_daily[i,j,:], wind_daily[i,j,:], shrt_MJ_m2_day[i,j,:], rel_humidity_daily[i,j,:])
+                obj_eto.setClimateData(minT_daily[i,j,:], maxT_daily[i,j,:], wind_daily[i,j,:],radiation_daily[i,j,:], rel_humidity_daily[i,j,:])
                 self.eto_daily[i,j,:] = obj_eto.calculateETO()
         
         monthly_precip = np.zeros((self.im_height, self.im_width, 12))
@@ -137,7 +132,7 @@ class ClimaticConstraints(object):
 
         # releasing memory
         del(mean_temp, totalPrec_daily, minT_daily, maxT_daily, radiation_daily, rel_humidity_daily, wind_daily,
-             monthly_eto,shrt_MJ_m2_day, monthly_precip)
+             monthly_eto, monthly_precip)
 
         
 

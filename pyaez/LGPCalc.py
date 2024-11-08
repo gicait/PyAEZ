@@ -358,3 +358,165 @@ def islgpt(Ta):
 
     return ist5
 
+@jit(nopython=True)
+def EtaCalc2(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, istart0, istart1, Sa, D, p, kc_list, lgpt5_point):
+    """Calculate actual evapotranspiration (ETa)
+        This is a Numba routine, which means all the arguments are a single element -- not an array. 
+    Args:
+        Tx365 (float): a daily value of maximum temperature
+        Ta365 (float): a daily value of average temperature
+        Pcp365 (float): a daily value of precipitation
+        Txsnm (float): the maximum temperature threshold, underwhich precip. falls as snow
+        Fsnm (float): snow melt parameter
+        Eto365 (float): a daily value of reference evapotranspiration
+        wb_old (float): water bucket value from the previous day
+        sb_old (float): snow bucket value from the previous day
+        doy (int): day of year
+        istart0 (int): the starting date of the growing period
+        istart1 (int): the ending date of the growing period
+        Sa (int): total available soil water holding capacity
+        D (int): rooting depth
+        p (int): the share of exess water, below which soil moisture starts to become difficult to extract
+        kc_list (list): crop coefficients for water requirements
+        lgpt5_point (float): numbers of days with mean daily tenmperature above 5 degC
+
+    Returns:
+        Eta365 (float): a daily value of the 'Actual Evapotranspiration' (mm)
+        Etm365 (float): a daily value of the 'Maximum Evapotranspiration' (mm)
+        Wb365 (float): a daily value of the 'Soil Water Balance'
+        Wx365 (float): a daily value of the 'Maximum water available to plants'
+        Sb365 (float): a daily value of the 'Snow balance' (mm)
+        kc365 (float): a daily value of the 'crop coefficients for water requirements'
+    """
+
+    # Period with Tmax <= Txsnm (precipitaton falls as snow as is added to snow bucket)
+    if Tx365 <= Txsnm:
+        kc365 = kc_list[0]
+
+        etm = kc_list[0] * Eto365
+        Etm365 = etm
+
+        sbx = sb_old+Pcp365
+
+        if sbx >= etm:
+            Sb365 = sbx-etm
+            Eta365 = etm
+        else:
+            Sb365 = 0
+            wb, wx, Eta = eta(wb_old, etm-sbx, Sa, D, p, 0.)
+            Eta365 = Eta + sbx
+        Wb365 = wb
+        Sb365 = sb_old
+        
+    # Snow-melt takes place; minor evapotranspiration
+    elif Ta365 <= 0.:
+        kc365 = kc_list[0]
+        etm = kc_list[1] * Eto365
+        Etm365 = etm
+        ks = 0.1
+        # Snow-melt function
+        snm = min(Fsnm*(Tx365-Txsnm), sb_old)
+        sbx = sb_old - snm 
+        Salim = Sa*D
+        if sbx >= etm:
+            Sb365 = sbx-etm
+            Eta365 = etm
+            wb = wb_old+snm+Pcp365-etm
+
+            if wb > Salim:
+                wx = wb - Salim
+                wb = Salim
+            else:
+                wx = 0
+        else:
+            Sb365 = 0.
+            wb, wx, Eta = eta(wb_old+snm, etm, Sa, D, p, Pcp365)
+            Eta365 = Eta
+
+        if wb < 0:
+            wb = 0
+      
+        Wb365 = wb
+        Wx365 = wx
+        kc365 = kc_list[1]
+
+    elif Ta365 < 5. and Ta365 > 0.:
+        # Biological activities before start of growing period
+        etm = kc_list[2] * Eto365
+        Etm365 = etm
+
+        # In case there is still snow
+        if sb_old > 0.:
+            snm = min(Fsnm*(Tx365-Txsnm), sb_old)
+        else:
+            snm = 0.
+
+        sbx = sb_old-snm
+
+        wb, wx, Eta = eta(wb_old+snm, etm, Sa, D, p, Pcp365)
+
+        if Eta > Etm365:
+            Eta365 = etm
+        else:
+            Eta365=Eta
+
+        Wx365 = wx
+        Wb365 = wb
+        Sb365 = sbx
+        kc365 = kc_list[2]
+
+    elif lgpt5_point < 365 and Ta365 >= 5.:
+        if doy >= istart0 and doy <= istart1:
+            # case 2 -- kc increases from 0.5 to 1.0 during first month of LGP
+            # case 3 -- kc = 1 until daily Ta falls below 5C
+            xx = min((doy-istart0)/30., 1.)
+            kc = kc_list[3]*(1.-xx)+(kc_list[4]*xx)
+        else:
+            # case 1 -- kc=0.5 for days until start of growing period
+            kc = kc_list[3]
+
+        etm = kc * Eto365
+        Etm365 = etm
+        # In case there is still snow
+        if sb_old > 0.:
+            snm = min(Fsnm*(Tx365-Txsnm), sb_old)
+        else:
+            snm = 0.
+
+        sbx = sb_old-snm
+
+        wb, wx, Eta = eta(wb_old+snm, etm, Sa, D, p, Pcp365)
+
+        if Eta > Etm365:
+            Eta365 = etm
+        else:
+            Eta365 = Eta
+
+        Wb365 = wb
+        Wx365 = wx
+        Sb365 = sbx
+        kc365 = kc
+
+    else:
+        etm = kc_list[4] * Eto365
+        Etm365 = etm
+        # In case there is still snow
+        if sb_old > 0.:
+            snm = min(Fsnm*(Tx365-Txsnm), sb_old)
+        else:
+            snm = 0.
+
+        wb, wx, Eta = eta(wb_old, etm, Sa, D, p, Pcp365)
+
+        if Eta > Etm365:
+            Eta365 = etm
+        else:
+            Eta365 = Eta
+            
+        Wb365 = wb
+        Wx365 = wx
+        Sb365 = sbx
+        kc365 = kc_list[4]
+
+    return Eta365, Etm365, Wb365, Wx365, Sb365, kc365
+

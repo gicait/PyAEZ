@@ -20,8 +20,8 @@ Modification:
 
 import numpy as np
 import pandas as pd
-from pyaez import ETOCalc, UtilitiesCalc
-
+from pyaez.ETOCalc import calculateETONumba
+from pyaez.UtilitiesCalc import generateLatitudeMap, interpMonthlyToDaily, averageDailyToMonthly
 class ClimaticConstraints(object):
 
     def __init__(self, lat_min, lat_max, elevation, mask = None, no_mask_value = None):
@@ -41,7 +41,7 @@ class ClimaticConstraints(object):
         
         self.im_height = elevation.shape[0]
         self.im_width = elevation.shape[1]
-        self.latitude = UtilitiesCalc.UtilitiesCalc().generateLatitudeMap(lat_min, lat_max, self.im_height, self.im_width)
+        self.latitude = generateLatitudeMap(lat_min, lat_max, self.im_height, self.im_width)
 
         self.set_mask = False
 
@@ -84,60 +84,52 @@ class ClimaticConstraints(object):
                         if self.mask[i_row, i_col] == self.no_mask_value:
                             continue
 
-                    totalPrec_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(precip[i_row, i_col,:], 1, 365, no_minus_values=True)
-                    minT_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(min_temp[i_row, i_col,:], 1, 365)
-                    maxT_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(max_temp[i_row, i_col,:], 1, 365)
-                    radiation_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(short_rad[i_row, i_col,:], 1, 365, no_minus_values=True)
-                    wind_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(wind_speed[i_row, i_col,:], 1, 365, no_minus_values=True)
-                    rel_humidity_daily[i_row, i_col, :] = UtilitiesCalc.UtilitiesCalc().interpMonthlyToDaily(rel_humidity[i_row, i_col,:], 1, 365, no_minus_values=True)
+                    totalPrec_daily[i_row, i_col, :] = interpMonthlyToDaily(precip[i_row, i_col,:], 1, 365, no_minus_values=True)
+                    minT_daily[i_row, i_col, :] = interpMonthlyToDaily(min_temp[i_row, i_col,:], 1, 365)
+                    maxT_daily[i_row, i_col, :] = interpMonthlyToDaily(max_temp[i_row, i_col,:], 1, 365)
+                    radiation_daily[i_row, i_col, :] = (interpMonthlyToDaily(short_rad[i_row, i_col,:], 1, 365, no_minus_values=True)* 3600 * 24)/1000000
+                    wind_daily[i_row, i_col, :] = interpMonthlyToDaily(wind_speed[i_row, i_col,:], 1, 365, no_minus_values=True)
+                    rel_humidity_daily[i_row, i_col, :] = interpMonthlyToDaily(rel_humidity[i_row, i_col,:], 1, 365, no_minus_values=True)
             
         else:
             totalPrec_daily = precip
             minT_daily = min_temp
             maxT_daily = max_temp
             radiation_daily = (short_rad * 3600 * 24)/1000000 # conversion from W/m2 to MJ/m2/day
-            rel_humidity_daily = np.zeros((self.im_height, self.im_width, 365))
-            wind_daily = np.zeros((self.im_height, self.im_width, 365))
-
+            rel_humidity_daily = rel_humidity.copy()
+            wind_daily = wind_speed.copy()
 
             
         mean_temp = (minT_daily + maxT_daily)/2
         
-        # self.ann_mean = np.mean(mean_temp, 2) # minimum temp of monthly mean temperature it should be
-        self.min_T = np.zeros((self.im_height, self.im_width))
-
         # The minimum temperature of the 12 monthly mean temperatures
+        self.min_T = np.zeros((self.im_height, self.im_width))
         for i in range(self.im_height):
             for j in range(self.im_width):
-                month12_temp = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(mean_temp[i,j,:])
+                month12_temp = averageDailyToMonthly(mean_temp[i,j,:])
                 self.min_T[i,j] = np.min(month12_temp)
-
-
-
-        shrt_MJ_m2_day = (radiation_daily * 3600 * 24)/1000000 # conversion from W/m2 to MJ/m2/day
 
         self.eto_daily = np.zeros((self.im_height, self.im_width, 365))
 
         for i in range(self.im_height):
             for j in range(self.im_width):
-                obj_eto = ETOCalc.ETOCalc(1, 365, self.latitude[i,j], self.elevation[i,j])
-                obj_eto.setClimateData(minT_daily[i,j,:], maxT_daily[i,j,:], wind_daily[i,j,:], shrt_MJ_m2_day[i,j,:], rel_humidity_daily[i,j,:])
-                self.eto_daily[i,j,:] = obj_eto.calculateETO()
+                self.eto_daily[i,j,:] = calculateETONumba(1, 365, self.latitude[i,j], self.elevation[i,j], minT_daily[i,j,:], maxT_daily[i,j,:],
+                                                           wind_daily[i,j,:], radiation_daily[i,j,:], rel_humidity_daily[i,j,:])
         
         monthly_precip = np.zeros((self.im_height, self.im_width, 12))
         monthly_eto = np.zeros((self.im_height, self.im_width, 12))
         
         for i in range(self.im_height):
             for j in range(self.im_width):
-                monthly_precip[i,j,:] = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(totalPrec_daily[i,j,:])
-                monthly_eto[i,j,:] = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(self.eto_daily[i,j,:])
+                monthly_precip[i,j,:] = averageDailyToMonthly(totalPrec_daily[i,j,:])
+                monthly_eto[i,j,:] = averageDailyToMonthly(self.eto_daily[i,j,:])
         
         self.months_P_gte_eto = np.zeros((self.im_height, self.im_width), dtype = np.int8)
         self.months_P_gte_eto = np.sum(monthly_precip >= monthly_eto, axis = 2)
 
         # releasing memory
         del(mean_temp, totalPrec_daily, minT_daily, maxT_daily, radiation_daily, rel_humidity_daily, wind_daily,
-             monthly_eto,shrt_MJ_m2_day, monthly_precip)
+             monthly_eto, monthly_precip)
 
         
 

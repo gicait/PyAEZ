@@ -259,7 +259,7 @@ class CropSimulation(object):
         None.
         """        
         self.Sa = Sa  # available soil moisture holding capacity (mm/m) , assumption
-        self.croup_group = crop_group  # soil water depletion fraction below which ETa < ETo (from literature)
+        self.crop_group = crop_group  # soil water depletion fraction below which ETa < ETo (from literature)
 
 
     """Nested functions within the mandatory functions"""
@@ -678,7 +678,7 @@ class CropSimulation(object):
                 values = simulateCropCycleOneLocation(start_doy, end_doy, step_doy, leap_year, cycle_len_check_data, LAI_HI_data, climate_data,
                                     self.latitude[i,j], self.elevation[i,j], self.plant_height, self.set_Tsum_screening, self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO,
                                     self.setCropSpecificRule, self.data, self.legume, self.adaptability,
-                                    self.kc, self.d_per, Sa_temp, self.D1, self.D2, self.croup_group, self.yloss_f_all, self.yloss_f, 'I')
+                                    self.kc, self.d_per, Sa_temp, self.D1, self.D2, self.crop_group, self.yloss_f_all, self.yloss_f, 'I')
                 
                 self.final_yield_irrig[i,j] = values[0]
                 self.wde_irr[i,j] = values[1]
@@ -761,7 +761,7 @@ class CropSimulation(object):
                 values = simulateCropCycleOneLocation(start_doy, end_doy, step_doy, leap_year, cycle_len_check_data, LAI_HI_data, climate_data,
                                     self.latitude[i,j], self.elevation[i,j], self.plant_height, self.set_Tsum_screening, self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO,
                                 self.setCropSpecificRule, self.data, self.legume, self.adaptability,
-                                self.kc, self.d_per, Sa_temp, self.D1, self.D2, self.croup_group, self.yloss_f_all, self.yloss_f, 'R')
+                                self.kc, self.d_per, Sa_temp, self.D1, self.D2, self.crop_group, self.yloss_f_all, self.yloss_f, 'R')
                 
                 self.final_yield_rain[i,j] = values[0]
                 self.wde_rain[i,j] = values[1]
@@ -812,12 +812,12 @@ class CropSimulation(object):
         rain = simulateCropCycleOneLocationIntermediates(start_doy, end_doy, step_doy, self.leap_year, cycle_len_check_data_rain, LAI_HI_data, climate_data,
                             self.latitude[i,j], self.elevation[i,j], self.plant_height, self.set_Tsum_screening, self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO,
                         self.setCropSpecificRule, self.data, self.legume, self.adaptability,
-                        self.kc, self.d_per, Sa_temp, self.D1, self.D2, self.croup_group, self.yloss_f_all, self.yloss_f, 'R')
+                        self.kc, self.d_per, Sa_temp, self.D1, self.D2, self.crop_group, self.yloss_f_all, self.yloss_f, 'R')
         
         irrigated = simulateCropCycleOneLocationIntermediates(start_doy, end_doy, step_doy, self.leap_year, cycle_len_check_data_irr, LAI_HI_data, climate_data,
                             self.latitude[i,j], self.elevation[i,j], self.plant_height, self.set_Tsum_screening, self.LnS, self.LsO, self.LO, self.HnS, self.HsO, self.HO,
                         self.setCropSpecificRule, self.data, self.legume, self.adaptability,
-                        self.kc, self.d_per, Sa_temp, self.D1, self.D2, self.croup_group, self.yloss_f_all, self.yloss_f, 'I')
+                        self.kc, self.d_per, Sa_temp, self.D1, self.D2, self.crop_group, self.yloss_f_all, self.yloss_f, 'I')
 
         LAI_rain, HI_rain, LAI_irr, HI_rain = 0., 0., 0., 0.
         # Effective cycle length determination for perennial crops
@@ -995,7 +995,7 @@ class CropSimulation(object):
             # Crop Water Requirement for irrigated conditions
             cropwati = calculateMoistureLimitedYieldNumbaIntermediates('I', self.kc, self.d_per, cycle_len_irr,climate_data[5][ccdi2:ccdi2+cycle_len_irr], climate_data[7][ccdi2:ccdi2+cycle_len_irr], 
                                                                     climate_data[0][ccdi2:ccdi2+cycle_len_irr], climate_data[1][ccdi2:ccdi2+cycle_len_irr], self.plant_height, climate_data[4][ccdi2:ccdi2+cycle_len_irr],
-                                            self.Sa, self.D1, self.D2, climate_data[2][ccdi2:ccdi2+cycle_len_irr], self.croup_group, self.yloss_f_all, self.yloss_f, self.perennial, np.round(cycle_yldi, 0).astype(int))    
+                                            self.Sa, self.D1, self.D2, climate_data[2][ccdi2:ccdi2+cycle_len_irr], self.crop_group, self.yloss_f_all, self.yloss_f, self.perennial, np.round(cycle_yldi, 0).astype(int))    
             wati = {
                 'cycle_start': [ccdi2+1],
                 'cycle_end': [ccdi2+1+cycle_len_irr],
@@ -1006,7 +1006,7 @@ class CropSimulation(object):
                 'Adjusted kc_reprodu':[cropwati[6][1]],
                 'Adjusted kc_maturity':[cropwati[6][2]],
                 'Soil Water Holding Capacity (Sa)':[self.Sa],
-                'Soil Water Depletion Factor Group':[self.croup_group],
+                'Soil Water Depletion Factor Group':[self.crop_group],
                 'plant height': [self.plant_height],
                 'kc_all': [self.kc_all],
                 'y_loss_init':[self.yloss_f[0]],
@@ -1076,7 +1076,7 @@ class CropSimulation(object):
             # Crop Water Requirement for rainfed conditions
             cropwatr = calculateMoistureLimitedYieldNumbaIntermediates('R', self.kc, self.d_per, cycle_len_rain,climate_data[5][ccdr2:ccdr2+cycle_len_rain], climate_data[7][ccdr2:ccdr2+cycle_len_rain], 
                                                                     climate_data[0][ccdr2:ccdr2+cycle_len_rain], climate_data[1][ccdr2:ccdr2+cycle_len_rain], self.plant_height, climate_data[4][ccdr2:ccdr2+cycle_len_rain],
-                                            self.Sa, self.D1, self.D2, climate_data[2][ccdr2:ccdr2+cycle_len_rain], self.croup_group, self.yloss_f_all, self.yloss_f, self.perennial, np.round(cycle_yldr, 0).astype(int))    
+                                            self.Sa, self.D1, self.D2, climate_data[2][ccdr2:ccdr2+cycle_len_rain], self.crop_group, self.yloss_f_all, self.yloss_f, self.perennial, np.round(cycle_yldr, 0).astype(int))    
             watr = {
                 'cycle_start': [ccdr2+1],
                 'cycle_end': [ccdr2+1+cycle_len_rain],
@@ -1087,7 +1087,7 @@ class CropSimulation(object):
                 'Adjusted kc_reprodu':[cropwatr[6][1]],
                 'Adjusted kc_maturity':[cropwatr[6][2]],
                 'Soil Water Holding Capacity (Sa)':[self.Sa],
-                'Soil Water Depletion Factor Group':[self.croup_group],
+                'Soil Water Depletion Factor Group':[self.crop_group],
                 'plant height': [self.plant_height],
                 'kc_all': [self.kc_all],
                 'y_loss_init':[self.yloss_f[0]],

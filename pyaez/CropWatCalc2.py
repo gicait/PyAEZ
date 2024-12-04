@@ -20,7 +20,7 @@ from pyaez.LGPCalc import rainPeak, psh, EtaCalc
 ########################################## MAIN FUNCTION ENDS HERE ###################################################################################
 # This code is now working properly. Do not use parallel setting as it will slow down. (Earlier case 1.6 seconds to 4.9 seconds execution)
 @nb.jit(nopython=True)
-def Adjustkc_Factor(orig_kc,d_per, cycle_len, Prec, eto, min_temp, max_temp, h, wind_sp):
+def Adjustkc_Factor(orig_kc,d_per, cycle_len, Prec, eto, min_temp, max_temp, h, wind_sp, irr_or_rain):
     """
     Calculation of kc factor adjustment based on local climate. Sub-function of water
     requirement calculation. 
@@ -28,16 +28,17 @@ def Adjustkc_Factor(orig_kc,d_per, cycle_len, Prec, eto, min_temp, max_temp, h, 
     Algorithm adapted from GAEZv4 FORTRAN routine. Calculation exclusive to rainfed yield.
     
     Args:
-        in_kc : input kc factors (NumPy array or list). Format = [kc_init, kc_vegetative, kc_maturity]
-        in_stage_per : input development duration of stages corresponding to kc factors (1D NumPy array or list) Format:[initial, vegetative, reproductive, maturity]
-        precip : precipitation within cycle duration (1D NumPy array)
-        eto : reference evapotranspiration within cycle duration (1D NumPy array)
-        min_temp : minimum temperature within cycle duration (1D NumPy array)
-        max_temp : maximum temperature within cycle duration (1D NumPy array)
-        cycle_start : starting DOY of the cycle (int)
-        incycle_len : input cycle length (int)
-        height : canopy height (meters)
-        wind_sp : wind speed in 2 meters (1D NumPy array)
+        in_kc (1D NumPy array or list): input kc factors. Format = [kc_init, kc_vegetative, kc_maturity]
+        in_stage_per (1D NumPy array or list): input development duration of stages corresponding to kc factors  Format:[initial, vegetative, reproductive, maturity]
+        precip (1D NumPy array): precipitation within cycle duration 
+        eto (1D NumPy array): reference evapotranspiration within cycle duration 
+        min_temp (1D NumPy array): minimum temperature within cycle duration 
+        max_temp (1D NumPy array): maximum temperature within cycle duration (1D NumPy array)
+        cycle_start (int) : starting DOY of the cycle
+        incycle_len (int): input cycle length
+        height (float): canopy height (meters)
+        wind_sp (1D NumPy array): wind speed in 2 meters
+        irr_or_rain (string): Rainfed ('R')/ Irrigated ('I')
     """
     kc = orig_kc
     stage_per = d_per
@@ -65,9 +66,15 @@ def Adjustkc_Factor(orig_kc,d_per, cycle_len, Prec, eto, min_temp, max_temp, h, 
 
     cum_sum = (precip_d1 >= 0.2 )*1
 
-    # counting the number of wet_events snippet
-    wet_events = np.nansum(cum_sum)
+    # (Confirmed by Gunther) For irrigated conditions, if the wet events are greater than 5, GAEZ set up wet events to 5 due to 
+    # the fact that irrigated condition is expected constant water supply.
+    if irr_or_rain == 'I':
+        wet_events = 5
+    else:
+        # counting the number of wet_events snippet
+        wet_events = np.nansum(cum_sum)
 
+            
     # average time between wetting events
     tw = d_days[0]/ (wet_events + 0.5) # correct
 
@@ -123,11 +130,11 @@ def Adjustkc_Factor(orig_kc,d_per, cycle_len, Prec, eto, min_temp, max_temp, h, 
 
     # redefining kc factors
     if tw <= t1 or abs(tw * avg_eto1) <= 1e-5:
-        kc1 = np.round_(1.15 * fw, 2)
+        kc1 = round(1.15 * fw, 2)
     else:
         exp = np.exp((-(tw - t1) * Eso * (1 + (rew/(tew - rew))))/tew) # correct
         com = (tew - ((tew - rew) * exp))/(tw * avg_eto1)
-        kc1 = np.round_(min(1.15, com) * fw, 2)
+        kc1 = round(min(1.15, com) * fw, 2)
 
 
     # kc1 finished
@@ -149,7 +156,6 @@ def Adjustkc_Factor(orig_kc,d_per, cycle_len, Prec, eto, min_temp, max_temp, h, 
     # length duration starts from previous DOY to length for D2+ D3
 
     # precip_d2 = precip_cycle[d_days[0]:d_days[2]-1]
-    eto_d2 = eto_cycle[d_days[0]:d_days[2]]
     wd_d2 = wind_sp[d_days[0]:d_days[2]]
 
     minT_d2 = minT_cycle[d_days[0]:d_days[2]]
@@ -179,7 +185,7 @@ def Adjustkc_Factor(orig_kc,d_per, cycle_len, Prec, eto, min_temp, max_temp, h, 
     elif u2>6.:
         u2 = 6.;
 
-    kc2 = np.round_(kc[1] + (0.04 * (u2-2.) - 0.004*(rhmn - 45.)) * hfct, 2) # correct
+    kc2 = round(kc[1] + (0.04 * (u2-2.) - 0.004*(rhmn - 45.)) * hfct, 2) # correct
     # print(kc2)
     ### kc2 completed
     """kc3 starting"""
@@ -221,7 +227,7 @@ def Adjustkc_Factor(orig_kc,d_per, cycle_len, Prec, eto, min_temp, max_temp, h, 
         else:
             u23 = 2.;
 
-        kc3 = np.round_(kc[2] + (0.04 * (u23 - 2.) - (0.004 * (rhmn3 - 45.))) * hfct, 2)
+        kc3 = round(kc[2] + (0.04 * (u23 - 2.) - (0.004 * (rhmn3 - 45.))) * hfct, 2)
     else:
         kc3 = kc[2]
         
@@ -379,6 +385,7 @@ def WaterBalance(eto, kc, d_per, cycle_len, Sa, D1, D2, mean_temp, max_temp, Pre
     kc_daily[d_days[1]:d_days[2]] = kc[1]
     kc_daily[d_days[2]:] = kc[1] + (np.arange(d_days[2], d_days[3])- d_days[2]) * ( (kc[2]-kc[1])/(d_days[3]-d_days[2]) )
 
+
     # calculation of soil water depletion factor (pc) for the whole cycle length
     if crop_group == 0.:
         psh0 = 0.5
@@ -397,7 +404,7 @@ def WaterBalance(eto, kc, d_per, cycle_len, Sa, D1, D2, mean_temp, max_temp, Pre
     sb = 0.
     wx = 0.
 
-    for i in range(cycle_len):
+    for i in range(eto.shape[0]):
         
         #"""Periods with Tmax <= Txsnm (precipitation falls as snow)"""
         if max_temp[i] <= Txsnm:
@@ -485,6 +492,7 @@ def WaterBalance(eto, kc, d_per, cycle_len, Sa, D1, D2, mean_temp, max_temp, Pre
             Sb_cycle[i] = sb
             Wx_cycle[i] = wx
             Wb_cycle[i] = wb
+    
     
     return Sb_cycle, Wx_cycle, Wb_cycle, Eta_cycle, Etm_cycle, kc_daily, pc_daily
     # Swun (14/9/2024) the above code will be used for the calculation of ETa and ETm, including the water
@@ -660,6 +668,80 @@ def WaterBalancewhole(eto, kc_daily, cycle_start, cycle_len, Sa, D1, D2, mean_te
     
     return Sb_cycle, Wx_cycle, Wb_cycle, Eta_cycle, Etm_cycle, kc_daily, pc_daily
 
+@nb.jit(nopython=True)
+def WaterBalancewholeII(eto, kc_daily, Sa, D1, D2, Prec, crop_group):
+
+    """Sub-function routine: apply water balance calculation for individual growth stage of development
+        Note: to test out the water balance based on WATREQ.F routine. But this approach is not correct.
+    Args:
+        eto (1-D NumPy array): cycle-length specific reference evapotranspiration (mm/day)
+        kc (1-D NumPy array): crop water requirement factors for individual growth stages
+        d_per (1-D NumPy array): percentages of days each individual growth stages compared to cycle length
+        cycle_len (int): cycle length of the crop cycle [Days]
+        Sa (int/float): soil water holding capacity (mm/m)
+        D1 (int/float): effective soil depth at the cycle start (m)
+        D2 (int/float): effective soil depth at the cycle end (m)
+        mean_temp (1-D NumPy array): cycle-length specific mean temperature (Deg C)
+        max_temp (1-D NumPy array): cycle-length specific maximum temperature (Deg C)
+        Prec (1-D NumPy array): cycle-length specific precipitation (mm/day)
+        crop_group (int): soil water depletion factor group
+
+    Return:
+        Sb_cycle (1-D NumPy Array): cycle-length specific daily snow balance 
+        Wx_cycle (1-D NumPy Array): cycle-length specific daily available soil moisture
+        Wb_cycle (1-D NumPy Array): cycle-length specific daily water balance amount (mm)
+        Eta_cycle (1-D NumPy Array): cycle-length specific daily actual evapotranspiration (mm/day)
+        Etm_cycle (1-D NumPy Array): cycle-length specific daily maximum evapotranpiration (mm/day)
+    """
+
+    '''Interpolate Effective Soil Depth / Rootable Depth (D) if D1 and D2 are not equal.'''
+    D = np.zeros(eto.size)
+
+    if D1 == D2:
+        D = np.full(D.shape, D1)
+    # else:
+    #     D[d_days[1]:] = D2
+    #     D[:d_days[1]] = D1 + ((D2-D1)/(d_days[1])) * np.arange(d_days[1])
+    
+    # curtail D by setting limits on usable soil water
+    D[D<0.1]= 0.1
+    D[D>1.0] = 1.0
+
+    # create output arrays
+    Wx_cycle = np.zeros(eto.size)
+    Wb_cycle = np.zeros(eto.size)
+    Etm_cycle = np.zeros(eto.size)
+    Sb_cycle = np.zeros(eto.size)
+    Eta_cycle = np.zeros(eto.size)
+    pc_daily = np.zeros(eto.size)
+    
+    # calculation of soil water depletion factor (pc) for the whole cycle length
+    if crop_group == 0.:
+        psh0 = 0.5
+    else:
+        psh0 = 0.3+(crop_group-1)*.05
+
+    pc_daily = psh0 + .04 * (5.-eto)
+    pc_daily[pc_daily < 0.1] = 0.1
+    pc_daily[pc_daily > 0.8] = 0.8
+
+    # maximum evapotranspiration (ETm calculation)
+    Etm_cycle = eto * kc_daily
+
+    # Loop for each doy for water balance and actual evapotranspiration (ETa)
+    # starting point variables
+    wb = 0.
+    wx = 0.
+
+    for i in range(eto.shape[0]):
+        dta = eta(wb, Etm_cycle[i], Sa, D[i], pc_daily[i], Prec[i])
+        wb, wx, Eta_cycle[i] = dta
+        Wx_cycle[i] = wx
+        Wb_cycle[i] = wb
+        
+    
+    return Wx_cycle, Wb_cycle, Eta_cycle, Etm_cycle, kc_daily, pc_daily
+
 @nb.jit(nopython = True)
 def calculateMoistureLimitedYieldNumba(irr_or_rain, kc, d_per, cycle_len, Prec, eto, min_temp, max_temp, height, wind_sp,
                                         Sa, D1, D2, mean_temp, crop_group, yloss_f_all, yloss_f, perennial_flag, y_potential):
@@ -681,7 +763,7 @@ def calculateMoistureLimitedYieldNumba(irr_or_rain, kc, d_per, cycle_len, Prec, 
 
     # Kc factor adjustment based on local climate conditions is done for rainfed/irrigated condition
 
-    adj_kc = Adjustkc_Factor(kc, d_per, cycle_len, Prec, eto, min_temp, max_temp, height, wind_sp)
+    adj_kc = Adjustkc_Factor(kc, d_per, cycle_len, Prec, eto, min_temp, max_temp, height, wind_sp, irr_or_rain)
     adj_kc = np.array(adj_kc)
 
     
@@ -750,7 +832,76 @@ def calculateMoistureLimitedYieldNumbaIntermediates(irr_or_rain, kc, d_per, cycl
 
     # Kc factor adjustment based on local climate conditions are done to rainfed condition only
 
-    adj_kc = Adjustkc_Factor(kc, d_per, cycle_len, Prec, eto, min_temp, max_temp, height, wind_sp)
+    adj_kc = Adjustkc_Factor(kc, d_per, cycle_len, Prec, eto, min_temp, max_temp, height, wind_sp, irr_or_rain)
+    adj_kc = np.array(adj_kc)
+
+    
+    Sb_cycle = None
+    Wx_cycle = None
+    Wb_cycle = None
+    eta_stage = None
+    etm_stage = None
+    
+    # Start water balance calculation using crop-stage specific kc factors
+    water_balance_results = WaterBalance(eto, adj_kc, d_per, cycle_len, Sa, D1, D2, mean_temp, max_temp, Prec, crop_group)
+    Sb_cycle =  water_balance_results[0]
+    Wx_cycle = water_balance_results[1]
+    Wb_cycle = water_balance_results[2]
+    eta_stage =water_balance_results[3]
+    etm_stage = water_balance_results[4]
+
+    # calculate total cycle deficit and cumulative over crop stages
+    sum_eta_stage = np.sum(eta_stage)
+    sum_etm_stage = np.sum(etm_stage)
+
+    ratio = 0. if sum_etm_stage <=0 else sum_eta_stage/sum_etm_stage
+
+    wde = sum_etm_stage - sum_eta_stage
+    eta_total = sum_eta_stage
+
+    # Yield reduction factor for the overall cycle period
+    fc2_all = 1 - (yloss_f_all *(1- ratio) )
+
+    if fc2_all <0: fc2_all = 0. 
+
+    # Any irrigated annuals or perennials won't go yield deficit assessment due to moisture 
+    if perennial_flag:
+        fc2_cycle = 1.
+    else: 
+        fc2_cycle = YieldReductionByWaterDeficit(yloss_f, eta_stage, etm_stage, cycle_len, d_per)
+    
+    if irr_or_rain == 'I':
+        fc2_final = 1.
+    else:
+        fc2_final = min(fc2_cycle, fc2_all)
+
+    yld_w = y_potential * fc2_final
+
+    return wde, fc2_final, eta_total,  yld_w, fc2_cycle, fc2_all, adj_kc, ratio, Sb_cycle, Wx_cycle, Wb_cycle, eta_stage, etm_stage, water_balance_results[5], water_balance_results[6]
+
+@nb.jit(nopython = True)
+def calculateMoistureLimitedYieldNumbaIntermediatesII(irr_or_rain, kc, d_per, cycle_len, Prec, eto, min_temp, max_temp, height, wind_sp,
+                                        Sa, D1, D2, mean_temp, crop_group, yloss_f_all, yloss_f, perennial_flag, y_potential):
+
+    '''
+    #3 Changes: Water balance calculation is now calculated for both rainfed and irrigated condition. The revised logic is that the assessment of yield loss for
+        the entire growth stage are not applied to irrigated annual crops and irrigated perennial crops due to assumption of constant water would be suppied throughout 
+        the entire growing cycle, thus no possible yield loss could occurr. However, you still need to assess yield loss coming from individual growith stages of development 
+        caused by water deficit for each interval must be assessed because the deficit information is important for farmers to know how much net irrigation is needed.
+    Note: This functions will be used to check the investigation of water balance. Not for the entire simulation.
+    '''
+    
+    # create input variables
+    wde = 0. # water deficit
+    fc2_cycle = 0.
+    fc2_all = 0.
+    fc2_final = 0.
+    eta_total = 0.
+
+
+    # Kc factor adjustment based on local climate conditions are done to rainfed condition only
+
+    adj_kc = Adjustkc_Factor(kc, d_per, cycle_len, Prec, eto, min_temp, max_temp, height, wind_sp, irr_or_rain)
     adj_kc = np.array(adj_kc)
 
     
@@ -796,6 +947,7 @@ def calculateMoistureLimitedYieldNumbaIntermediates(irr_or_rain, kc, d_per, cycl
     yld_w = y_potential * fc2_final
 
     return wde, fc2_final, eta_total,  yld_w, fc2_cycle, fc2_all, adj_kc, ratio, Sb_cycle, Wx_cycle, Wb_cycle, eta_stage, etm_stage, water_balance_results[5], water_balance_results[6]
+
 
 nb.jit(nopython = True)
 def ReferenceWaterBalanceCalc(max_temp, mean_temp, precip, eto, Sa:float = 100., D:float = 1.):

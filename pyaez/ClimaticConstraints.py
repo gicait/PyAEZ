@@ -1,5 +1,5 @@
 """"
-PyAEZ version 2.2(Dec 2023)
+PyAEZ version 2.3(Apr 2023)
 2022- 2023: Swun Wunna Htet, Kittiphon Boonma
 2023 (Dec) : Swun Wunna Htet
 

@@ -186,11 +186,9 @@ class SoilConstraints(object):
         TXT_intp = 100 if pd.isna(TXT_val) else para['TXT_fct'][np.where(para['TXT_val'] == TXT_val)[0][0]]
 
         # check if current pH is either in monotonically increasing or decresing trend
-        pH_intp = None
-        if pH_val < 7:
-            pH_intp = 100 if math.isnan(pH_val) else np.interp(pH_val, para['pH_L_val'], para['pH_L_fct'])
-        else:
-            pH_intp = 100  if math.isnan(pH_val) else np.interp(pH_val, para['pH_H_val'], para['pH_H_fct'])
+        pH_intp1 = 100 if math.isnan(pH_val) else np.interp(pH_val, para['pH_L_val'], para['pH_L_fct'])
+        pH_intp2 = 100  if math.isnan(pH_val) else np.interp(pH_val, para['pH_H_val'], para['pH_H_fct'])
+        pH_intp = min(pH_intp1, pH_intp2)
 
         OC_intp  = 100 if math.isnan(OC_val) else np.interp(OC_val , para['OC_val'], para['OC_fct'])
         TEB_intp = 100 if math.isnan(TEB_val) else np.interp(TEB_val, para['TEB_val'], para['TEB_fct']) 
@@ -223,11 +221,9 @@ class SoilConstraints(object):
         CECsoil_intp = 100 if math.isnan(CECclay_val) else np.interp(CECsoil_val, para['CECsoil_val'], para['CECsoil_fct'])
         
         # check if current pH is either in monotonically increasing or decresing trend
-        pH_intp = None
-        if pH_val < 7:
-            pH_intp = 100 if math.isnan(pH_val) else np.interp(pH_val, para['pH_L_val'], para['pH_L_fct'])
-        else:
-            pH_intp = 100 if math.isnan(pH_val) else np.interp(pH_val, para['pH_H_val'], para['pH_H_fct'])
+        pH_intp1 = 100 if math.isnan(pH_val) else np.interp(pH_val, para['pH_L_val'], para['pH_L_fct'])
+        pH_intp2 = 100  if math.isnan(pH_val) else np.interp(pH_val, para['pH_H_val'], para['pH_H_fct'])
+        pH_intp = min(pH_intp1, pH_intp2)
 
 
         if top_sub == 'top':
@@ -734,9 +730,227 @@ class SoilConstraints(object):
             Soil reduction factor: 2-D NumPy Array.
         """
         return np.round(self.soilsuit_map/100, 2)
-
     
-    #--------------------------------------  MAIN FUNCTIONS STARTS HERE  ------------------------------------#
+    def getAWC(self, soil, soil_characteristics_path:str, rooting_depth:float):
+        """
+        Calculate the Available Soil Water Holding Capacity (AWC).
+        
+        Args:
+            soil (2-D NumPy Array): Soil Map with SMUs
+            soil_characteristics_path (String): File path of SMU's soil characteristics
+        Return:
+            AWC Map : 2-D NumPy Array (Unit: mm/m).
+        """
+        
+        AWC = np.zeros(soil.shape)
+
+        # reading soil properties from excel sheet
+        main_df = pd.read_excel(soil_characteristics_path, sheet_name= None)
+
+        # check if input excel have seven sheets, else, raise error.
+        if len(list(main_df.keys())) != 7:
+            raise Exception(r'Input excel must contain seven sheet. Please revise the input.')
+        
+        # check if all sheets have same number of SMUs, if not raise error.
+        if main_df['D1'].shape != main_df['D2'].shape != main_df['D3'].shape != main_df['D4'].shape != main_df['D5'].shape != main_df['D6'].shape != main_df['D7'].shape:
+            raise Exception(r'Unequal dimensions of soil characteristics sheets detected. Please revise the input again.')
+        
+        if main_df['D1']['RSD'].squeeze() != main_df['D2']['RSD'].squeeze() != main_df['D3']['RSD'].squeeze() != main_df['D4']['RSD'].squeeze() != main_df['D5']['RSD'].squeeze() \
+            != main_df['D6']['RSD'].squeeze() != main_df['D7']['RSD'].squeeze():
+            raise Exception(r'Unequal values of Rootable soil depth detected. Please revise RSD again.')
+        else:
+            rsd = main_df['D1']['RSD'].squeeze()
+
+        subsoil_class = ['D1','D2', 'D3', 'D4', 'D5', 'D6', 'D7']
+
+        # getting SMU from the data
+        SMU = main_df['D1']['CODE'].to_numpy()
+
+        # create AWC array for each SMU for each soil depth class
+        awc_array = np.zeros((SMU.shape[0] ,7))
+
+        # calculate crop specific AWC for each SMU
+        for i in range(len(SMU)):
+            smuidx = SMU[i]
+
+            df = main_df[smuidx]
+
+            for j in range(len(subsoil_class)):
+                id_class = subsoil_class[j]
+            
+                row = df.loc[df['CODE'] == id_class]
+                txt = row['TXT'].squeeze() # soil texture
+                stype = row['SOIL'].squeeze() # soil type
+                stype_flg = True if stype == 'Histosols' else False # Flag for histosols in AWCtxt
+                ssal = row['EC'].squeeze() # soil salinity (electrical conductivity)
+
+                # Reference AWC calculation
+                awc = AWCtxt(txt, stype_flg)
+                awc = AWCsoil(awc, stype)
+                awc_array[i,j] = AWCsalinity(awc, txt, ssal)
+            
+            awc = AWCrootable(awc, rsd)
+            awc = AWCfinal(rooting_depth, rsd, awc)
+
+            # Map out AWC for each SMU
+            AWC[soil == smuidx] = awc
+        
+        AWC_data = {
+            'SMU':SMU,
+            'AWCD1':awc_array[:,0],
+            'AWCD2':awc_array[:,1],
+            'AWCD3':awc_array[:,2],
+            'AWCD4':awc_array[:,3],
+            'AWCD5':awc_array[:,4],
+            'AWCD6':awc_array[:,5],
+            'AWCD7':awc_array[:,6],
+        }
+
+        return AWC 
+        
+    
+    #--------------------------------------  MAIN FUNCTIONS END HERE  ------------------------------------#
+    #-------------------------------------- SUB FUNCTIONS STARTS HERE  -----------------------------------#
+
+    #---------------------------------------SUB FUNCTIONS FOR AWC ----------------------------------------#
+def AWCtxt(soil_texture:str, Histosols:bool = False):
+    """Sub-routine of getAWC function. 
+    Return texture based AWC from GAEZ v5.
+    
+    Args:
+        soil_texture (str): USDA Texture clases
+    return:
+        AWC (int): texture-based AWC (Unit: mm/m)
+    """
+    if Histosols:
+        return 250
+    elif soil_texture == 'Heavy clay':
+        return 160
+    elif soil_texture  in ['Silty clay', 'Clay', 'Silt', 'Silt loam']:
+        return 175
+    elif soil_texture == 'Silty clay loam' or soil_texture == 'Clay loam':
+        return 190
+    elif soil_texture in ['Sandy clay', 'Loam', 'Sandy clay loam']:
+        return 160
+    elif soil_texture == 'Sandy loam':
+        return 125
+    elif soil_texture == 'Loamy sand':
+        return 85
+    elif soil_texture == 'Sand':
+        return 65
+    else:
+        raise NameError('Unlisted USDA soil texture class detected.')
+
+def AWCsoil(awc:float, soil_type:str):
+    """
+    Sub-routine of getAWC function.
+    Return soil material adjusted AWC based on FAO 1995, (Digital Soil Map
+    of the World and derived soil properties version 3.5).
+    
+    Args:
+        awc (int/float): input AWC (Unit: mm/m).
+        soil_type (str): type of soil parent material.
+    Return:
+        AWC (float): soil parent material adjusted AWC (Unit: mm/m).
+    """
+    if soil_type == 'Andosols':
+        return awc + (awc * 0.1) # 10 % increase
+    elif soil_type == 'Vertisols':
+        return awc - (awc * 0.2) # 20 % reduction
+    elif soil_type in ['Ferralsols', 'Acrisols', 'Nitisols', 'Plinthosols', 'Lixisols', \
+                       'plintic Alisols', 'ferralic Arenosols', 'ferric Luvisols', 'ferric Podzols']:
+        return awc - (awc * 0.1) # 10 % reduction to tropical soils
+    else:
+        raise NameError('Unlisted soil type detected.')
+
+def AWCsalinity(awc:float, soil_texture:str, sal:float):
+    """
+    Sub-routine of getAWC function.
+    Adjustment of AWC based on soil salinity and existing soil texture.
+    
+    Args:
+        soil_texture (str): USDA Texture class.
+        sal (float): soil salinity (dS/m)
+    Return:
+        AWC (float): Soil salinity adjusted AWC (mm/m).
+    """
+    soilsal = np.array([0., 2., 4., 6., 8., 10., 12., 14.])
+    adj_arr = None
+    if soil_texture == 'Clay':
+        adj_arr = np.array([1., .933, .867, .8, .733, .667, .5, .3])
+    elif soil_texture == 'Silty clay':
+        adj_arr = np.array([1., .938, .875, .813, .719, .625, .469, .344])
+    elif soil_texture == 'Sandy clay':
+        adj_arr = np.array([1., .938, .875, .813, .719, .625, .469, .344])
+    elif soil_texture == 'Silty clay loam':
+        adj_arr = np.array([1., .95, .875, .8, .725, .625, .475, .325])
+    elif soil_texture == 'Clay loam':
+        adj_arr =  np.array([1., .95, .875, .8, .725, .625, .475, .325])
+    elif soil_texture == 'Sandy clay loam':
+        adj_arr = np.array([1., .933, .867, .767, .667, .567, .433, .233])
+    elif soil_texture == 'Silt loam':
+        adj_arr = np.array([1., .95, .875, .8, .725, .625, .475, .325])
+    elif soil_texture == 'Loam':
+        adj_arr = np.array([1., .941, .882, .824, .735, .618, .5, .324])
+    elif soil_texture == 'Sandy loam':
+        adj_arr = np.array([1., .917, .875, .833, .708, .625, .458, .292])
+    elif soil_texture == 'Loamy sand':
+        adj_arr = np.array([1., .929, .857, .786, .714, .643, .5, .357])
+    elif soil_texture == 'Sand':
+        adj_arr = np.array([1., .917, .833, .792, .75, .583, .417, .333])
+    
+    # interpolate reduction factor based on existing soil texture and soil salinity
+    adj_val = np.interp(sal, soilsal, adj_arr)
+    awc = awc * adj_val
+    return awc
+
+def AWCrootable(awc, RSD:float):
+    """
+    Sub-routine of getAWC function.
+    Adjustment of AWC based on rootable soil depth.
+    
+    Args:
+        awc (1-D NumPy Array): AWC values for all soil depth classes (D1 to D7)
+        RSD (1-D NumPy Array): rootable soil depth (cm)
+    """
+    # rsd = None
+    # get the representative rootable depth from the provided RSD value
+    # rsd = rootable depth (cm) assumed in each class for AWC calculation
+    if RSD <10:
+        # rsd = 10
+        AWC = 0.5*AWC[0]
+    elif RSD in range(10,50):
+        # rsd = 30
+        AWC = AWC[0] + (0.5* AWC[1])
+    elif RSD in range(50,100):
+        # rsd = 75
+        AWC = np.sum(AWC[:3]) + (0.75 * AWC[3])
+    else:
+        # rsd = 150
+        AWC = np.sum(awc[:6])
+    
+    return AWC
+
+def AWCfinal(RD:float, RTD:float, awc:float):
+    """
+    Sub-routine of getAWC function.
+    
+    Calculation of crop-specific AWC.
+    
+    Args:
+        RD (float): crop-specific rooting depth (cm).
+        RTD (float): rootable depth
+        awc (float): adjusted reference AWC (mm/m).
+    Return:
+        AWC: crop-specific AWC (mm/m).
+    """
+    fct = min(1., RD/RTD)
+    AWC = awc * fct
+
+    return AWC
+
+
+
     #--------------------------------------  END OF SOIL CONSTRAINTS  ---------------------------------------#
 
 

@@ -10,6 +10,8 @@ Modification:
 1. Latitude calculated revised according to GAEZ Fortran routine.
 2. New function added: Yield Gap calculation.
 3. Removed the python object class feature.
+4. Decimal changes for wind speed adjustment on height of measurement based on
+   GAEZ routine.
 """
 
 import numpy as np
@@ -42,33 +44,47 @@ def interpMonthlyToDaily( monthly_vector, cycle_begin, cycle_end, no_minus_value
 
     return daily_vector
 
-def averageDailyToMonthly(daily_vector):
+def averageDailyToMonthly(daily_vector, leap_year:False):
     """Aggregating daily data into monthly data
 
     Args:
-        daily_vector (1D NumPy): daily data array
-
+        daily_vector (1D NumPy Array): daily data array
+        leap_year (Boolean): True for leap year, False for non-leap year
     Returns:
         1D NumPy: Monthly data array
     """        
     monthly_vector = np.zeros(12)
 
-    monthly_vector[0] = np.sum(daily_vector[:31])/31
-    monthly_vector[1] = np.sum(daily_vector[31:59])/28
-    monthly_vector[2] = np.sum(daily_vector[59:90])/31
-    monthly_vector[3] = np.sum(daily_vector[90:120])/30
-    monthly_vector[4] = np.sum(daily_vector[120:151])/31
-    monthly_vector[5] = np.sum(daily_vector[151:181])/30
-    monthly_vector[6] = np.sum(daily_vector[181:212])/31
-    monthly_vector[7] = np.sum(daily_vector[212:243])/31
-    monthly_vector[8] = np.sum(daily_vector[243:273])/30
-    monthly_vector[9] = np.sum(daily_vector[273:304])/31
-    monthly_vector[10] = np.sum(daily_vector[304:334])/30
-    monthly_vector[11] = np.sum(daily_vector[334:])/31
+    if leap_year:
+        monthly_vector[0] = np.sum(daily_vector[:31])/31
+        monthly_vector[1] = np.sum(daily_vector[31:60])/29
+        monthly_vector[2] = np.sum(daily_vector[60:91])/31
+        monthly_vector[3] = np.sum(daily_vector[91:121])/30
+        monthly_vector[4] = np.sum(daily_vector[121:152])/31
+        monthly_vector[5] = np.sum(daily_vector[152:182])/30
+        monthly_vector[6] = np.sum(daily_vector[182:213])/31
+        monthly_vector[7] = np.sum(daily_vector[213:244])/31
+        monthly_vector[8] = np.sum(daily_vector[244:274])/30
+        monthly_vector[9] = np.sum(daily_vector[274:305])/31
+        monthly_vector[10] = np.sum(daily_vector[305:335])/30
+        monthly_vector[11] = np.sum(daily_vector[335:])/31
+    else:
+        monthly_vector[0] = np.sum(daily_vector[:31])/31
+        monthly_vector[1] = np.sum(daily_vector[31:59])/28
+        monthly_vector[2] = np.sum(daily_vector[59:90])/31
+        monthly_vector[3] = np.sum(daily_vector[90:120])/30
+        monthly_vector[4] = np.sum(daily_vector[120:151])/31
+        monthly_vector[5] = np.sum(daily_vector[151:181])/30
+        monthly_vector[6] = np.sum(daily_vector[181:212])/31
+        monthly_vector[7] = np.sum(daily_vector[212:243])/31
+        monthly_vector[8] = np.sum(daily_vector[243:273])/30
+        monthly_vector[9] = np.sum(daily_vector[273:304])/31
+        monthly_vector[10] = np.sum(daily_vector[304:334])/30
+        monthly_vector[11] = np.sum(daily_vector[334:])/31
 
     return monthly_vector
 
-def generateLatitudeMap( lat_min, lat_max, im_height, im_width):
+def generateLatitudeMap(lat_min, lat_max, im_height, im_width):
     """Create latitude map from input geographical extents
 
     Args:
@@ -156,13 +172,13 @@ def windSpeedAt2m( wind_speed, altitude):
 
     Args:
         wind_speed (1D,2D,or 3D NumPy array): wind speed
-        altitude (float): altitude [m]
+        altitude (float): altitude of wind speed measurement above ground [m]
 
     Returns:
         1D,2D,or 3D NumPy array: Converted wind speed at 2m altitude
     """        
-    # this function converts wind speed from a particular altitude to wind speed at 2m altitude. wind_speed can be a numpy array (can be 1D, 2D or 3D)
-    return wind_speed * (4.87/np.log(67.8*altitude-5.42))
+    # this function converts wind speed from a particular altitude of measurement to 2m altitude. wind_speed can be a numpy array (can be 1D, 2D or 3D)
+    return wind_speed * (4.868/np.log(67.75*altitude-5.42))
 
 def getYieldGap( potential, actual):
     """

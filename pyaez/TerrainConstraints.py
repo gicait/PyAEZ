@@ -1,19 +1,21 @@
 """
-PyAEZ version 2.2 (Dec 2023)
+PyAEZ version 2.3 (Apr 2025)
 2020: N. Lakmal Deshapriya
 2023 (Dec): Swun Wunna Htet
+2025 (Apr): Swun Wunna Htet
 
 Modifications:
 1.  Excel sheet integration is now added to the routine.
 2.  Algorithm will check whether daily or monthly preciptation is provided and 
     calculate Fournier Index accordingly.
 3.  Terrain Reduction Factor can now be returned as raster map.
+4.  Numba enhancements are done to functions available for optimization.
 """
 
 import numpy as np
 import pandas as pd
-from pyaez import UtilitiesCalc
-
+import numba as nb
+from pyaez.UtilitiesCalc import averageDailyToMonthly
 
 class TerrainConstraints(object):
 
@@ -37,8 +39,8 @@ class TerrainConstraints(object):
         self.rain_FI_class = np.array([eval(rain_df['Classes'].to_numpy()[x]) for x in range(rain_df['Classes'].to_numpy().shape[0])])
         self.irr_FI_class = np.array([eval(irr_df['Classes'].to_numpy()[x]) for x in range(irr_df['Classes'].to_numpy().shape[0])])
         # reduction factor look-up table
-        self.rain_np = rain_df.to_numpy()[:,1:]
-        self.irr_np = irr_df.to_numpy()[:,1:]
+        self.rain_np = rain_df.to_numpy()[:,1:].astype(np.float16)
+        self.irr_np = irr_df.to_numpy()[:,1:].astype(np.float16)
 
     def setClimateTerrainData(self, precipitation, slope):
         """
@@ -49,20 +51,30 @@ class TerrainConstraints(object):
         """
         self.im_height = slope.shape[0]
         self.im_width = slope.shape[1]
+        leap_year = False
         
         if precipitation.shape[2] == 12:
             self.prec_monthly = precipitation
-        else:
+        elif precipitation.shape[2] in [365, 366]:
             self.prec_monthly = np.zeros((self.im_height,self.im_width,12))
+
+            
+            if precipitation.shape[2] == 365:
+                pass
+            elif precipitation.shape[2] == 366:
+                leap_year = True
+
             for i in range(self.prec_monthly.shape[0]):
                 for j in range(self.prec_monthly.shape[1]):
-                    self.prec_monthly[i,j,:] = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(precipitation[i,j,:])
+                    self.prec_monthly[i,j,:] = averageDailyToMonthly(precipitation[i,j,:], leap_year)
+        else:
+            raise ValueError('Time dimension of input wrong. Please check the input.')
 
-
-        self.slope = slope # Percentage Slope
+        # slope is now 3D NumPy Array (Slope distribution classes)
+        self.slope = slope 
         self.slope[np.isnan(self.slope)] = 0 # This suppresses warning with NaN values
-
-
+        # slope distribution data type reformatting
+        self.slope = self.slope.astype(np.float16)
 
     def calculateFI(self):
         """Calculation of Fournier Index
@@ -118,22 +130,30 @@ class TerrainConstraints(object):
 
         yield_final = np.copy(yield_in)
         self.terrain_fct = np.zeros(yield_in.shape)
+        
+        FI_iter = list(enumerate(FI_class))
+        for i in range(self.im_height):
+            for j in range(self.im_width):
 
+                slp_arr = self.slope[i,j,:]
 
-        FI_count = -1
-        for FI_cls1 in FI_class:
-            FI_count = FI_count + 1
+                # find relevant FI-class specific terrain factor for all slope classes
+                for k in range(len(FI_iter)):
+                    index, intval = FI_iter[k]
+                    if np.logical_and([self.FI[i,j] >= intval[0]], [self.FI[i,j] < intval[1]]):
+                        fiidx = index
+                        tfct_arr = Terrain_factor[fiidx]
+                        break
+                    else:
+                        pass
+                
+                fc5 = np.divide(tfct_arr, slp_arr, where= slp_arr >0, out = np.zeros(8, dtype = np.float16)) 
 
-            slope_count = -1
-            for slope_cls1 in Slope_class:
-                slope_count = slope_count + 1
+                # each terrain factor is adjusted with the slope distribution classes and summed up.
+                fc5 = np.sum(fc5)
+                yield_final[i,j] =  fc5 * yield_in[i,j]
+                self.terrain_fct[i,j] = fc5
 
-                FI_idx = np.logical_and(FI_cls1[0]<=self.FI, self.FI<=FI_cls1[1])
-                slope_idx = np.logical_and(slope_cls1[0]<=self.slope, self.slope<=slope_cls1[1])
-                temp_idx = np.logical_and(FI_idx, slope_idx)
-
-                yield_final[temp_idx] = yield_in[temp_idx] * (Terrain_factor[FI_count][slope_count] / 100)
-                self.terrain_fct[temp_idx] = Terrain_factor[FI_count][slope_count] / 100
         return yield_final
     
     def getTerrainReductionFactor(self):
@@ -147,7 +167,7 @@ class TerrainConstraints(object):
         Args:
             None.
         Return:
-            fc5 (2-D NumPy Array): Terrain Reduction factor"""
+            fc5 (2-D NumPy Array): Terrain Reduction factor (0 : Unsuitable, 1 = Very Suitable)"""
         
         return self.terrain_fct
 

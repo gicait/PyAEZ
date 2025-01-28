@@ -10,15 +10,23 @@ Modifications
 1. Removed the object class declaration from other modules.
 
 """
-
 import numpy as np
 from pyaez.UtilitiesCalc import generateLatitudeMap, interpMonthlyToDaily, averageDailyToMonthly
-from pyaez.ETOCalc import calculateETONumba
+from pyaez.ETOCalc import calculateETONumba, calculateNetRadiationFlux
 from pyaez.LGPCalc import psh, EtaCalc, rainPeak, islgpt, val10day
 np.seterr(divide='ignore', invalid='ignore') # ignore "divide by zero" or "divide by NaN" warning
 
 # Initiate ClimateRegime Class instance
 class ClimateRegime(object):
+
+    def __init__(self):
+        """Initial flag settings."""
+        self.set_mask = False
+        self.set_monthly = False
+        self.leap_year = False
+
+
+    
     def setLocationTerrainData(self, lat_min, lat_max, elevation):
         """Load geographical extents and elevation data in to the Class, 
            and create a latitude map
@@ -48,9 +56,10 @@ class ClimateRegime(object):
 
   
 
-    def setMonthlyClimateAndSoilWaterData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity, Sa = 100., D = 1.):
-        """Load MONTHLY climate data into the Class and calculate the Reference Evapotranspiration (ETo), Water balance calculation
-           to estimate maximum evapotranspiration (ETm), actual evapotranspiration (ETa), 
+    def setClimateAndSoilWaterData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity, Sa = 100., D = 1.):
+        """Load MONTHLY/DAILY climate data into the Class and calculate the Reference Evapotranspiration (ETo), Water balance calculation
+           to estimate maximum evapotranspiration (ETm), actual evapotranspiration (ETa), and temperature data for the agroclimatic indicator
+           calculations.
 
         Args:
             min_temp (3D NumPy Array): Monthly minimum temperature [Celcius]
@@ -67,13 +76,31 @@ class ClimateRegime(object):
         short_rad[short_rad < 0] = 0
         wind_speed[wind_speed < 0] = 0
 
-        self.meanT_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.totalPrec_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.pet_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.minT_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.maxT_daily = np.zeros((self.im_height, self.im_width, 365))
-        self.shortrad_daily = np.zeros((self.im_height, self.im_width, 365))
+        # Time dimension checkpoint
+        doy = None
+        if np.all(min_temp.shape[2] ==12 and max_temp.shape[2] ==12 and wind_speed.shape[2] ==12
+                and short_rad.shape[2] ==12 and rel_humidity.shape[2] ==12 and precipitation.shape[2] ==12):
+            self.set_monthly = True
+            doy = 365
+        elif np.all(min_temp.shape[2] ==365 and max_temp.shape[2] ==365 and wind_speed.shape[2] ==365
+                and short_rad.shape[2] ==365 and rel_humidity.shape[2] ==365 and precipitation.shape[2] ==365):
+            doy = 365
+        elif np.all(min_temp.shape[2] ==366 and max_temp.shape[2] ==366 and wind_speed.shape[2] ==366
+                and short_rad.shape[2] ==366 and rel_humidity.shape[2] ==366 and precipitation.shape[2] ==366):
+            doy = 366
+            self.leap_year = True
+        else:
+            raise ValueError('Time Dimension of climate data must be 12, 365 or 366. Please check your input data.')
 
+        self.meanT_daily = np.zeros((self.im_height, self.im_width, doy))
+        self.totalPrec_daily = np.zeros((self.im_height, self.im_width, doy))
+        self.minT_daily = np.zeros((self.im_height, self.im_width, doy))
+        self.maxT_daily = np.zeros((self.im_height, self.im_width, doy))
+        self.shortrad_daily = np.zeros((self.im_height, self.im_width, doy))
+        self.wind_daily = np.zeros((self.im_height, self.im_width, doy))
+        self.rel_humidity_daily = np.zeros((self.im_height, self.im_width, doy))
+        self.pet_daily = np.zeros((self.im_height, self.im_width, doy))
+        self.shortrad_daily_MJm2day = np.zeros((self.im_height, self.im_width, doy))
 
         meanT_monthly = (min_temp+max_temp)/2
 
@@ -83,25 +110,35 @@ class ClimateRegime(object):
                 if self.set_mask:
                     if self.im_mask[i_row, i_col] == self.nodata_val:
                         continue
-
-                self.meanT_daily[i_row, i_col, :] = interpMonthlyToDaily(meanT_monthly[i_row, i_col,:], 1, 365)
-                self.totalPrec_daily[i_row, i_col, :] = interpMonthlyToDaily(precipitation[i_row, i_col,:], 1, 365, no_minus_values=True)
-                self.minT_daily[i_row, i_col, :] = interpMonthlyToDaily(min_temp[i_row, i_col,:], 1, 365)
-                self.maxT_daily[i_row, i_col, :] = interpMonthlyToDaily(max_temp[i_row, i_col,:], 1, 365)
-                self.shortrad_daily[i_row, i_col, :] = interpMonthlyToDaily(short_rad[i_row, i_col,:], 1, 365, no_minus_values=True)
-                wind_daily = interpMonthlyToDaily(wind_speed[i_row, i_col,:], 1, 365, no_minus_values=True)
-                rel_humidity_daily = interpMonthlyToDaily(rel_humidity[i_row, i_col,:], 1, 365, no_minus_values=True)
+                
+                if self.set_monthly:
+                    self.meanT_daily[i_row, i_col, :] = interpMonthlyToDaily(meanT_monthly[i_row, i_col,:], 1, doy)
+                    self.totalPrec_daily[i_row, i_col, :] = interpMonthlyToDaily(precipitation[i_row, i_col,:], 1, doy, no_minus_values=True)
+                    self.minT_daily[i_row, i_col, :] = interpMonthlyToDaily(min_temp[i_row, i_col,:], 1, doy)
+                    self.maxT_daily[i_row, i_col, :] = interpMonthlyToDaily(max_temp[i_row, i_col,:], 1, doy)
+                    self.shortrad_daily[i_row, i_col, :] = interpMonthlyToDaily(short_rad[i_row, i_col,:], 1, doy, no_minus_values=True)
+                    self.wind_daily[i_row, i_col, :] = interpMonthlyToDaily(wind_speed[i_row, i_col,:], 1, doy, no_minus_values=True)
+                    self.rel_humidity_daily[i_row, i_col, :] = interpMonthlyToDaily(rel_humidity[i_row, i_col,:], 1, doy, no_minus_values=True)
+                else:
+                    self.meanT_daily[i_row, i_col, :] = (min_temp[i_row, i_col, :]+ max_temp[i_row, i_col, :])/2
+                    self.totalPrec_daily[i_row, i_col, :] = precipitation[i_row, i_col,:]
+                    self.minT_daily[i_row, i_col, :] = min_temp[i_row, i_col,:]
+                    self.maxT_daily[i_row, i_col, :] = max_temp[i_row, i_col,:]
+                    self.shortrad_daily[i_row, i_col, :] = short_rad[i_row, i_col,:]
+                    self.wind_daily[i_row, i_col, :] = wind_speed[i_row, i_col, :]
+                    self.rel_humidity_daily[i_row, i_col, :] = rel_humidity[i_row, i_col, :]
 
                 # calculation of reference evapotranspiration (ETo)
-                shortrad_daily_MJm2day = (self.shortrad_daily[i_row, i_col, :]*3600*24)/1000000 # convert w/m2 to MJ/m2/day
-                self.pet_daily[i_row, i_col, :] = calculateETONumba(1, 365, self.latitude[i_row, i_col], self.elevation[i_row, i_col], 
+                self.shortrad_daily_MJm2day[i_row, i_col, :] = (self.shortrad_daily[i_row, i_col, :]*3600*24)/1000000 # convert w/m2 to MJ/m2/day
+                self.pet_daily[i_row, i_col, :] = calculateETONumba(1, doy, self.latitude[i_row, i_col], self.elevation[i_row, i_col], 
                                                                     self.minT_daily[i_row, i_col, :], self.maxT_daily[i_row, i_col, :], 
-                                                                    wind_daily[i_row, i_col, :], shortrad_daily_MJm2day, rel_humidity_daily[i_row, i_col, :])
+                                                                    self.wind_daily[i_row, i_col, :], self.shortrad_daily_MJm2day[i_row, i_col, :],
+                                                                      self.rel_humidity_daily[i_row, i_col, :])
                 
         # Sea-level adjusted mean temperature
-        self.meanT_daily_sealevel = self.meanT_daily + np.tile(np.reshape(self.elevation/100*0.55, (self.im_height,self.im_width,1)), (1,1,365))
+        self.meanT_daily_sealevel = self.meanT_daily + np.tile(np.reshape(self.elevation/100*0.55, (self.im_height,self.im_width,1)), (1,1,doy))
         # P over PET ratio(to eliminate nan in the result, nan is replaced with zero)
-        self.P_by_PET_daily = np.divide(self.totalPrec_daily, self.pet_daily, where = self.pet_daily >0, out= np.zeros((self.im_height, self.im_width, 365)))
+        self.P_by_PET_daily = np.divide(self.totalPrec_daily, self.pet_daily, where = self.pet_daily >0, out= np.zeros((self.im_height, self.im_width, doy)))
 
         #============================
         # Calculation of Water Balance to estimate ETa, ETm
@@ -130,7 +167,7 @@ class ClimateRegime(object):
 
                 lgpt5_point = np.sum(self.meanT_daily[i_row, i_col,:]>=5)
 
-                totalPrec_monthly = averageDailyToMonthly(self.totalPrec_daily[i_row, i_col, :])
+                totalPrec_monthly = averageDailyToMonthly(self.totalPrec_daily[i_row, i_col, :], self.leap_year)
                 meanT_daily_point = Ta365[i_row, i_col, :]
                 istart0, istart1 = rainPeak(totalPrec_monthly, meanT_daily_point, lgpt5_point)
                 #----------------------------------
@@ -138,138 +175,28 @@ class ClimateRegime(object):
                     if self.im_mask[i_row, i_col] == self.nodata_val:
                         continue
 
-                for doy in range(0, 365):
-                    p = psh(0., self.Eto365[i_row, i_col, doy])
+                for d in range(0, doy):
+                    p = psh(0., self.Eto365[i_row, i_col, d])
                     Eta_new, Etm_new, Wb_new, Wx_new, Sb_new, kc_new = EtaCalc(
-                        np.float64(Tx365[i_row, i_col, doy]), np.float64(
-                            Ta365[i_row, i_col, doy]),
+                        np.float64(Tx365[i_row, i_col, d]), np.float64(
+                            Ta365[i_row, i_col, d]),
                             # Ta365[i_row, i_col, doy]),
-                        np.float64(Pcp365[i_row, i_col, doy]), Txsnm, Fsnm, np.float64(
-                            self.Eto365[i_row, i_col, doy]),
-                        Wb_old, Sb_old, doy, istart0, istart1,
+                        np.float64(Pcp365[i_row, i_col, d]), Txsnm, Fsnm, np.float64(
+                            self.Eto365[i_row, i_col, d]),
+                        Wb_old, Sb_old, d, istart0, istart1,
                         Sa, D, p, kc_list, lgpt5_point)
 
                     if Eta_new <0.: Eta_new = 0.
 
-                    self.Eta365[i_row, i_col, doy] = Eta_new
-                    self.Etm365[i_row, i_col, doy] = Etm_new
-                    self.Wb365[i_row, i_col, doy] = Wb_new
-                    self.Wx365[i_row, i_col, doy] = Wx_new
-                    self.Sb365[i_row, i_col, doy] = Sb_new
-                    self.kc365[i_row, i_col, doy] = kc_new
+                    self.Eta365[i_row, i_col, d] = Eta_new
+                    self.Etm365[i_row, i_col, d] = Etm_new
+                    self.Wb365[i_row, i_col, d] = Wb_new
+                    self.Wx365[i_row, i_col, d] = Wx_new
+                    self.Sb365[i_row, i_col, d] = Sb_new
+                    self.kc365[i_row, i_col, d] = kc_new
 
                     Wb_old = Wb_new
                     Sb_old = Sb_new
-
-        self.set_monthly = True
-
-    def setDailyClimateAndSoilWaterData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity, Sa = 100., D = 1.):
-        """Load DAILY climate data into the Class and calculate the Reference Evapotranspiration (ETo)
-
-        Args:
-            min_temp (3D NumPy): Daily minimum temperature [Celcius]
-            max_temp (3D NumPy): Daily maximum temperature [Celcius]
-            precipitation (3D NumPy): Daily total precipitation [mm/day]
-            short_rad (3D NumPy): Daily solar radiation [W/m2]
-            wind_speed (3D NumPy): Daily windspeed at 2m altitude [m/s]
-            rel_humidity (3D NumPy): Daily relative humidity [percentage decimal, 0-1]
-        """
-
-        rel_humidity_daily = rel_humidity.copy()
-        rel_humidity_daily[rel_humidity_daily > 0.99] = 0.99
-        rel_humidity_daily[rel_humidity_daily < 0.05] = 0.05
-
-        short_rad[short_rad < 0] = 0
-        wind_speed[wind_speed < 0] = 0
-        wind_daily = wind_speed.copy()
-        
-        self.maxT_daily = max_temp
-        self.minT_daily = min_temp
-        self.meanT_daily = (min_temp + max_temp)/2
-        self.totalPrec_daily = precipitation
-        self.shortrad_daily = short_rad.copy()
-        self.pet_daily = np.zeros((self.im_height, self.im_width, 365))
-        
-
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
-
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
-
-                self.totalPrec_daily[i_row, i_col, :] = precipitation[i_row, i_col, :]
-                
-                # calculation of reference evapotranspiration (ETo)
-                shortrad_daily_MJm2day = (self.shortrad_daily[i_row, i_col, :]*3600*24)/1000000 # convert w/m2 to MJ/m2/day
-                self.pet_daily[i_row, i_col, :] = calculateETONumba(1, 365, self.latitude[i_row, i_col], self.elevation[i_row, i_col], 
-                                                                    self.minT_daily[i_row, i_col, :], self.maxT_daily[i_row, i_col, :], 
-                                                                    wind_daily[i_row, i_col, :], shortrad_daily_MJm2day, rel_humidity_daily[i_row, i_col, :])
-                
-        # sea level temperature
-        self.meanT_daily_sealevel = self.meanT_daily + np.tile(np.reshape(self.elevation/100*0.55, (self.im_height,self.im_width,1)), (1,1,365))
-        # P over PET ratio (to eliminate nan in the result, nan is replaced with zero)
-        self.P_by_PET_daily = np.divide(self.totalPrec_daily, self.pet_daily, where = self.pet_daily >0, out= np.zeros((self.im_height, self.im_width, 365)))
-
-        #============================
-        # Calculation of REFERENCE Water Balance to estimate ETa, ETm
-        #============================
-        kc_list = np.array([0.0, 0.1, 0.2, 0.5, 1.0])
-        #============================
-        Txsnm = 0.  # Txsnm - snow melt temperature threshold
-        Fsnm = 5.5  # Fsnm - snow melting coefficient
-        Sb_old = 0.
-        Wb_old = 0.
-        #============================
-        Tx365 = self.maxT_daily.copy()
-        Ta365 = self.meanT_daily.copy()
-        Pcp365 = self.totalPrec_daily.copy()
-        self.Eto365 = self.pet_daily.copy()  # Eto
-        self.Etm365 = np.zeros(Tx365.shape)
-        self.Eta365 = np.zeros(Tx365.shape)
-        self.Sb365 = np.zeros(Tx365.shape)
-        self.Wb365 = np.zeros(Tx365.shape)
-        self.Wx365 = np.zeros(Tx365.shape)
-        self.kc365 = np.zeros(Tx365.shape)
-        self.maxT_daily_new = np.zeros(Tx365.shape)
-        #============================
-        for i_row in range(self.im_height):
-            for i_col in range(self.im_width):
-
-                lgpt5_point = np.sum(self.meanT_daily[i_row, i_col,:]>=5)
-
-                totalPrec_monthly = averageDailyToMonthly(self.totalPrec_daily[i_row, i_col, :])
-                meanT_daily_point = Ta365[i_row, i_col, :]
-                istart0, istart1 = rainPeak(totalPrec_monthly, meanT_daily_point, lgpt5_point)
-                #----------------------------------
-                if self.set_mask:
-                    if self.im_mask[i_row, i_col] == self.nodata_val:
-                        continue
-
-                for doy in range(0, 365):
-                    p = psh(0., self.Eto365[i_row, i_col, doy])
-                    Eta_new, Etm_new, Wb_new, Wx_new, Sb_new, kc_new = EtaCalc(
-                        np.float64(Tx365[i_row, i_col, doy]), np.float64(
-                            Ta365[i_row, i_col, doy]),
-                            # Ta365[i_row, i_col, doy]),
-                        np.float64(Pcp365[i_row, i_col, doy]), Txsnm, Fsnm, np.float64(
-                            self.Eto365[i_row, i_col, doy]),
-                        Wb_old, Sb_old, doy, istart0, istart1,
-                        Sa, D, p, kc_list, lgpt5_point)
-
-                    if Eta_new <0.: Eta_new = 0.
-
-                    self.Eta365[i_row, i_col, doy] = Eta_new
-                    self.Etm365[i_row, i_col, doy] = Etm_new
-                    self.Wb365[i_row, i_col, doy] = Wb_new
-                    self.Wx365[i_row, i_col, doy] = Wx_new
-                    self.Sb365[i_row, i_col, doy] = Sb_new
-                    self.kc365[i_row, i_col, doy] = kc_new
-
-                    Wb_old = Wb_new
-                    Sb_old = Sb_new
-
-        self.set_monthly = False
 
     def getThermalClimate(self):
         """Classification of rainfall and temperature seasonality into thermal climate classes
@@ -288,9 +215,9 @@ class ClimateRegime(object):
                         continue
                 
                 # converting daily to monthly
-                meanT_monthly_sealevel = averageDailyToMonthly(self.meanT_daily_sealevel[i_row,i_col,:])
-                meanT_monthly = averageDailyToMonthly(self.meanT_daily[i_row,i_col,:])
-                P_by_PET_monthly = averageDailyToMonthly(self.P_by_PET_daily[i_row,i_col,:])
+                meanT_monthly_sealevel = averageDailyToMonthly(self.meanT_daily_sealevel[i_row,i_col,:], self.leap_year)
+                meanT_monthly = averageDailyToMonthly(self.meanT_daily[i_row,i_col,:], self.leap_year)
+                P_by_PET_monthly = averageDailyToMonthly(self.P_by_PET_daily[i_row,i_col,:], self.leap_year)
 
                 if self.set_mask:
                     if self.im_mask[i_row, i_col] == self.nodata_val:
@@ -716,7 +643,7 @@ class ClimateRegime(object):
                 
                 # Checking the non-tropical zones
                 else:
-                    meanT_monthly = averageDailyToMonthly(self.meanT_daily[i_row, i_col, :])
+                    meanT_monthly = averageDailyToMonthly(self.meanT_daily[i_row, i_col, :], self.leap_year)
                     # Class 5: mean T of the warmest month > 20 deg C
                     if np.max(meanT_monthly) > 20:
                         tzonefallow[i_row, i_col] = 5
@@ -871,7 +798,7 @@ class ClimateRegime(object):
                     else:
                         mean_temp = np.copy(self.meanT_daily[i_r, i_c, :])
                         meanT_monthly = averageDailyToMonthly(
-                            mean_temp)
+                            mean_temp, self.leap_year)
                         # one conditional parameter for temperature accumulation
                         temp_acc_10deg = np.copy(self.meanT_daily[i_r, i_c, :])
                         temp_acc_10deg[temp_acc_10deg < 10] = 0
@@ -1432,19 +1359,17 @@ class ClimateRegime(object):
             for j in range(self.im_width):
 
                 if self.set_mask:
-                    
                     if self.im_mask[i, j]== self.nodata_val:
                         continue
-                    else:
-                        monthly_maxT = averageDailyToMonthly(self.maxT_daily[i,j,:])
-                        monthly_minT = averageDailyToMonthly(self.minT_daily[i,j,:])
-                        ann_temp_amp[i,j] = np.max(monthly_maxT) - np.min(monthly_minT)
+
+                monthly_meanT = averageDailyToMonthly(self.meanT_daily[i,j,:], self.leap_year)
+                ann_temp_amp[i,j] = np.nanmax(monthly_meanT) - np.nanmin(monthly_meanT)
         
         return ann_temp_amp
     
     def getETODaily(self):
         """
-        Get the daily reference evapotranspiration calculated from the input climatic variables.
+        Get the annual total reference potential evapotranspiration (ET0) calculated from the input climatic variables.
         ONLY this function can proceed after setting the climatic variables in the object class.
         
         Args:
@@ -1452,7 +1377,7 @@ class ClimateRegime(object):
         Return:
             ETo (3D NumPy Array): reference evapotranspiration (mm/day)
         """
-        return self.pet_daily
+        return np.sum(self.pet_daily, axis = 2)
     
     def getAnnualMoistureAvailabilityIndex(self):
         """
@@ -1465,15 +1390,18 @@ class ClimateRegime(object):
         Return:
             P/ETO * 100 (2D NumPy Array): annual moisture availability index (Unitless).
         """
-        mean_P_ETO = np.mean(self.P_by_PET_daily, axis = 2) * 100
-        mean_P_ETO[mean_P_ETO>100] = 100.
-        mean_P_ETO[mean_P_ETO<0] = 0.
+        psum = np.sum(self.totalPrec_daily, axis = 2)
+        pet0 = np.sum(self.pet_daily, axis = 2)
+        mean_P_ETO = np.divide(psum, pet0, where= pet0>0, out = np.zeros(psum.shape)) * 100
+
+        # curtailing overshooting values based on Fortran routine
+        mean_P_ETO[mean_P_ETO >30000.] = 30000.
 
         return np.round(mean_P_ETO, 1)
     
     def getETaDaily(self):
         """
-        Get the daily actual evapotranspiration. ONLY this function can proceed after setting the climatic variables in 
+        Get the annual total reference actual evapotranspiration (ETa). ONLY this function can proceed after setting the climatic variables in 
         the object class.
         
         Args:
@@ -1483,11 +1411,11 @@ class ClimateRegime(object):
         Return:
             ETa (3D NumPy Array, {row, column, time}): actual evapotranspiration (mm/day).
         """
-        return self.Eta365
+        return np.sum(self.Eta365, axis = 2)
     
     def getReferenceAnnualWaterDeficit(self):
         """
-        Get the daily actual evapotranspiration. ONLY this function can proceed after setting the climatic variables in 
+        Get the annual total reference water deficit (Wde). ONLY this function can proceed after setting the climatic variables in 
         the object class.
         
         Args:a
@@ -1517,16 +1445,22 @@ class ClimateRegime(object):
         if irr_or_rain == None:
             raise Exception('Please provide string value of I for irrigated or R for rainfed.')
 
-        short_rad = self.shortrad_daily.copy()
-        pr = self.totalPrec_daily.copy()
+        Rn = np.zeros(366) if self.leap_year else np.zeros(365)
         monthly_shortrad = np.zeros((self.im_height, self.im_width, 12))
         monthly_pr = np.zeros((self.im_height, self.im_width, 12))
 
         for i in range(self.im_height):
             for j in range(self.im_width):
-                monthly_shortrad[i,j,:] = averageDailyToMonthly(short_rad[i,j,:])
-                monthly_pr[i,j,:] = averageDailyToMonthly(pr[i,j,:])
-        
+                Rn = calculateNetRadiationFlux(1, 365, self.latitude[i,j], self.elevation[i,j],  
+                                                      self.minT_daily[i,j,:], self.maxT_daily[i,j,:], 
+                                                        self.shortrad_daily_MJm2day[i,j,:], self.rel_humidity_daily[i,j,:],
+                                                        self.wind_daily[i,j,:])
+                
+                # Rn = Rn /2.45
+                monthly_shortrad[i,j,:] = averageDailyToMonthly(Rn, self.leap_year)
+                monthly_pr[i,j,:] = averageDailyToMonthly(self.totalPrec_daily[i,j,:], self.leap_year)
+
+
         total_shrad = np.sum(monthly_shortrad, axis =2)
         total_pr = np.sum(monthly_pr, axis = 2)
         
@@ -1535,10 +1469,11 @@ class ClimateRegime(object):
 
         if irr_or_rain == 'I':
             # NPP for irrigated condition, ETa = ETm and rdi is 1.375 (maximum of function term)
-            npp = np.sum(self.Etm365, axis = 2) * 1.375 * np.exp((-1) * np.sqrt(9.87+(6.25*1.375)))
+            rdi = np.nanmin([rdi, np.full((self.im_height, self.im_width), 1.375)], axis = 0)
+            npp = np.sum(self.Eto365, axis = 2) * rdi * np.exp(- np.sqrt(9.87+(6.25*rdi))) * 1000
         else:
             # NPP for rainfed condition, ETa is estimated from GAEZ reference water balance
-            npp =  np.sum(self.Eta365, axis = 2) * rdi * np.exp((-1) * np.sqrt(9.87+(6.25*rdi)))
+            npp =  np.sum(self.Eta365, axis = 2) * rdi * np.exp(- np.sqrt(9.87+(6.25*rdi))) * 1000
         
         return np.round(npp, 1)
 #----------------- End of file -------------------------#

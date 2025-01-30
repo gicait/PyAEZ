@@ -9,7 +9,7 @@ Modifications:
 2.  Algorithm will check whether daily or monthly preciptation is provided and 
     calculate Fournier Index accordingly.
 3.  Terrain Reduction Factor can now be returned as raster map.
-4.  Numba enhancements are done to functions available for optimization.
+4.  Terrain reduction calculation is now changed with the slope distribution class layers.
 """
 
 import numpy as np
@@ -88,8 +88,7 @@ class TerrainConstraints(object):
         sum_Psquare = np.sum(np.square(self.prec_monthly), axis=2)
         sum_P = np.sum(self.prec_monthly, axis=2)
 
-        self.FI = np.multiply(12, (sum_Psquare / sum_P), where= sum_P !=0)
-        self.FI[np.isnan(self.FI)] = 0 # This suppresses warning with NaN values
+        self.FI = np.multiply(12, (sum_Psquare / sum_P), where= sum_P !=0, out = np.zeros(sum_Psquare.shape))
 
     def getFI(self):
         """Getting the result of Fournier Index.
@@ -128,7 +127,7 @@ class TerrainConstraints(object):
             Slope_class = self.rain_slope_class
             Terrain_factor = self.rain_np
 
-        yield_final = np.copy(yield_in)
+        yield_final = np.zeros(yield_in.shape)
         self.terrain_fct = np.zeros(yield_in.shape)
         
         FI_iter = list(enumerate(FI_class))
@@ -151,6 +150,7 @@ class TerrainConstraints(object):
 
                 # each terrain factor is adjusted with the slope distribution classes and summed up.
                 fc5 = np.sum(fc5)
+                print(fc5)
                 yield_final[i,j] =  fc5 * yield_in[i,j]
                 self.terrain_fct[i,j] = fc5
 

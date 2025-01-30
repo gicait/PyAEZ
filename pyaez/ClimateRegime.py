@@ -62,12 +62,12 @@ class ClimateRegime(object):
            calculations.
 
         Args:
-            min_temp (3D NumPy Array): Monthly minimum temperature [Celcius]
-            max_temp (3D NumPy Array): Monthly maximum temperature [Celcius]
-            precipitation (3D NumPy Array): Monthly total precipitation [mm/day]
-            short_rad (3D NumPy Array): Monthly solar radiation [W/m2]
-            wind_speed (3D NumPy Array): Monthly windspeed at 2m altitude [m/s]
-            rel_humidity (3D NumPy Array): Monthly relative humidity [percentage decimal, 0-1]
+            min_temp (3D NumPy Array): Minimum temperature [Celcius]
+            max_temp (3D NumPy Array): Maximum temperature [Celcius]
+            precipitation (3D NumPy Array): Total precipitation [mm/day]
+            short_rad (3D NumPy Array): Solar radiation [W/m2]
+            wind_speed (3D NumPy Array): Windspeed at 2m altitude [m/s]
+            rel_humidity (3D NumPy Array): Relative humidity [percentage decimal, 0-1]
             Sa (int/float/2D NumPy Array): Soil water holding capacity (mm/m). Default value set for 100 mm/m.
             D (int/float) : Rooting depth (m). Default value set for 1 m.
         """    

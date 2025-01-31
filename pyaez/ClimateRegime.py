@@ -133,7 +133,7 @@ class ClimateRegime(object):
                 self.pet_daily[i_row, i_col, :] = calculateETONumba(1, doy, self.latitude[i_row, i_col], self.elevation[i_row, i_col], 
                                                                     self.minT_daily[i_row, i_col, :], self.maxT_daily[i_row, i_col, :], 
                                                                     self.wind_daily[i_row, i_col, :], self.shortrad_daily_MJm2day[i_row, i_col, :],
-                                                                      self.rel_humidity_daily[i_row, i_col, :])
+                                                                      self.rel_humidity_daily[i_row, i_col, :], self.leap_year)
                 
         # Sea-level adjusted mean temperature
         self.meanT_daily_sealevel = self.meanT_daily + np.tile(np.reshape(self.elevation/100*0.55, (self.im_height,self.im_width,1)), (1,1,doy))
@@ -1392,12 +1392,20 @@ class ClimateRegime(object):
         """
         psum = np.sum(self.totalPrec_daily, axis = 2)
         pet0 = np.sum(self.pet_daily, axis = 2)
-        mean_P_ETO = np.divide(psum, pet0, where= pet0>0, out = np.zeros(psum.shape)) * 100
+        mean_P_ETO = np.zeros(psum.shape)
 
-        # curtailing overshooting values based on Fortran routine
-        mean_P_ETO[mean_P_ETO >30000.] = 30000.
+        mean_P_ETO = np.where(pet0>1e-5, np.round(100.* psum/pet0, 0), np.zeros(pet0.shape))
+        mean_P_ETO[mean_P_ETO>1000] = 1000
+        mean_P_ETO = np.where(pet0>1e-5, np.round(100.* psum/pet0, 0), np.zeros(pet0.shape))
+        mean_P_ETO[np.logical_and(pet0 <1e-5, psum>0)] = 1000.
+        mean_P_ETO[np.logical_and(pet0 <1e-5, psum<=0)] = 100.
 
-        return np.round(mean_P_ETO, 1)
+        # curtailing overshooting values based on Fortran routine  
+        mean_P_ETO = np.nanmin([mean_P_ETO, np.full(psum.shape, 30000.)], axis = 0)
+        if self.set_mask:
+            mean_P_ETO[self.im_mask == self.nodata_val] = 0.
+       
+        return mean_P_ETO
     
     def getETaDaily(self):
         """
@@ -1446,15 +1454,17 @@ class ClimateRegime(object):
             raise Exception('Please provide string value of I for irrigated or R for rainfed.')
 
         Rn = np.zeros(366) if self.leap_year else np.zeros(365)
+        doy = 366 if self.leap_year else 365
         monthly_shortrad = np.zeros((self.im_height, self.im_width, 12))
         monthly_pr = np.zeros((self.im_height, self.im_width, 12))
 
         for i in range(self.im_height):
             for j in range(self.im_width):
-                Rn = calculateNetRadiationFlux(1, 365, self.latitude[i,j], self.elevation[i,j],  
+                Rn = calculateNetRadiationFlux(1, doy, self.latitude[i,j], self.elevation[i,j],  
                                                       self.minT_daily[i,j,:], self.maxT_daily[i,j,:], 
-                                                        self.shortrad_daily_MJm2day[i,j,:], self.rel_humidity_daily[i,j,:],
-                                                        self.wind_daily[i,j,:])
+                                                        self.shortrad_daily_MJm2day[i,j,:],
+                                                        self.wind_daily[i,j,:], self.rel_humidity_daily[i,j,:],
+                                                        self.leap_year)
                 
                 # Rn = Rn /2.45
                 monthly_shortrad[i,j,:] = averageDailyToMonthly(Rn, self.leap_year)

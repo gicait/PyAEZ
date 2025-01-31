@@ -113,7 +113,8 @@ class CropSimulation(object):
             
                 self.pet_daily[i_row, i_col, :] = calculateETONumba(1, doy, self.latitude[i_row, i_col], self.elevation[i_row, i_col],  
                                                                     self.minT_daily[i_row, i_col, :], self.maxT_daily[i_row, i_col, :], 
-                                                                    self.wind2m_daily[i_row, i_col, :], shortrad_daily_MJm2day,  self.rel_humidity_daily[i_row, i_col, :])
+                                                                    self.wind2m_daily[i_row, i_col, :], shortrad_daily_MJm2day,  self.rel_humidity_daily[i_row, i_col, :],
+                                                                    self.leap_year)
         self.set_monthly=True
     
     def setDailyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity):
@@ -175,7 +176,8 @@ class CropSimulation(object):
                 shortrad_daily_MJm2day = (self.shortRad_daily[i_row, i_col,:] * 3600 * 24)/1000000
                 self.pet_daily[i_row, i_col, :] = calculateETONumba(1, doy, self.latitude[i_row, i_col], self.elevation[i_row, i_col],  
                                                     self.minT_daily[i_row, i_col, :], self.maxT_daily[i_row, i_col, :], 
-                                                    self.wind2m_daily[i_row, i_col, :], shortrad_daily_MJm2day,  self.rel_humidity_daily[i_row, i_col, :])
+                                                    self.wind2m_daily[i_row, i_col, :], shortrad_daily_MJm2day,  self.rel_humidity_daily[i_row, i_col, :],
+                                                    self.leap_year)
         self.set_daily = True
     
     def setLocationTerrainData(self, lat_min, lat_max, elevation):

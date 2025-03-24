@@ -120,7 +120,7 @@ class ClimaticConstraints(object):
                     self.wind_daily[i_row, i_col, :] = interpMonthlyToDaily(wind_speed[i_row, i_col,:], 1, doy, no_minus_values=True)
                     self.rel_humidity_daily[i_row, i_col, :] = interpMonthlyToDaily(rel_humidity[i_row, i_col,:], 1, doy, no_minus_values=True)
 
-                    monthly_precip[i_row, i_col, : ] = self.totalPrec_daily[i_row, i_col, :]
+                    monthly_precip[i_row, i_col, : ] = precip[i_row, i_col, :]
                     self.min_T[i_row, i_col] = np.nanmin(Tm)
                 
         else:

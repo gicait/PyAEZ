@@ -193,7 +193,7 @@ def calculateETONumba(cycle_begin, cycle_end, latitude, alt,  minT_daily, maxT_d
     
     et0 = et0ady + et0rad
 
-    et0[et0 <= 0.] = 0
+    et0 = np.where(et0<=0., 0, et0)
 
     return et0
 

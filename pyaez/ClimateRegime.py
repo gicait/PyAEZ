@@ -302,8 +302,8 @@ class ClimateRegime(object):
         for i_row in range(self.im_height):
             for i_col in range(self.im_width):
 
-                meanT_monthly = averageDailyToMonthly(self.meanT_daily[i_row, i_col, :])
-                meanT_monthly_sealevel =  averageDailyToMonthly(self.meanT_daily_sealevel[i_row, i_col, :])
+                meanT_monthly = averageDailyToMonthly(self.meanT_daily[i_row, i_col, :], self.leap_year)
+                meanT_monthly_sealevel =  averageDailyToMonthly(self.meanT_daily_sealevel[i_row, i_col, :], self.leap_year)
     
                 if self.set_mask:
                     if self.im_mask[i_row, i_col] == self.nodata_val:

@@ -109,7 +109,7 @@ class CropSimulation(object):
 
                 # calculation of reference evapotranspiration (ETo)
                 # convert w/m2 to MJ/m2/day
-                shortrad_daily_MJm2day = (self.shortRad_daily * 3600 * 24)/1000000
+                shortrad_daily_MJm2day = (self.shortRad_daily[i_row, i_col, :] * 3600 * 24)/1000000
             
                 self.pet_daily[i_row, i_col, :] = calculateETONumba(1, doy, self.latitude[i_row, i_col], self.elevation[i_row, i_col],  
                                                                     self.minT_daily[i_row, i_col, :], self.maxT_daily[i_row, i_col, :], 
@@ -1301,16 +1301,20 @@ def CropCycleLooping(start_doy:int, end_doy:int, step_doy:int, climate_data, min
             fc2_arr = np.append(fc2_arr, 0.)
             continue
         else:
+            start = int(i_cycle+1)
+            end= int(i_cycle+cycle_len+1)
+            endi = int(i_cycle+cycle_len)
+
             # Biomass Calculation
-            bn = calculateBiomassNumba(i_cycle+1, i_cycle+1+cycle_len, cycle_len, lat, shrt_rd[i_cycle:i_cycle+cycle_len],
-                                         mean_T[i_cycle:i_cycle+cycle_len], min_T[i_cycle:i_cycle+cycle_len],max_T[i_cycle:i_cycle+cycle_len],
+            bn = calculateBiomassNumba(start, end, cycle_len, lat, shrt_rd[i_cycle:endi],
+                                         mean_T[i_cycle:endi], min_T[i_cycle:endi],max_T[i_cycle:endi],
                                          lai, legume, adaptability, leap_year)
             cycle_yld = bn * hi * cycle_fc1
 
             #Crop Water Requirement
-            cycle_wde, cycle_fc2, cycle_eta,  cycle_yld = calculateMoistureLimitedYieldNumba(irr_or_rain, kc, d_per, cycle_len, pr[i_cycle:i_cycle+cycle_len], eto[i_cycle:i_cycle+cycle_len],
-                                                                                            min_T[i_cycle:i_cycle+cycle_len], max_T[i_cycle:i_cycle+cycle_len], plant_height, wind_sp[i_cycle:i_cycle+cycle_len],
-                                                                                            Sa, D1, D2, mean_T[i_cycle:i_cycle+cycle_len], crop_group, yloss_f_all, yloss_f, perennial_flag, cycle_yld)
+            cycle_wde, cycle_fc2, cycle_eta,  cycle_yld = calculateMoistureLimitedYieldNumba(irr_or_rain, kc, d_per, cycle_len, pr[i_cycle:endi], eto[i_cycle:endi],
+                                                                                            min_T[i_cycle:endi], max_T[i_cycle:endi], plant_height, wind_sp[i_cycle:endi],
+                                                                                            Sa, D1, D2, mean_T[i_cycle:endi], crop_group, yloss_f_all, yloss_f, perennial_flag, cycle_yld)
             
             # Appending to the list
             yd_arr = np.append(yd_arr, cycle_yld)

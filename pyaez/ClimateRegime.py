@@ -4,16 +4,19 @@ This ClimateRegime Class read/load and calculates the agro-climatic indicators
 required to run PyAEZ.  
 2021: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet and Kittiphon Boonma
-2024: Swun Wunna Htet
+2024 (Apr): Swun Wunna Htet
 
 Modifications
 1. Removed the object class declaration from other modules.
-
+2. Added reference water balance calculation into the routine.
+3. Added new agro-climatic indicator functions.
+4. The system will automatically handle differently based on monthly/daily time dimension.
 """
 import numpy as np
 from pyaez.UtilitiesCalc import generateLatitudeMap, interpMonthlyToDaily, averageDailyToMonthly
 from pyaez.ETOCalc import calculateETONumba, calculateNetRadiationFlux
-from pyaez.LGPCalc import psh, EtaCalc, rainPeak, islgpt, val10day
+from pyaez.LGPCalc import psh, RefWaterBalanceCalc, rainPeak, islgpt, val10day, search_cycles
+from pyaez.ThermalScreening import getTempTrend, getSmoothTemp, getTemperatureGrowingPeriod
 np.seterr(divide='ignore', invalid='ignore') # ignore "divide by zero" or "divide by NaN" warning
 
 # Initiate ClimateRegime Class instance
@@ -28,13 +31,15 @@ class ClimateRegime(object):
 
     
     def setLocationTerrainData(self, lat_min, lat_max, elevation):
-        """Load geographical extents and elevation data in to the Class, 
-           and create a latitude map
+        """(MANDATORY FUNCTION) Load geographical extents and elevation data in to the Class, 
+           and create a latitude map.
 
         Args:
             lat_min (float): the minimum latitude of the AOI in decimal degrees
             lat_max (float): the maximum latitude of the AOI in decimal degrees
             elevation (2D NumPy): elevation map in metres
+        Return:
+            None.
         """        
         self.elevation = elevation
         self.im_height = elevation.shape[0]
@@ -44,11 +49,13 @@ class ClimateRegime(object):
         
     
     def setStudyAreaMask(self, admin_mask, no_data_value):
-        """Set clipping mask of the area of interest (optional)
+        """(OPTIONAL FUNCTION) Set clipping mask of the area of interest (optional)
 
         Args:
             admin_mask (2D NumPy/Binary): mask to extract only region of interest
             no_data_value (int): pixels with this value will be omitted during PyAEZ calculations
+        Return:
+            None.
         """    
         self.im_mask = admin_mask
         self.nodata_val = no_data_value
@@ -57,7 +64,7 @@ class ClimateRegime(object):
   
 
     def setClimateAndSoilWaterData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity, Sa = 100., D = 1.):
-        """Load MONTHLY/DAILY climate data into the Class and calculate the Reference Evapotranspiration (ETo), Water balance calculation
+        """(MANDATORY FUNCTION) Load MONTHLY/DAILY climate data into the Class and calculate the Reference Evapotranspiration (ETo), Water balance calculation
            to estimate maximum evapotranspiration (ETm), actual evapotranspiration (ETa), and temperature data for the agroclimatic indicator
            calculations.
 
@@ -68,8 +75,10 @@ class ClimateRegime(object):
             short_rad (3D NumPy Array): Solar radiation [W/m2]
             wind_speed (3D NumPy Array): Windspeed at 2m altitude [m/s]
             rel_humidity (3D NumPy Array): Relative humidity [percentage decimal, 0-1]
-            Sa (int/float/2D NumPy Array): Soil water holding capacity (mm/m). Default value set for 100 mm/m.
+            Sa (int/float/2D NumPy Array): Soil water holding capacity (mm/m). Default value set for 100 mm.
             D (int/float) : Rooting depth (m). Default value set for 1 m.
+        Return:
+            None.
         """    
         rel_humidity[rel_humidity > 0.99] = 0.99
         rel_humidity[rel_humidity < 0.05] = 0.05
@@ -167,9 +176,11 @@ class ClimateRegime(object):
 
                 lgpt5_point = np.sum(self.meanT_daily[i_row, i_col,:]>=5)
 
-                totalPrec_monthly = averageDailyToMonthly(self.totalPrec_daily[i_row, i_col, :], self.leap_year)
+                # totalPrec_monthly = averageDailyToMonthly(self.totalPrec_daily[i_row, i_col, :], self.leap_year)
                 meanT_daily_point = Ta365[i_row, i_col, :]
-                istart0, istart1 = rainPeak(totalPrec_monthly, meanT_daily_point, lgpt5_point)
+                istart0, istart1 = rainPeak(meanT_daily_point, lgpt5_point)
+                
+                istup = getTempTrend(self.meanT_daily[i_row, i_col, :])
                 #----------------------------------
                 if self.set_mask:
                     if self.im_mask[i_row, i_col] == self.nodata_val:
@@ -177,14 +188,14 @@ class ClimateRegime(object):
 
                 for d in range(0, doy):
                     p = psh(0., self.Eto365[i_row, i_col, d])
-                    Eta_new, Etm_new, Wb_new, Wx_new, Sb_new, kc_new = EtaCalc(
+                    Eta_new, Etm_new, Wb_new, Wx_new, Sb_new, kc_new = RefWaterBalanceCalc(
                         np.float64(Tx365[i_row, i_col, d]), np.float64(
                             Ta365[i_row, i_col, d]),
                             # Ta365[i_row, i_col, doy]),
                         np.float64(Pcp365[i_row, i_col, d]), Txsnm, Fsnm, np.float64(
                             self.Eto365[i_row, i_col, d]),
                         Wb_old, Sb_old, d, istart0, istart1,
-                        Sa, D, p, kc_list, lgpt5_point)
+                        Sa, D, p, lgpt5_point, istup[d])
 
                     if Eta_new <0.: Eta_new = 0.
 
@@ -199,10 +210,12 @@ class ClimateRegime(object):
                     Sb_old = Sb_new
 
     def getThermalClimate(self):
-        """Classification of rainfall and temperature seasonality into thermal climate classes
+        """Classification of rainfall and temperature seasonality into thermal climate classes.
 
-        Returns:
-            2D NumPy: Thermal Climate classification
+        Args:
+            None.
+        Return:
+            tclimate (2D NumPy Array): Thermal Climate classification
         """        
         # Note that currently, this thermal climate is designed only for the northern hemisphere, southern hemisphere is not implemented yet.
         thermal_climate = np.zeros((self.im_height, self.im_width), dtype= np.int8)
@@ -292,10 +305,12 @@ class ClimateRegime(object):
     
     def getThermalZone(self):
         """The thermal zone is classified based on actual temperature which reflects 
-        on the temperature regimes of major thermal climates
+        on the temperature regimes of major thermal climates.
 
-        Returns:
-            2D NumPy: Thermal Zones classification
+        Args:
+            None.
+        Return:
+            tzone (2D-NumPy Array): thermal zone class.
         """        
         thermal_zone = np.zeros((self.im_height, self.im_width))
     
@@ -348,11 +363,12 @@ class ClimateRegime(object):
 
     def getThermalLGP0(self):
         """Calculate Thermal Length of Growing Period (LGPt) with 
-        temperature threshold of 0 degree Celcius
+        temperature threshold of 0 degree Celcius.
 
-        Returns:
-            2D numpy: The accumulated number of days with daily mean 
-                      temperature is above 0 degree Celcius
+        Args:
+            None.
+        Return:
+            lgpt0 (2D-NumPy Array): temperature growing period with 0 Deg Celsius. [Unit: Days]
         """        
         # Adding interpolation to the dataset
         # interp_daily_temp = np.zeros((self.im_height, self.im_width, 365))
@@ -367,11 +383,12 @@ class ClimateRegime(object):
 
     def getThermalLGP5(self):
         """Calculate Thermal Length of Growing Period (LGPt) with 
-        temperature threshold of 5 degree Celcius
+        temperature threshold of 5 degree Celcius.
 
-        Returns:
-            2D numpy: The accumulated number of days with daily mean 
-                      temperature is above 5 degree Celcius
+        Args:
+            None.
+        Return:
+            lgpt5 (2D-NumPy Array): temperature growing period with 5 Deg Celsius. [Unit: Days]
         """          
         lgpt5 = np.sum(self.meanT_daily>=5, axis=2)
         if self.set_mask:
@@ -384,9 +401,10 @@ class ClimateRegime(object):
         """Calculate Thermal Length of Growing Period (LGPt) with
         temperature threshold of 10 degree Celcius
 
-        Returns:
-            2D numpy: The accumulated number of days with daily mean
-                      temperature is above 10 degree Celcius
+        Args:
+            None.
+        Return:
+            lgpt10 (2D-NumPy Array): temperature growing period with 10 Deg Celsius. [Unit: Days]
         """
 
         lgpt10 = np.sum(self.meanT_daily >= 10, axis=2)
@@ -398,11 +416,14 @@ class ClimateRegime(object):
 
     def getTemperatureSum0(self):
         """Calculate temperature summation at temperature threshold 
-        of 0 degree Celcius
+        of 0 degree Celcius.
 
-        Returns:
-            2D numpy: Accumulative daily average temperature (Ta) for days
-                      when Ta is above the thresholds of 0 degree Celcius
+        Args:
+            None.
+        Return:
+            tsum0 (2D-NumPy Array):Accumulative daily average temperature (Ta) for days
+                                    when Ta is above the thresholds of 0 degree Celcius.
+                                    [Unit: Degree-Days]
         """
         tempT = self.meanT_daily.copy()
         tempT[tempT<0] = 0
@@ -414,11 +435,14 @@ class ClimateRegime(object):
 
     def getTemperatureSum5(self):
         """Calculate temperature summation at temperature threshold 
-        of 5 degree Celcius
+        of 5 degree Celcius.
 
-        Returns:
-            2D numpy: Accumulative daily average temperature (Ta) for days
-                      when Ta is above the thresholds of 5 degree Celcius
+        Args:
+            None.
+        Return:
+            tsum5 (2D-NumPy Array):Accumulative daily average temperature (Ta) for days
+                                    when Ta is above the thresholds of 5 degree Celcius.
+                                    [Unit: Degree-Days]
         """
         tempT = self.meanT_daily.copy()
         tempT[tempT<5] = 0
@@ -433,9 +457,12 @@ class ClimateRegime(object):
         """Calculate temperature summation at temperature threshold 
         of 10 degree Celcius
 
-        Returns:
-            2D numpy: Accumulative daily average temperature (Ta) for days
-                      when Ta is above the thresholds of 10 degree Celcius
+        Args:
+            None.
+        Return:
+            tsum10 (2D-NumPy Array):Accumulative daily average temperature (Ta) for days
+                                    when Ta is above the thresholds of 10 degree Celcius. 
+                                    [Unit: Degree-Days]
         """
         tempT = self.meanT_daily.copy()
         tempT[tempT<10] = 0
@@ -446,10 +473,12 @@ class ClimateRegime(object):
         return tsum10
 
     def getTemperatureProfile(self):
-        """Classification of temperature ranges for temperature profile
+        """Classification of temperature ranges for temperature profile classes.
 
-        Returns:
-            2D NumPy: 18 2D arrays [A1-A9, B1-B9] correspond to each Temperature Profile class [days]
+        Args:
+            None.
+        Return:
+            2D NumPy: 18 2D arrays [A1-A9, B1-B9] correspond to each Temperature Profile class [Unit: days]
         """        
         # Smoothening the temperature curve
         interp_daily_temp = np.zeros((self.im_height, self.im_width, 365))
@@ -510,14 +539,12 @@ class ClimateRegime(object):
 
 
     def getLGP(self):
-        """Calculate length of growing period (LGP)
+        """Calculate length of growing period (LGP).
 
         Args:
-            Sa (float, optional): Available soil moisture holding capacity [mm/m]. Defaults to 100..
-            D (float, optional): Rooting depth. Defaults to 1..
-
-        Returns:
-           2D NumPy: Length of Growing Period
+            None.
+        Return:
+           lgp (2D-NumPy Array): length of growing periods [Unit: Days].
         """        
         lgp_tot = np.zeros((self.im_height, self.im_width))
         #============================
@@ -545,16 +572,15 @@ class ClimateRegime(object):
             return lgp_tot
   
     def getLGPClassified(self, lgp): # Original PyAEZ source code
-        """This function calculates the classification of moisture regime using LGP.
+        """This function calculates the classification of moisture regimes based on LGP.
 
         Args:
-            lgp (2D NumPy): Length of Growing Period
+            lgp (2D-NumPy Array): Length of Growing Period [Unit: Days]
 
-        Returns:
-            2D NumPy: Classified Length of Growing Period
+        Return:
+            lgp_class (2D-NumPy Array): Moisture regime classes.
+
         """        
-        # 
-
         lgp_class = np.zeros(lgp.shape)
 
         lgp_class[lgp>=365] = 7 # Per-humid
@@ -572,10 +598,12 @@ class ClimateRegime(object):
         
         
     def getLGPEquivalent(self): 
-        """Calculate the Equivalent LGP 
+        """Calculate the equivalent length of growing period.
 
-        Returns:
-            2D NumPy: LGP Equivalent 
+        Args:
+            None.
+        Return:
+            lgp_equv (2D-NumPy Array): equivalent length of growing period [Unit: Days].
         """        
         moisture_index = np.sum(self.totalPrec_daily, axis=2)/np.sum(self.pet_daily, axis=2)
 
@@ -593,21 +621,15 @@ class ClimateRegime(object):
         # Overall, there are no changes with the calculation steps and logics.
         # '''
       
-
-
-
     def TZoneFallowRequirement(self, tzone):
         """
-        The function calculates the temperature for fallow requirements which 
-        requires thermal zone to classify. If mask is on, the function will
-        mask out pixels by the mask layer.
+        The function calculates the temperature zones applied for fallow requirements which 
+        requires thermal zone to classify. 
 
         Args:
-        tzone : a 2-D numpy array
-            THERMAL ZONE.
-
-        Returns:
-        A 2-D numpy array, corresponding to thermal zone for fallow requirement.
+            tzone (2D-NumPy Array): thermal zone classes.
+        Return:
+            tzone_fallow (2D-NumPy Array): thermal zone for fallow requirements.
 
         """
 
@@ -661,11 +683,12 @@ class ClimateRegime(object):
         The function calculates the air frost index which is used for evaluation of 
         occurrence of continuous or discontinuous permafrost condtions executed in 
         GAEZ v4. Two outputs of numerical air frost index and classified reference
-        permafrost zones are returned. If mask layer is inserted, the function will
-        automatically mask user-defined pixels out of the calculation 
+        permafrost zones are returned.
 
-        Returns:
-        air_frost_index/permafrost : a python list: [air frost number, permafrost classes]
+        Args:
+            None.
+        Return:
+            air_frost_index/permafrost : a python list: [air frost number, permafrost classes]
 
         """
         fi = np.zeros((self.im_height, self.im_width), dtype=float)
@@ -709,23 +732,21 @@ class ClimateRegime(object):
         else:
             return [fi, permafrost]
         
-  
-
     
     def AEZClassification(self, tclimate, lgp, lgp_equv, lgpt_5, soil_terrain_lulc, permafrost):
         """The AEZ inventory combines spatial layers of thermal and moisture regimes 
         with broad categories of soil/terrain qualities.
 
         Args:
-            tclimate (2D NumPy): Thermal Climate classes
-            lgp (2D NumPy): Length of Growing Period
-            lgp_equv (2D NumPy): LGP Equivalent
-            lgpt_5 (2D NumPy): Thermal LGP of Ta>5˚C
-            soil_terrain_lulc (2D NumPy): soil/terrain/special land cover classes (8 classes)
-            permafrost (2D NumPy): Permafrost classes
+            tclimate (2D-NumPy Array): Thermal Climate classes
+            lgp (2D-NumPy Array): Length of Growing Period [Unit: Days]
+            lgp_equv (2D-NumPy Array): Equivalent length of growing periods [Unit:Days]
+            lgpt_5 (2D-NumPy Array): Thermal LGP of days with Ta>5˚C
+            soil_terrain_lulc (2D-NumPy Array): soil/terrain/special land cover classes (8 classes)
+            permafrost (2D-NumPy Array): Permafrost classes
 
-        Returns:
-           2D NumPy: 57 classes of AEZ
+        Return:
+            aez (2D-NumPy Array): aez zones (57 classes).
         """        
         
         #1st step: reclassifying the existing 12 classes of thermal climate into 6 major thermal climate.
@@ -1345,12 +1366,12 @@ class ClimateRegime(object):
     def getAnnualTemperatureAmplitude(self):
         """
         Calculate the annual temperature amplitude (temperature difference from the temperature of the hottest month by temperature from 
-        the coldest month). ONLY this function can proceed after setting the climatic variables in the object class.
+        the coldest month).
 
         Args:
             None.
         Return:
-            ann_temp_amp (2D NumPy Array): annual temperature amplitude (Unit: Deg Celsius)
+            ann_temp_amp (2D NumPy Array): annual temperature amplitude [Unit: Deg Celsius]
         """
 
         ann_temp_amp = np.zeros((self.im_height, self.im_width))
@@ -1370,25 +1391,23 @@ class ClimateRegime(object):
     def getETODaily(self):
         """
         Get the annual total reference potential evapotranspiration (ET0) calculated from the input climatic variables.
-        ONLY this function can proceed after setting the climatic variables in the object class.
         
         Args:
             None.
         Return:
-            ETo (3D NumPy Array): reference evapotranspiration (mm/day)
+            ETo (3D NumPy Array): reference evapotranspiration [Unit: mm/day]
         """
         return np.sum(self.pet_daily, axis = 2)
     
     def getAnnualMoistureAvailabilityIndex(self):
         """
         Get the annual moisture availability index (P/ETo * 100). Values ranges from 0 (P < ETo)
-        to 100 (P = ETo). ONLY this function can proceed after setting the climatic variables in 
-        the object class.
+        to 100 (P >= ETo). 
         
         Args:
             None.
         Return:
-            P/ETO * 100 (2D NumPy Array): annual moisture availability index (Unitless).
+            P/ETO * 100 (2D NumPy Array): annual moisture availability index [Unit: Unitless].
         """
         psum = np.sum(self.totalPrec_daily, axis = 2)
         pet0 = np.sum(self.pet_daily, axis = 2)
@@ -1413,11 +1432,9 @@ class ClimateRegime(object):
         the object class.
         
         Args:
-            lgpt5 (2-D NumPy Array): temperature growing period at 5 degree threshold
-            Sa (int/float) : soil water holding capacity (mm/m)
-            D (int/float) : rooting depth (m) 
+            None.
         Return:
-            ETa (3D NumPy Array, {row, column, time}): actual evapotranspiration (mm/day).
+            eta: (2D-NumPy Array): actual evapotranspiration [Unit: mm].
         """
         return np.sum(self.Eta365, axis = 2)
     
@@ -1427,11 +1444,9 @@ class ClimateRegime(object):
         the object class.
         
         Args:a
-            lgpt5 (2-D NumPy Array): temperature growing period at 5 degree threshold
-            Sa (int/float) : soil water holding capacity (mm/m)
-            D (int/float) : rooting depth (m) 
+            None.
         Return:
-            ETa (3D NumPy Array, {row, column, time}): actual evapotranspiration (mm/day).
+            ETa (2D-NumPy Array): actual evapotranspiration [Unit: mm].
         """
         eta_sum = np.sum(self.Eta365, axis = 2)
         etm_sum = np.sum(self.Etm365, axis = 2)
@@ -1486,4 +1501,225 @@ class ClimateRegime(object):
             npp =  np.sum(self.Eta365, axis = 2) * rdi * np.exp(- np.sqrt(9.87+(6.25*rdi))) * 1000
         
         return np.round(npp, 1)
+
+    def getLGPlongest(self):
+        """
+        Calculate the total growing days of the longest cycle in a single year.
+        
+        Args:
+            None.
+        Return:
+            lgb [2-D NumPy Array]: total growing periods of the longest LGP cycle. [Unit: Days]
+        """
+
+        lgb = np.zeros((self.im_height, self.im_width), dtype = int)
+
+        eta = self.Eta365.copy()
+        etm = self.Etm365.copy()
+        Tm = self.meanT_daily.copy()
+
+        for i in range(self.im_height):
+            for j in range(self.im_width):
+
+                if self.set_mask:
+                    if self.im_mask[i, j]== self.nodata_val:
+                        continue
+                
+                islgp = islgpt(Tm[i,j,:])
+                xx = val10day(eta[i,j,:])
+                yy = val10day(etm[i,j,:])
+
+                # etamin = np.nanmin(xx)
+                # etamax = np.nanmax(xx)
+
+                # etaminidx = np.argmin(xx)
+                # etamaxidx = np.argmax(xx)
+
+                # zz = etamin + 
+
+                lgp_whole = np.divide(xx, yy, where= yy>0, out = np.ones(xx.shape))
+
+                count = []
+
+                for k in range(len(lgp_whole)):
+                    if islgp[k] == 1 and lgp_whole[k] >=0.4:
+                        count.append(1)
+                    else:
+                        count.append(0)
+                
+
+                # find the length of the LGP cycles
+                lgp_components = search_cycles(count)
+                
+                # if there are no growing periods year-round, skip calculation.
+                if len(lgp_components[0])==0:
+                    lgb[i,j] = 0
+                else:
+                    # find the longest component
+                    sum_list = []
+                    
+                    for k in range(len(lgp_components[0])):
+                        sum_list.append(sum(lgp_components[0][k]))
+                    lgb[i,j] = int(np.nanmax(sum_list))
+                
+        return lgb
+    
+    def getLGPlongestBeginDate(self):
+        """
+        Calculate the the beginning day of the longest LGP cycle in a single year frame.
+        
+        Args:
+            None.
+        Return:
+            lgb_d [2-D NumPy Array]: beginning day of total growing days of the longest. [Unit: DOY]
+        """
+
+        lgb_d = np.zeros((self.im_height, self.im_width), dtype = int)
+
+        eta = self.Eta365.copy()
+        etm = self.Etm365.copy()
+        Tm = self.meanT_daily.copy()
+
+        for i in range(self.im_height):
+            for j in range(self.im_width):
+                
+                # print(f'Row {i}, Col {j}')
+                if self.set_mask:
+                    if self.im_mask[i, j]== self.nodata_val:
+                        continue
+                
+                islgp = islgpt(Tm[i,j,:])
+                xx = val10day(eta[i,j,:])
+                yy = val10day(etm[i,j,:])
+                lgp_whole = np.divide(xx, yy, where= yy>0, out = np.ones(xx.shape))
+
+                count = []
+
+                for k in range(len(lgp_whole)):
+                    if islgp[k] == 1 and lgp_whole[k] >=0.4:
+                        count.append(1)
+                    else:
+                        count.append(0)
+                
+                # if there are no growing days year-round, skip cycle searching
+                if sum(count) ==0:
+                    continue
+                # find the length of the cycles
+                lgp_components = search_cycles(count)
+
+                # if there are no growing periods year-round, skip calculation.
+                if len(lgp_components[0])==0:
+                    lgb_d[i,j] = 0
+                else:
+                    # find all days of each cycle
+                    sum_list = []
+                    
+                    for k in lgp_components[0]:
+                        if len(k) ==0:
+                            sum_list.append(0)
+                        else:
+                            sum_list.append(sum(k))
+                    
+                    # change the list into numpy array for possible error occurrence
+                    sum_list = np.array(sum_list)
+                    lgp_bd = lgp_components[1]
+                    idx = np.argwhere(sum_list == np.nanmax(sum_list))[0][0]
+                    lgb_d[i,j] = lgp_bd[idx] +1
+
+        return lgb_d
+    
+    def getBeginningDateofHibernationPeriod(self):
+        """
+        Calculate the starting date of the hibernation period in a single year frame.
+        
+        Args:
+            None.
+        Return:
+            lgh_b [2-D NumPy Array]: Beginning date of the hibernation (dormancy period) [Unit: DOY].
+        """
+
+        # critical temperature threshold of the least sensitive crop: winter rye
+        lgh_b = np.zeros((self.im_height, self.im_width), dtype = int)
+        cbtr1, cbtr2 = (-11, -16)
+
+        for i in range(self.im_height):
+            for j in range(self.im_width):
+                
+                # print(f'Row {i}, Col {j}')
+                if self.set_mask:
+                    if self.im_mask[i, j]== self.nodata_val:
+                        continue
+                
+                # calculate monthly mean average= 
+                monthly_Tm = averageDailyToMonthly(self.meanT_daily[i,j,:], self.leap_year)
+                tadif0 = np.nanmax(monthly_Tm) - np.nanmin(monthly_Tm)
+                
+                # Determine the critical breaking temperature (cbtr)
+                if tadif0 > 35:
+                    cbtr = cbtr1
+                elif tadif0 > 20:
+                    cbtr = cbtr1 + (cbtr2 - cbtr1) * (35 - tadif0) / 15
+                else:
+                    cbtr = cbtr2
+                
+                # three criteria must be satisfied for dormancy (hibernation period) determination
+                # 1. Average Temperature must be less than 5
+                # 2. Dormancy period must be less than 200 days
+                # 3. Average Temperature must satisfy crop-specific temperature threshold.
+                dormancy_days = (self.meanT_daily[i,j,:] < 5) & (self.meanT_daily[i,j,:] >= cbtr)
+
+                idx:int = 0
+                for k in range(len(dormancy_days)):
+                    if dormancy_days[k] == 1:
+                        idx = k
+                        break
+                
+                lgh_b[i,j] = idx+1
+        
+        return lgh_b
+    
+    def getHibernationPeriodLength(self):
+        """
+        Calculate the total number of hibernating periods in a single year frame.
+        
+        Args:
+            None.
+        Return:
+            lgh [2-D NumPy Array]: length of the hibernation period [Unit: Days].
+        """
+
+        # critical temperature threshold of the least sensitive crop: winter rye
+        lgh = np.zeros((self.im_height, self.im_width), dtype = int)
+        cbtr1, cbtr2 = (-11, -16)
+
+        for i in range(self.im_height):
+            for j in range(self.im_width):
+                
+                # print(f'Row {i}, Col {j}')
+                if self.set_mask:
+                    if self.im_mask[i, j]== self.nodata_val:
+                        continue
+                
+                # calculate monthly mean average= 
+                monthly_Tm = averageDailyToMonthly(self.meanT_daily[i,j,:], self.leap_year)
+                tadif0 = np.nanmax(monthly_Tm) - np.nanmin(monthly_Tm)
+                
+                # Determine the critical breaking temperature (cbtr)
+                if tadif0 > 35:
+                    cbtr = cbtr1
+                elif tadif0 > 20:
+                    cbtr = cbtr1 + (cbtr2 - cbtr1) * (35 - tadif0) / 15
+                else:
+                    cbtr = cbtr2
+                
+                # three criteria must be satisfied for dormancy (hibernation period) determination
+                # 1. Average Temperature must be less than 5
+                # 2. Dormancy period must be less than 200 days
+                # 3. Average Temperature must satisfy crop-specific temperature threshold.
+                dormancy_days = (self.meanT_daily[i,j,:] < 5) & (self.meanT_daily[i,j,:] >= cbtr)
+                
+                # sum up all days with satisfied conditions
+                lgh[i,j] = np.nansum(dormancy_days)
+        
+        return lgh
 #----------------- End of file -------------------------#

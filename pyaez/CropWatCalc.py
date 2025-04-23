@@ -15,7 +15,7 @@ Modifications
 import numpy as np
 import numba as nb
 from pyaez.UtilitiesCalc import averageDailyToMonthly
-from pyaez.LGPCalc import rainPeak, psh, EtaCalc
+from pyaez.LGPCalc import rainPeak, psh
 
 ########################################## MAIN FUNCTION ENDS HERE ###################################################################################
 # This code is now working properly. Do not use parallel setting as it will slow down. (Earlier case 1.6 seconds to 4.9 seconds execution)
@@ -949,65 +949,65 @@ def calculateMoistureLimitedYieldNumbaIntermediatesII(irr_or_rain, kc, d_per, cy
     return wde, fc2_final, eta_total,  yld_w, fc2_cycle, fc2_all, adj_kc, ratio, Sb_cycle, Wx_cycle, Wb_cycle, eta_stage, etm_stage, water_balance_results[5], water_balance_results[6]
 
 
-nb.jit(nopython = True)
-def ReferenceWaterBalanceCalc(max_temp, mean_temp, precip, eto, Sa:float = 100., D:float = 1.):
-    """Reference water balance calculation for a single pixel (Relevant to Module I).
+# nb.jit(nopython = True)
+# def ReferenceWaterBalanceCalc(max_temp, mean_temp, precip, eto, Sa:float = 100., D:float = 1.):
+#     """Reference water balance calculation for a single pixel (Relevant to Module I).
     
-    Args:
-        max_temp (1D NumPy Array): daily maximum temperature [Deg Celsius]
-        mean_temp (1D NumPy Array): daily mean temperature [Deg Celsius]
-        precip (1D NumPy Array): daily precipitation [mm/day]
-        eto (1D NumPy Array): daily reference evapotranspiration [mm/day]
-        Sa (int/float): Soil Water Holding Capacity [mm/m]
-        D (int/float): Rooting Depth [m]
-    Return:
+#     Args:
+#         max_temp (1D NumPy Array): daily maximum temperature [Deg Celsius]
+#         mean_temp (1D NumPy Array): daily mean temperature [Deg Celsius]
+#         precip (1D NumPy Array): daily precipitation [mm/day]
+#         eto (1D NumPy Array): daily reference evapotranspiration [mm/day]
+#         Sa (int/float): Soil Water Holding Capacity [mm/m]
+#         D (int/float): Rooting Depth [m]
+#     Return:
         
-    """
-    #============================
-    # Calculation of REFERENCE Water Balance to estimate ETa, ETm
-    #============================
-    kc_list = np.array([0.0, 0.1, 0.2, 0.5, 1.0])
-    #============================
-    Txsnm = 0.  # Txsnm - snow melt temperature threshold
-    Fsnm = 5.5  # Fsnm - snow melting coefficient
-    Sb_old = 0.
-    Wb_old = 0.
+#     """
+#     #============================
+#     # Calculation of REFERENCE Water Balance to estimate ETa, ETm
+#     #============================
+#     kc_list = np.array([0.0, 0.1, 0.2, 0.5, 1.0])
+#     #============================
+#     Txsnm = 0.  # Txsnm - snow melt temperature threshold
+#     Fsnm = 5.5  # Fsnm - snow melting coefficient
+#     Sb_old = 0.
+#     Wb_old = 0.
 
-    #============================
-    Tx365 = max_temp.copy()
-    Ta365 = mean_temp.copy()
-    Pcp365 = precip.copy()
-    Eto365 = eto.copy()  # Eto
-    Etm365 = np.zeros(Tx365.shape)
-    Eta365 = np.zeros(Tx365.shape)
-    Sb365 = np.zeros(Tx365.shape)
-    Wb365 = np.zeros(Tx365.shape)
-    Wx365 = np.zeros(Tx365.shape)
-    kc365 = np.zeros(Tx365.shape)
+#     #============================
+#     Tx365 = max_temp.copy()
+#     Ta365 = mean_temp.copy()
+#     Pcp365 = precip.copy()
+#     Eto365 = eto.copy()  # Eto
+#     Etm365 = np.zeros(Tx365.shape)
+#     Eta365 = np.zeros(Tx365.shape)
+#     Sb365 = np.zeros(Tx365.shape)
+#     Wb365 = np.zeros(Tx365.shape)
+#     Wx365 = np.zeros(Tx365.shape)
+#     kc365 = np.zeros(Tx365.shape)
 
-    lgpt5_point = np.sum(mean_temp >=5)
-    totalPrec_monthly = averageDailyToMonthly(Pcp365)
-    istart0, istart1 = rainPeak(totalPrec_monthly, Ta365, lgpt5_point)
+#     lgpt5_point = np.sum(mean_temp >=5)
+#     totalPrec_monthly = averageDailyToMonthly(Pcp365)
+#     istart0, istart1 = rainPeak(totalPrec_monthly, Ta365, lgpt5_point)
 
-    for doy in range(0, 365):
-        p = psh(0., Eto365[doy])
-        Eta_new, Etm_new, Wb_new, Wx_new, Sb_new, kc_new = EtaCalc(
-                        np.float64(Tx365[doy]), np.float64(
-                            Ta365[doy]),
-                        np.float64(Pcp365[doy]), Txsnm, Fsnm, np.float64(
-                            Eto365[doy]),
-                        Wb_old, Sb_old, doy, istart0, istart1,
-                        Sa, D, p, kc_list, lgpt5_point)
+#     for doy in range(0, 365):
+#         p = psh(0., Eto365[doy])
+#         Eta_new, Etm_new, Wb_new, Wx_new, Sb_new, kc_new = EtaCalc(
+#                         np.float64(Tx365[doy]), np.float64(
+#                             Ta365[doy]),
+#                         np.float64(Pcp365[doy]), Txsnm, Fsnm, np.float64(
+#                             Eto365[doy]),
+#                         Wb_old, Sb_old, doy, istart0, istart1,
+#                         Sa, D, p, kc_list, lgpt5_point)
         
-        if Eta_new <0.: Eta_new = 0.
-        Eta365[doy] = Eta_new
-        Etm365[doy] = Etm_new
-        Wb365[doy] = Wb_new
-        Wx365[doy] = Wx_new
-        Sb365[doy] = Sb_new
-        kc365[doy] = kc_new
+#         if Eta_new <0.: Eta_new = 0.
+#         Eta365[doy] = Eta_new
+#         Etm365[doy] = Etm_new
+#         Wb365[doy] = Wb_new
+#         Wx365[doy] = Wx_new
+#         Sb365[doy] = Sb_new
+#         kc365[doy] = kc_new
 
-        Wb_old = Wb_new
-        Sb_old = Sb_new
+#         Wb_old = Wb_new
+#         Sb_old = Sb_new
 
-    return Eta365, Etm365, Wb365, Wx365, Sb365, kc365
+#     return Eta365, Etm365, Wb365, Wx365, Sb365, kc365

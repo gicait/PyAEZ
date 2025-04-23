@@ -21,7 +21,7 @@ class TerrainConstraints(object):
 
     def importTerrainReductionSheet(self, irr_file_path, rain_file_path):
         """
-        Upload the terrain reduction factor excel sheets into Module V object class.
+        (MANDATORY FUNCTION) Upload the terrain reduction factor excel sheets into Module V object class.
         
         Args:
             rain_file_path (String): file path of terrain reduction factor for rainfed conditions (Excel sheet)
@@ -41,13 +41,29 @@ class TerrainConstraints(object):
         # reduction factor look-up table
         self.rain_np = rain_df.to_numpy()[:,1:].astype(np.float16)
         self.irr_np = irr_df.to_numpy()[:,1:].astype(np.float16)
+    
+    def setStudyAreaMask(self, admin_mask, no_data_value):
+        """
+        (OPTIONAL FUNCTION) Set clipping mask of the area of interest.
+
+        Args:
+            admin_mask (2D NumPy/Binary): mask to extract only region of interest
+            no_data_value (int): pixels with this value will be omitted during PyAEZ calculations
+        """    
+        self.im_mask = admin_mask
+        self.nodata_val = no_data_value
+        self.set_mask = True
 
     def setClimateTerrainData(self, precipitation, slope):
         """
-        Import precipitation and percent slope data into the object class.
+        (MANDATORY FUNCTION) Import precipitation and percent slope data into the object class.
         Args:
-            precipitation (3-D NumPy array): daily or monthly precipitation (Unit: mm/day or mm/month)
-            slope (2-D NumPy array): percent slope (Unit: %)
+            precipitation (3D-NumPy Array): daily or monthly precipitation (Unit: mm/day or mm/month)
+            slope (2D-NumPy Array): percent slope (Unit: %)
+            mask (2D-NumPy Array): mask layer
+            no_val_mask (int): pixel value of mask layer to omit calculation.
+        Return:
+            None.
         """
         self.im_height = slope.shape[0]
         self.im_width = slope.shape[1]
@@ -71,13 +87,14 @@ class TerrainConstraints(object):
             raise ValueError('Time dimension of input wrong. Please check the input.')
 
         # slope is now 3D NumPy Array (Slope distribution classes)
-        self.slope = slope 
+        self.slope = classifySlopeDistribution(slope) 
         self.slope[np.isnan(self.slope)] = 0 # This suppresses warning with NaN values
-        # slope distribution data type reformatting
-        self.slope = self.slope.astype(np.float16)
+
 
     def calculateFI(self):
-        """Calculation of Fournier Index
+        """
+        (MANDATORY FUNCTION) Calculation of Fournier Index
+
         Args:
             None.
         Return:
@@ -91,7 +108,8 @@ class TerrainConstraints(object):
         self.FI = np.multiply(12, (sum_Psquare / sum_P), where= sum_P !=0, out = np.zeros(sum_Psquare.shape))
 
     def getFI(self):
-        """Getting the result of Fournier Index.
+        """
+        Getting the result of Fournier Index.
         
         Args:
             None.
@@ -99,60 +117,67 @@ class TerrainConstraints(object):
             FI (2-D NumPy Array): Fournier Index
         """
         # returning Fournier index
-
         return self.FI
 
+   
     def applyTerrainConstraints(self, yield_in, irr_or_rain):
 
         """
         Apply the terrain reduction factors to the input yield map based on selected water supply setting.
         Based on it, the terrain reduction factor will be calculated to apply yield reduction.
-        
+
         Args:
             yield_in (2-D NumPy Array): input yield, either rainfed or irrigated (Unit: kg/ha)
             irr_or_rain (String): either provide I (Irrigated) or R (Rainfed)
-        
+
         Return:
             final_yield (2-D NumPy Array): terrain-adjusted yield (rainfed or irrigated)
         """
 
-        if irr_or_rain == 'I':
-            crop_P = self.irr_np
-            FI_class = self.irr_FI_class
-            Slope_class = self.irr_slope_class
-            Terrain_factor = self.irr_np
-        elif irr_or_rain == 'R':
-            crop_P = self.rain_np
-            FI_class = self.rain_FI_class
-            Slope_class = self.rain_slope_class
-            Terrain_factor = self.rain_np
-
         yield_final = np.zeros(yield_in.shape)
         self.terrain_fct = np.zeros(yield_in.shape)
-        
-        FI_iter = list(enumerate(FI_class))
+
+        if irr_or_rain == 'I':
+            terrain_factor = self.irr_np
+        else:
+            terrain_factor = self.rain_np
+
+        # Define FI slope classes
+        fi_classes = [(0,1300), (1300, 1800), (1800, 2200), (2200, 2500), (2500, 2700), 'fi>45']
+
         for i in range(self.im_height):
             for j in range(self.im_width):
+                
 
+                if self.set_mask:
+                    if self.im_mask[i, j] == self.nodata_val:
+                        continue 
+                
+                if i==0 or i==self.im_height-1 or j ==0 or j== self.im_width-1:
+                    continue
+                
+                # select an array of slope class distribution
                 slp_arr = self.slope[i,j,:]
 
-                # find relevant FI-class specific terrain factor for all slope classes
-                for k in range(len(FI_iter)):
-                    index, intval = FI_iter[k]
-                    if np.logical_and([self.FI[i,j] >= intval[0]], [self.FI[i,j] < intval[1]]):
-                        fiidx = index
-                        tfct_arr = Terrain_factor[fiidx]
-                        break
-                    else:
-                        pass
-                
-                fc5 = np.divide(tfct_arr, slp_arr, where= slp_arr >0, out = np.zeros(8, dtype = np.float16)) 
+                # get FI class-based terrain reduction factors
+                for k in range(len(fi_classes)):
 
-                # each terrain factor is adjusted with the slope distribution classes and summed up.
-                fc5 = np.sum(fc5)
-                print(fc5)
-                yield_final[i,j] =  fc5 * yield_in[i,j]
+                    if k == 5:
+                        terrain_fct_arr = terrain_factor[k]
+                    else:
+                        if self.FI[i,j] in range(fi_classes[k][0], fi_classes[k][0]):
+                            terrain_fct_arr = terrain_factor[k]
+                            break
+                    
+                # Normalize the slope classs percentages as decimals
+                normalized_slp = slp_arr/100.
+
+                # Application of weighted average of the terrain ratings from all slope classes
+                fc5 = np.sum(np.multiply(normalized_slp, terrain_fct_arr))
                 self.terrain_fct[i,j] = fc5
+
+                # Applying the yield reduction due to terrain condition
+                yield_final[i,j] = yield_in[i,j] * (fc5 / 100)
 
         return yield_final
     
@@ -173,3 +198,77 @@ class TerrainConstraints(object):
 
 #----------------------------------------------End of File-----------------------------------------------#
 #--------------------------------------  END OF TERRAIN CONSTRAINTS  ---------------------------------------#
+
+def classifySlopeDistribution(slp):
+    """
+    Calculates the eight slope class distribution based on GAEZ framework.
+    
+    Arg:
+        slope [2-D NumPy Array]: Percent slope map (Unit = Percent)
+    Return:
+        slp_class [3D NumPy Array]: eight slope class distribution.
+                                    Class 1: 0 - 0.5 % (very flat)
+                                    Class 2: 0.5 - 2 % (flat)
+                                    Class 3: 2 - 5 % (gently sloping)
+                                    Class 4: 5 - 10 % (undulating)
+                                    Class 5: 10 - 15 % (rolling)
+                                    Class 6: 15 - 30 % (hilly)
+                                    Class 7: 30 - 45 % (steep)
+                                    Class 8: > 45 % (very steep)
+    """
+    row,col = slp.shape
+
+    slp_class = np.zeros((row, col, 8), dtype = int)
+    
+    for i in range(row):
+        for j in range(col):
+
+            if i==0 or i==row-1 or j ==0 or j== col-1:
+                continue
+
+            slA = slp[i-1,j-1] # top-left
+            slB = slp[i-1,j] # top-middle
+            slC = slp[i-1,j+1] # top-right
+            slD = slp[i,j-1] # middle-left
+            slE = slp[i,j] # middle
+            slF = slp[i,j+1] # middle-right
+            slG = slp[i+1,j-1] # bottom-left
+            slH = slp[i+1,j] # bottom-middle
+            slI = slp[i+1,j+1] # bottom-right
+
+            # Start counting the corresponding slope class
+            for k in [slA, slB, slC, slD, slE, slF, slG, slH, slI]:
+                
+                # C1: 0 - 0.5 % (very flat)
+                if k >=0 and k< 0.5:
+                    slp_class[i,j,0] =  slp_class[i,j,0] + 1
+                # C2: 0.5 - 2 % (flat)
+                elif k>=0.5 and k<2:
+                    slp_class[i,j,1] =  slp_class[i,j,1] + 1
+                # C3: 2 - 5 % (gently sloping)
+                elif k>=2 and k<5:
+                    slp_class[i,j,2] =  slp_class[i,j,2] + 1
+                # C4: 0 - 0.5 % (undulating)
+                elif k>=5 and k<10:
+                    slp_class[i,j,3] =  slp_class[i,j,3] + 1
+                # C5: 0 - 0.5 % (rolling)
+                elif k>=10 and k<15:
+                    slp_class[i,j,4] =  slp_class[i,j,4] + 1
+                # C6: 0 - 0.5 % (hilly)
+                elif k>=15 and k<30:
+                    slp_class[i,j,5] =  slp_class[i,j,5] + 1
+                # C7: 0 - 0.5 % (steep)
+                elif k>=30 and k<45:
+                    slp_class[i,j,6] =  slp_class[i,j,6] + 1
+                # Cl8: 0 - 0.5 % (very steep)
+                elif k >=45:
+                    slp_class[i,j,7] =  slp_class[i,j,7] + 1
+    
+    total = np.sum(slp_class, axis = 2)
+    total = total[:,:,np.newaxis]
+    total = np.repeat(total, 8, axis = 2)
+    slp_class = np.divide(slp_class, total ,where = total >0, out = np.zeros((row, col, 8)))
+    slp_class = np.round(slp_class*100, decimals= 1)
+    return slp_class
+
+#----------------------------------------------------END OF FILE --------------------------------------------------------------#

@@ -36,6 +36,7 @@ theme:
     - content.code.select
     - content.code.annotate
     - toc.follow
+    - navigation.expand
   palette: 
 
     # Palette toggle for light mode

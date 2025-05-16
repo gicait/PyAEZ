@@ -1,7 +1,8 @@
 """
 PyAEZ version 2.3 (Apr 2025)
 This CropSimulation Class simulates all the possible crop cycles to find 
-the best crop cycle that produces maximum yield for a particular grid
+the best crop cycle that produces maximum yield for a particular grid.
+
 2020: N. Lakmal Deshapriya
 2022/2023: Swun Wunna Htet, Kittiphon Boonma
 2023 (Dec): Swun Wunna Htet
@@ -937,6 +938,62 @@ class CropSimulation(object):
 
         
         print('\nIrrigated Sugarcane Simulation Completed')
+    
+    def simulateRainfedSugarcane(self):
+        """Running the Rainfed Sugarcane calculation/simulation.
+
+        Args:
+            None.
+        Return:
+            None.
+        """
+        bar = '-' * 25
+        msg = {True:'Activated', False:'Deactivated'}
+        print(f'EXECUTING {self.crop_name} Rainfed Crop Simulation\n{bar}', end = '\n')
+        print(f'Masking\t\t\t\t={msg[self.set_mask]}\nThermal Climate Screening\t={msg[self.set_tclimate_screening]}', end= '\n')
+        print(f'TSUM Screening\t\t\t={msg[self.set_Tsum_screening]}\nPermafrost Screening\t\t={msg[self.set_Permafrost_screening]}', end= '\n')
+        print(f'Crop-specific Rule Screening\t={msg[self.setCropSpecificRule]}\n{bar}', end= '\n')
+        
+        # just a counter to keep track of progress
+        count_pixel_completed = 0
+        total = self.im_height * self.im_width
+
+        # this stores final result
+        self.final_yield_rain = np.zeros((self.im_height, self.im_width))
+        self.crop_calender_rain = np.zeros((self.im_height, self.im_width), dtype=int)
+        self.fc2_rain = np.zeros((self.im_height, self.im_width))
+        self.fc1_rain = np.zeros((self.im_height, self.im_width))
+        self.wde_rain = np.zeros((self.im_height, self.im_width))
+        self.eta_rain =  np.zeros((self.im_height, self.im_width))
+
+
+        for i in range(self.im_height):
+            for j in range(self.im_width):
+                
+                
+                # init_suit_chk_data = getInitialSuitabilityCheckData(self.set_mask, self.im_mask[i,j], self.nodata_val, self.set_Permafrost_screening, self.permafrost_class[i,j], 
+                #                                                     self.set_tclimate_screening, self.t_climate[i,j], self.no_t_climate)
+                
+                if InitialSuitabilityCheck(self.set_mask, self.im_mask[i,j], self.nodata_val, 
+                                self.set_Permafrost_screening, self.permafrost_class[i,j], self.set_tclimate_screening,
+                                self.t_climate[i,j], self.no_t_climate):
+
+                    count_pixel_completed = count_pixel_completed + 1
+                    print(f'\rDone:{round(count_pixel_completed / total*100, 2)} %', end='\r')
+                    continue
+
+                if CycleLengthChecking(self.LGPT5[i,j], self.LGPT10[i,j], self.LGP[i,j], self.min_cycle_len, 'R', self.perennial, self.min_temp):
+                    count_pixel_completed = count_pixel_completed + 1
+                    print(f'\rDone:{round(count_pixel_completed / total*100, 2)} %', end='\r')
+                    continue
+
+                self.final_yield_rain[i,j], self.fc1_rain[i,j], self.fc2_rain[i,j], self.eta_rain[i,j], self.wde_rain[i,j], self.crop_calender_rain[i,j] = self.simulateRainfedSugarcaneCropCycleOneTest(i, j)
+
+                count_pixel_completed = count_pixel_completed + 1
+                print(f'\rDone:{round(count_pixel_completed / total*100, 2)} %', end='\r')
+
+        
+        print('\nRainfed Sugarcane Simulation Completed')
     
     # def simulateRainfedCropCycle(self, start_doy:int =1, end_doy:int= 365, step_doy:int = 1, leap_year:bool = False):
     #     """Running the Rainfed crop cycle calculation/simulation.

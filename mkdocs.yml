@@ -1,0 +1,109 @@
+site_name: PyAEZ v2.4 Documentation
+site_dir: site
+use_directory_urls: true
+repo_url: https://github.com/gicait/PyAEZ
+repo_name: gicait/PyAEZ
+plugins:
+  - search
+nav:
+  - Home: index.md
+  - Acknowledgements: Acknowledgements.md
+  - Version Updates: Version Updates.md
+  - About : About.md
+  - Data Preparation & Requirements : Data_Prep.md
+  - Module 1 (Climate Regime): M1.md
+  - Module 2 (Crop Simulation): M2.md
+  - Module 3 (Climatic Constraints): M3.md
+  - Module 4 (Soil Constraints): M4.md
+  - Module 5 (Terrain Constraints): M5.md
+  - Module 6 (Economic Suitability): M6.md
+  - Utility Module (UtilitiesCalc): Util.md
+  - References: References.md
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+  font:
+    text: Merriweather
+    code: Courier Prime
+  features:
+    - navigation.footer
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - navigation.instant.progress
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+    - toc.follow
+  palette: 
+
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+# these configurations cannot be omitted out for every user guide creation
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 1
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - tables
+  - pymdownx.superfences:
+  - attr_list
+  - md_in_html
+  - pymdownx.blocks.caption:
+      prepend: false
+      auto: true
+      auto_level: 0
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format 
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+# extra_css:
+#   - https://unpkg.com/katex@0/dist/katex.min.css
+
+extra:
+  social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/gicait/PyAEZ
+  - icon: fontawesome/brands/linkedin
+    link: https://www.linkedin.com/in/swunwunna101234
+  
+copyright: Copyright &copy; 2025 FAO&GIC-AIT

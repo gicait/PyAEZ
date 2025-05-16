@@ -2,6 +2,14 @@
 [![PyPI version](https://badge.fury.io/py/PyAEZ.svg)](https://pypi.org/project/PyAEZ/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/gicait/PyAEZ/blob/master/LICENSE)
 
+# Note
+
+This branch is an experimental branch which wraps up new functionalities to include in the upcoming new version of PyAEZ. General users are not suggested to use this experimental branch to run AEZ projects. This branch is subjected to merge into master branch in future.
+
+Regards,
+
+Swun Wunna Htet
+
 # PyAEZ
 
 PyAEZ is a python package consisted of many algorithms related to Agro-ecalogical zoning (AEZ) framework. PyAEZ tries to encapsulate all complex calculations in AEZ and try to provide user friendly, and intuitive ways to input data and output results after calculations.

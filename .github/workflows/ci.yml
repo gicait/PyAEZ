@@ -3,7 +3,7 @@ name: Deploy MkDocs site to GitHub Pages
 on:
   push:
     branches:
-      - main
+      - fao_dev
 
 jobs:
   build:

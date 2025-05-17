@@ -1,0 +1,3725 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../Data_Prep/">
+      
+      
+        <link rel="next" href="../M2/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Module 1 (Climate Regime) - PyAEZ v2.4 Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Merriweather:300,300i,400,400i,700,700i%7CCourier+Prime:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Merriweather";--md-code-font:"Courier Prime"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#introduction" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PyAEZ v2.4 Documentation" class="md-header__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PyAEZ v2.4 Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Module 1 (Climate Regime)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/gicait/PyAEZ" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    gicait/PyAEZ
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PyAEZ v2.4 Documentation" class="md-nav__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PyAEZ v2.4 Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/gicait/PyAEZ" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    gicait/PyAEZ
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Acknowledgements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Acknowledgements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Version%20Updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Version Updates
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../About/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    About
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Data_Prep/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Preparation & Requirements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Module 1 (Climate Regime)
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Module 1 (Climate Regime)
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-setting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mandatory Setting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mandatory Setting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initialization-of-m1-object-class-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization of M1 Object Class Creation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-geographical-and-terrain-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting up Geographical and Terrain Data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uploading-the-climatic-data-and-soil-water-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Uploading the Climatic Data and Soil Water Data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-setting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optional Setting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optional Setting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setting-the-study-area-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting the Study Area Inputs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#major-functionalities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Major Functionalities
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Major Functionalities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#thermal-climate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Climate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Zone
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-length-of-growing-period-lgpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Length of Growing Period (LGPt)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temperature-summation-tsum" class="md-nav__link">
+    <span class="md-ellipsis">
+      Temperature Summation (TSUM)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temperature-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Temperature Profiles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#length-of-growing-period-lgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Length of Growing Period (LGP)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#equivalent-length-of-growing-period-lgpequv" class="md-nav__link">
+    <span class="md-ellipsis">
+      Equivalent Length of Growing Period (LGPequv)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moisture-regime-lgp-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moisture Regime (LGP Classes)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-zones-for-fallow-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Zones for Fallow Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#air-frost-index-and-permafrost-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Air Frost Index and Permafrost Evaluation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aez-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      AEZ Classification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-cropping-zonation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-cropping Zonation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annual-temperature-amplitude" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annual Temperature Amplitude
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annual-reference-evapotranspiration-et0" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annual Reference Evapotranspiration (ET0)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annual-reference-actual-evapotranspiration-eta" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annual Reference Actual Evapotranspiration (ETa)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annual-moisture-availability-index-pet0" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annual Moisture Availability Index (P/ET0)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-annual-water-deficit-wde" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reference Annual Water Deficit (Wde)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#net-primary-productivity-npp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Net Primary Productivity (NPP)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#longest-component-of-lgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Longest Component of LGP
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#beginning-date-of-the-lgp-longest" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beginning Date of the LGP Longest
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#length-of-hibernation-period" class="md-nav__link">
+    <span class="md-ellipsis">
+      Length of Hibernation Period
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#beginning-date-of-the-hibernation-period" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beginning Date of the Hibernation Period
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Module 2 (Crop Simulation)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Module 3 (Climatic Constraints)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Module 4 (Soil Constraints)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Module 5 (Terrain Constraints)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Module 6 (Economic Suitability)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Util/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Utility Module (UtilitiesCalc)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../References/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    References
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-setting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mandatory Setting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mandatory Setting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initialization-of-m1-object-class-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization of M1 Object Class Creation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-geographical-and-terrain-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting up Geographical and Terrain Data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uploading-the-climatic-data-and-soil-water-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Uploading the Climatic Data and Soil Water Data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-setting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optional Setting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optional Setting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setting-the-study-area-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting the Study Area Inputs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#major-functionalities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Major Functionalities
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Major Functionalities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#thermal-climate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Climate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Zone
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-length-of-growing-period-lgpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Length of Growing Period (LGPt)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temperature-summation-tsum" class="md-nav__link">
+    <span class="md-ellipsis">
+      Temperature Summation (TSUM)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temperature-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Temperature Profiles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#length-of-growing-period-lgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Length of Growing Period (LGP)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#equivalent-length-of-growing-period-lgpequv" class="md-nav__link">
+    <span class="md-ellipsis">
+      Equivalent Length of Growing Period (LGPequv)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moisture-regime-lgp-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moisture Regime (LGP Classes)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-zones-for-fallow-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Zones for Fallow Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#air-frost-index-and-permafrost-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Air Frost Index and Permafrost Evaluation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aez-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      AEZ Classification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-cropping-zonation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-cropping Zonation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annual-temperature-amplitude" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annual Temperature Amplitude
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annual-reference-evapotranspiration-et0" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annual Reference Evapotranspiration (ET0)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annual-reference-actual-evapotranspiration-eta" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annual Reference Actual Evapotranspiration (ETa)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annual-moisture-availability-index-pet0" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annual Moisture Availability Index (P/ET0)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-annual-water-deficit-wde" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reference Annual Water Deficit (Wde)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#net-primary-productivity-npp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Net Primary Productivity (NPP)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#longest-component-of-lgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Longest Component of LGP
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#beginning-date-of-the-lgp-longest" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beginning Date of the LGP Longest
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#length-of-hibernation-period" class="md-nav__link">
+    <span class="md-ellipsis">
+      Length of Hibernation Period
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#beginning-date-of-the-hibernation-period" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beginning Date of the Hibernation Period
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h1>
+<p>This module performs climate data analysis and compiling general agro-climatic indicators. These general agro-climatic indicators summarize climatic profiles in the study area for each grid. Figure 4 shows the overall workflow of Module 1. The key input data for this module is the climatic data, and the geographical and terrain data. This section offers descriptions of the all the functions within Module 1, with example code snippets. It is advisable to always run this module first, as several agro-climatic indicators output from Module 1 will get feed into Module 2 (Crop Simulation).</p>
+<p><strong>Figure: Overview of Module I: Climate Regime</strong>
+<img alt="Alt text" src="assets\M1_overview.png" /></p>
+<h2 id="mandatory-setting">Mandatory Setting<a class="headerlink" href="#mandatory-setting" title="Permanent link">&para;</a></h2>
+<p>These following functions are required to set up first before AEZ project initialization.</p>
+<h3 id="initialization-of-m1-object-class-creation">Initialization of M1 Object Class Creation<a class="headerlink" href="#initialization-of-m1-object-class-creation" title="Permanent link">&para;</a></h3>
+<p>PyAEZ codes utilizes ‘Object-Oriented Programming’ style, meaning that each module has its own Classes containing separate attributes and functions. Therefore, it is essential that the necessary object-classes are initiated at the beginning of each module. For Module 1, the Class that we need is called ‘ClimateRegime’, and is imported and initiated as</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">M1 Object Class Creation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyaez</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClimateRegime</span> 
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="n">clim_reg</span> <span class="o">=</span> <span class="n">ClimateRegime</span><span class="o">.</span><span class="n">ClimateRegime</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<hr />
+<h3 id="setting-up-geographical-and-terrain-data">Setting up Geographical and Terrain Data<a class="headerlink" href="#setting-up-geographical-and-terrain-data" title="Permanent link">&para;</a></h3>
+<p>The next mandatory step after object class creation is to input user’s elevation and geographic latitude information into the object class by using this function. This will generate the latitude map within in the object class.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting up latitudes and elevation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
+<span class="normal"><a href="#__codelineno-1-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="c1"># Load geographical location and elevation data into object class</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="n">clim_reg</span><span class="o">.</span><span class="n">setLocationTerrainData</span><span class="p">(</span><span class="n">lat_min</span><span class="p">,</span> <span class="n">_lat_max</span><span class="p">,</span> <span class="n">elevation</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lat_min</td>
+<td>minimum latitude extent</td>
+<td>Decimal Degrees</td>
+<td>float</td>
+</tr>
+<tr>
+<td>lat_max</td>
+<td>maximum latitude extent</td>
+<td>Decimal Degrees</td>
+<td>float</td>
+</tr>
+<tr>
+<td>elevation</td>
+<td>Elevation</td>
+<td>meters</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="uploading-the-climatic-data-and-soil-water-data">Uploading the Climatic Data and Soil Water Data<a class="headerlink" href="#uploading-the-climatic-data-and-soil-water-data" title="Permanent link">&para;</a></h3>
+<p>The third and final mandatory step of preparation is to incorporate all the required climatic datasets into the object class. Depending on the temporal dimension of climatic datasets, the function will handle time dimension to be able to calculate for year-round (365/366 days for leap year). For agro-climatic analysis , the soil water holding capacity (Sa) is set up as 100 mm and rooting depth of one meter by default, representing the reference crop (grass). The function will proceed the additional internal calculations and water balance calculation for the reference crop.</p>
+<p>Make sure the dimensions of all the climatic variables are the same. The system will stop execution once it detects different array dimensions.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting Climate and Soil Water Data</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
+<span class="normal"><a href="#__codelineno-2-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="c1"># Use this new function of all climate and soil water importing</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="n">clim_reg</span><span class="o">.</span><span class="n">setClimateAndSoilWaterData</span><span class="p">(</span><span class="n">min_temp</span><span class="p">,</span> <span class="n">max_temp</span><span class="p">,</span> <span class="n">precipitation</span><span class="p">,</span> <span class="n">short_rad</span><span class="p">,</span> <span class="n">wind_speed</span><span class="p">,</span> <span class="n">rel_humidity</span><span class="p">,</span> <span class="n">Sa</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>min_temp</td>
+<td>Minimum temperature</td>
+<td>&#176;C</td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>max_temp</td>
+<td>Maximum temperature</td>
+<td>&#176;C</td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>precipitation</td>
+<td>Total precipitation</td>
+<td>mmday<sup>-1</sup></td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>short_rad</td>
+<td>Shortwave radiation</td>
+<td>Wm<sup>-2</sup></td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>wind_speed</td>
+<td>Wind speed measured at 2-meter height</td>
+<td>ms<sup>-1</sup></td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>rel_humidity</td>
+<td>Relative humidity</td>
+<td>Decimal (0-1)</td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>Sa</td>
+<td>Soil Water Holding Capacity</td>
+<td>mm/m</td>
+<td>Int/float/2D-NumPy Array</td>
+<td>None</td>
+</tr>
+<tr>
+<td>D</td>
+<td>Rooting Depth</td>
+<td>m</td>
+<td>Int/float</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="optional-setting">Optional Setting<a class="headerlink" href="#optional-setting" title="Permanent link">&para;</a></h2>
+<p>These following functions are optional during the initial setup before the main functions are executed.</p>
+<h3 id="setting-the-study-area-inputs">Setting the Study Area Inputs<a class="headerlink" href="#setting-the-study-area-inputs" title="Permanent link">&para;</a></h3>
+<p>This function is set up as an optional step which set up the mask layer as input which reduces the computation time outside the pixels of considerations.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Mask Layer Setting</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span>
+<span class="normal"><a href="#__codelineno-3-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="c1"># Set up mask for the study area (country, regional, or local)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="n">terrain</span><span class="o">.</span><span class="n">setStudyAreaMask</span><span class="p">(</span><span class="n">admin_mask</span><span class="p">,</span> <span class="n">no_data_value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>admin_mask</td>
+<td>Mask Layer/Region of Interest</td>
+<td>Binary(0,1)/Categorical(1,2,...)</td>
+<td>2D NumPy Array</td>
+</tr>
+<tr>
+<td>no_data_value</td>
+<td>Value of mask layer to skip calculation</td>
+<td>Mask value from the layer. Default to 0</td>
+<td>Integer</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="major-functionalities">Major Functionalities<a class="headerlink" href="#major-functionalities" title="Permanent link">&para;</a></h2>
+<h3 id="thermal-climate">Thermal Climate<a class="headerlink" href="#thermal-climate" title="Permanent link">&para;</a></h3>
+<p>The Thermal Climate function calculates and classifies latitudinal thermal climate, which will be used later in Module 2 for the assessment of potential crops and Land Utilization Types (LUT) presence in each grid cell. It is advisable to use an average of multiple years of temperature data (e.g. 30 years) rather than a single-year data, to obtain better representation of the climate for the study region. Table 5 describes the classification of thermal climates based on:</p>
+<ol>
+<li>the monthly mean temperature (sea-level adjusted)</li>
+<li>the ratios between summer/winter rainfall and the reference evapotranspiration (P/ETo)</li>
+<li>the temperature amplitude as a measure of continentality (i.e. the difference between temperatures of warmest and coldest month) (Fischer et al., 2021).</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Additional Information</p>
+<p>In GAEZ, the sea-level adjusted monthly mean temperature is calculated with a fixed lapse of 0.55&#176;C/100 meters of elevation. This adjustment is already implemented in PyAEZ.</p>
+</div>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Thermal Climate</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span>
+<span class="normal"><a href="#__codelineno-4-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="c1"># Zonation of thermal climates classes</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="n">tclimate</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getThermalClimate</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tclimate</td>
+<td>Thermal Climate Classes</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Classification of Thermal Climate Classes According to Rainfall and Temperature Seasonality</strong></p>
+<table>
+<thead>
+<tr>
+<th>Climate</th>
+<th>Rainfall and Temperature Seasonality</th>
+<th>Thermal Climate Class</th>
+<th style="text-align: center;">Pixel Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tropics</strong> <br/> All months with monthly mean sea-level adjusted temperature&gt; 18&#176;C and monthly temperature amplitude &lt; 15 &#176;C</td>
+<td>Tropics with actual mean temperature (Ta) above 20 &#176;C</td>
+<td><em>Tropical lowland</em></td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td></td>
+<td>Tropics with actual mean temperatures below 20 &#176;C</td>
+<td><em>Tropical highland</em></td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr>
+<td><strong>Subtropics</strong> <br/>One or more months with monthly mean temperatures, corrected to sea level, below 18&#176;C, but all above 5&#176;C, and 8-12 months above 10&#176;C</td>
+<td><ins>Northern Hemisphere</ins>: P/ET0 in April-September &gt;= P/ET0 in October-March. <br/> <ins>Southern Hemisphere</ins>:  P/ET0 in October-March &gt;= P/ET0 in April-September.</td>
+<td><em>Summer rainfall</em></td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr>
+<td></td>
+<td><ins>Northern Hemisphere</ins>: P/ET0 in April-September &lt;= P/ET0 in October-March. <br/> <ins>Southern Hemisphere</ins>:  P/ET0 in October-March &lt;&gt;= P/ET0 in April-September.</td>
+<td><em>Winter rainfall</em></td>
+<td style="text-align: center;">4</td>
+</tr>
+<tr>
+<td></td>
+<td>Annual rainfall less than 250 mm</td>
+<td><em>Low rainfall</em></td>
+<td style="text-align: center;">5</td>
+</tr>
+<tr>
+<td><strong>Temperate</strong> <br/>At least one month with monthly mean temperatures, corrected to sea level, below 5&#176;C and 1-3 months above 10&#176;C</td>
+<td>Seasonality less than 20&#176;C</td>
+<td><em>Oceanic</em></td>
+<td style="text-align: center;">6</td>
+</tr>
+<tr>
+<td></td>
+<td>Seasonality 20 - 35&#176;C</td>
+<td><em>Sub-continental</em></td>
+<td style="text-align: center;">7</td>
+</tr>
+<tr>
+<td></td>
+<td>Seasonality more than 35&#176;C</td>
+<td><em>Continental</em></td>
+<td style="text-align: center;">8</td>
+</tr>
+<tr>
+<td><strong>Boreal</strong> <br/> At least one month with monthly mean temperatures, corrected to sea level, below 5&#176;C and 1-3 months above 10&#176;C</td>
+<td>Seasonality less than 20&#176;C</td>
+<td><em>Oceanic</em></td>
+<td style="text-align: center;">9</td>
+</tr>
+<tr>
+<td></td>
+<td>Seasonality 20 - 35&#176;C</td>
+<td><em>Sub-continental</em></td>
+<td style="text-align: center;">10</td>
+</tr>
+<tr>
+<td></td>
+<td>Seasonality more than 35&#176;C</td>
+<td><em>Continental</em></td>
+<td style="text-align: center;">11</td>
+</tr>
+<tr>
+<td><strong>Arctic</strong></td>
+<td>All months with monthly mean temperatures, corrected to sea level, below 10&#176;C</td>
+<td><em>Arctic</em></td>
+<td style="text-align: center;">12</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Additional Information</p>
+<p>Monthly temperature amplitude = monthly maximum temperature - monthly minimum temperature
+Seasonality = the difference in mean temperature of the warmest and the coldest month</p>
+</div>
+<hr />
+<h3 id="thermal-zone">Thermal Zone<a class="headerlink" href="#thermal-zone" title="Permanent link">&para;</a></h3>
+<p>The thermal zone is classified based on the actual temperature which reflects on the temperature regimes of the major thermal climaes.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Thermal Zones</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="n">tzone</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getThermalZone</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tzone</td>
+<td>Thermal Zone Classes</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Classification of Thermal Zone Classes According to Rainfall and Temperature Seasonality</strong></p>
+<table>
+<thead>
+<tr>
+<th>Climate</th>
+<th>Rainfall and Temperature Seasonality</th>
+<th>Thermal Climate Class</th>
+<th style="text-align: center;">Pixel Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tropics</strong> <br/> All months with monthly mean sea-level adjusted temperature&gt; 18&#176;C and monthly temperature amplitude &lt; 15 &#176;C</td>
+<td>Tropics with annual mean temperature above 20&#176;C</td>
+<td><em>Warm</em></td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td></td>
+<td>Tropics with annual mean temperatures below 20&#176;C</td>
+<td><em>Cool/Cold/Very Cold</em></td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr>
+<td><strong>Subtropics</strong> <br/>One or more months with monthly mean temperatures, corrected to sea level, below 18&#176;C, but all above 5&#176;C, and 8-12 months above 10&#176;C</td>
+<td>Annual mean temperatue below 20&#176;C</td>
+<td><em>Warm/Moderately cool</em></td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr>
+<td></td>
+<td>At least one month with monthly mean temperature below 5&#176;C and 4 or more months above 10&#176;C</td>
+<td><em>Cool</em></td>
+<td style="text-align: center;">4</td>
+</tr>
+<tr>
+<td></td>
+<td>At leaset one month with monthly mean temperatures below 5&#176;C and 1-3 months above 10&#176;C</td>
+<td><em>Cold</em></td>
+<td style="text-align: center;">5</td>
+</tr>
+<tr>
+<td></td>
+<td>All months with monthly mean temperatures below 10&#176;C</td>
+<td><em>Very cold</em></td>
+<td style="text-align: center;">6</td>
+</tr>
+<tr>
+<td><strong>Temperate</strong> <br/>At least one month with monthly mean temperatures, corrected to sea level, below 5&#176;C and 1-3 months above 10&#176;C</td>
+<td>At lease one month with monthly mean temperatures below 5&#176;C and 4 or more months above 10</td>
+<td><em>Cool</em></td>
+<td style="text-align: center;">7</td>
+</tr>
+<tr>
+<td></td>
+<td>At lease one month with monthly mean temperatures below 5&#176;C and 1-3 months above 10&#176;C</td>
+<td><em>Cold</em></td>
+<td style="text-align: center;">8</td>
+</tr>
+<tr>
+<td></td>
+<td>All months with monthly mean temperatures below 10&#176;C</td>
+<td><em>Very cold</em></td>
+<td style="text-align: center;">9</td>
+</tr>
+<tr>
+<td><strong>Boreal</strong> <br/> At least one month with monthly mean temperatures, corrected to sea level, below 5&#176;C and 1-3 months above 10&#176;C</td>
+<td>At lease one month with monthly mean temperatures below 5&#176;C and 1-3 months above 10&#176;C</td>
+<td><em>Cold</em></td>
+<td style="text-align: center;">10</td>
+</tr>
+<tr>
+<td></td>
+<td>All months with monthly mean temperatures below 10&#176;C</td>
+<td><em>Very cold</em></td>
+<td style="text-align: center;">11</td>
+</tr>
+<tr>
+<td>Arctic</td>
+<td>All months with monthly mean temperatures, corrected to sea level, below 10&#176;C</td>
+<td><em>Arctic</em></td>
+<td style="text-align: center;">12</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Additional Information</p>
+<p>Monthly temperature amplitude = monthly maximum temperature - monthly minimum temperature</p>
+</div>
+<hr />
+<h3 id="thermal-length-of-growing-period-lgpt">Thermal Length of Growing Period (LGP<sub>t</sub>)<a class="headerlink" href="#thermal-length-of-growing-period-lgpt" title="Permanent link">&para;</a></h3>
+<p>Thermal length of growing period (LGP<sub>t</sub>), also known as temperature growing periods in GAEZ terminology, is defined as the number of days in a year during which the daily mean temperature (Ta) is conductive to crop growth and development. PyAEZ uses the AEZ three standard temperature thresholds for LGP<sub>t</sub>:</p>
+<ol>
+<li>Periods with Ta &gt; 0&#176;C (LGP<sub>t0</sub>)</li>
+<li>Periods with Ta &gt; 5&#176;C (LGP<sub>t5</sub>)</li>
+<li>Periods with Ta &gt; 10&#176;C (LGP<sub>t10</sub>)</li>
+</ol>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">LGP<sub>t0</sub></label><label for="__tabbed_1_2">LGP<sub>t5</sub></label><label for="__tabbed_1_3">LGP<sub>t10</sub></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># For zero degress</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">lgpt0</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getThermalLGP0</span><span class="p">()</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># For five degress</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">lgpt5</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getThermalLGP5</span><span class="p">()</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># For ten degress</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">lgpt10</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getThermalLGP10</span><span class="p">()</span> 
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgpt</td>
+<td>temperature growing periods at specific degree thershold (Days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="temperature-summation-tsum">Temperature Summation (TSUM)<a class="headerlink" href="#temperature-summation-tsum" title="Permanent link">&para;</a></h3>
+<p>Temperature summation corresponds to the accumulated temperature which represents the crop/LUT specific heat requirements (Fischer et al., 2021). Reference temperature sums (TSUM) are calcualted for each grid-cell by accumulative daily average temperature (Ta) for days when Ta is above the thresholds as follows:</p>
+<ol>
+<li>TSUM with Ta &gt; 0&#176;C (TSUM<sub>t0</sub>)</li>
+<li>TSUM with Ta &gt; 5&#176;C (TSUM<sub>t5</sub>)</li>
+<li>TSUM with Ta &gt; 10&#176;C (TSUM<sub>t10</sub>)</li>
+</ol>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">TSUM<sub>t0</sub></label><label for="__tabbed_2_2">TSUM<sub>t5</sub></label><label for="__tabbed_2_3">TSUM<sub>t10</sub></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># For zero degress</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">tsum0</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getTemperatureSum0</span><span class="p">()</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># For five degress</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">tsum5</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getTemperatureSum5</span><span class="p">()</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># For ten degress</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">tsum10</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getTemperatureSum10</span><span class="p">()</span> 
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tsum</td>
+<td>acccumulated temperature at specific degree thershold (Degree-Days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="temperature-profiles">Temperature Profiles<a class="headerlink" href="#temperature-profiles" title="Permanent link">&para;</a></h3>
+<p>Temperature profiles can be classified to nine classes of different daily temperature ranges between Ta &lt; -5&#176;C to Ta &gt; 30&#176;C. This classification uses 5&#176;C intervals as well as distinguishes the increasing and decreasing temperature trends within a year (Fischer et al., 2021).</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Temperature Profiles</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1">1</a></span>
+<span class="normal"><a href="#__codelineno-12-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="c1"># Classification of temperature ranges for temperature profile</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a><span class="n">tprofile</span>  <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getTemperatureProfile</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tprofile</td>
+<td>Each NumPy Array corresponds to each temperature profile class listed as (A1-A9, B1-B9)</td>
+<td>list of 18 2D-NumPy Arrays</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Temperature Profile Classes</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Mean Daily Temperature (&#176;C)</th>
+<th style="text-align: center;">Increasing Temperature Trend</th>
+<th style="text-align: center;">Decreasing Temperature Trend</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">30</td>
+<td style="text-align: center;">A1</td>
+<td style="text-align: center;">B1</td>
+</tr>
+<tr>
+<td style="text-align: center;">25 - 30</td>
+<td style="text-align: center;">A2</td>
+<td style="text-align: center;">B2</td>
+</tr>
+<tr>
+<td style="text-align: center;">20 - 25</td>
+<td style="text-align: center;">A3</td>
+<td style="text-align: center;">B3</td>
+</tr>
+<tr>
+<td style="text-align: center;">15 - 20</td>
+<td style="text-align: center;">A4</td>
+<td style="text-align: center;">B4</td>
+</tr>
+<tr>
+<td style="text-align: center;">10 - 15</td>
+<td style="text-align: center;">A5</td>
+<td style="text-align: center;">B5</td>
+</tr>
+<tr>
+<td style="text-align: center;">5 - 10</td>
+<td style="text-align: center;">A6</td>
+<td style="text-align: center;">B6</td>
+</tr>
+<tr>
+<td style="text-align: center;">0 - 5</td>
+<td style="text-align: center;">A7</td>
+<td style="text-align: center;">B7</td>
+</tr>
+<tr>
+<td style="text-align: center;">-5 - 0</td>
+<td style="text-align: center;">A8</td>
+<td style="text-align: center;">B8</td>
+</tr>
+<tr>
+<td style="text-align: center;">&lt; -5</td>
+<td style="text-align: center;">A9</td>
+<td style="text-align: center;">B9</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="length-of-growing-period-lgp">Length of Growing Period (LGP)<a class="headerlink" href="#length-of-growing-period-lgp" title="Permanent link">&para;</a></h3>
+<p>The length of growing periods (LGP) is defined as the number of days during the year when the temperature regime and moisture supply are conductive to crop growth and development. LGP, therefore, acts as an agro-climatic indicator of the potential productivity of an area of land.</p>
+<p>The LGP determination in PyAEZ is determined based on prevailing temperatures and the water balance calculated for an assumed reference crop. Mathematically, LGP day is considered when average daily temperature is above 5&#176;C and ETa of the reference crop exceeds a specified fraction of maximum reference e, i.e., LGP = count(ETa &gt;= 0.4 * ETa). For reference water balance calculation, the underlying LGP calculation assumes an effective soil depth of one meter and a soil water holding capacity <em>Smax</em> of 100 mm/m, which is calculated year-round for 365 days or 366 for leap year. A specific list of kc factors used to relate the reference crop potential evapotranspiration (ETM) are implemented in PyAEZ in the following table.</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling LGP</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1">1</a></span>
+<span class="normal"><a href="#__codelineno-13-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="c1"># Classification of LGP</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2"></a><span class="n">lgp</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getLGP</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgp</td>
+<td>Length of Growing Period (days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kc Values used in Module 1 for the calculation of the maximum evapotranspiration (ETm)</strong></p>
+<table><thead>
+  <tr>
+    <th>Daily Temperature Condition</th>
+    <th>Remarks</th>
+    <th>Kc</th>
+  </tr></thead>
+<tbody>
+  <tr>
+    <td colspan="3">Areas with year-round temperature growing periods (LGPt5 = 365 days)</td>
+  </tr>
+  <tr>
+    <td>Daily Ta &gt;= 5&#176;C; LGPt5 = 365 days</td>
+    <td>In areas with year-round LGPt5, the kc values stays at 1</td>
+    <td>1.0</td>
+  </tr>
+  <tr>
+    <td colspan="3">Areas with dormancy period or cold break - LGPt5 less than 365 days<br></td>
+  </tr>
+  <tr>
+    <td>Daily Ta &lt;= 0&#176;C, Tmax &lt;0&#176;C</td>
+    <td>Precipitation falls as snow and is added to snow bucket</td>
+    <td>0.0</td>
+  </tr>
+  <tr>
+    <td>Daily Ta &lt;= 0&#176;C; Tmax &gt;=0&#176;C</td>
+    <td>Snowmelt takes place (water balance = precipitation +snowmelt); minor evapotranspiration</td>
+    <td>0.1</td>
+  </tr>
+  <tr>
+    <td>0&#176;C &lt; Daily Ta &lt; 5&#176;C; Ta trend upward</td>
+    <td>Some biological activities before the start of the growing period</td>
+    <td>0.2</td>
+  </tr>
+  <tr>
+    <td>Daily Ta &gt;= 5&#176;C, LGPt5&lt;365 days; Case 1</td>
+    <td>Kc used for the days prior to the start of the growing period</td>
+    <td>0.5</td>
+  </tr>
+  <tr>
+    <td>Daily Ta &gt;= 5&#176;C, LGPt5&lt;365 days; Case 2</td>
+    <td>Kc increases from 0.5 to 1.0 during the first month of LGP</td>
+    <td>0.5 - 1.0</td>
+  </tr>
+  <tr>
+    <td>Daily Ta &gt;= 5&#176;C, LGPt5&lt;365 days; Case 3</td>
+    <td>Kc = 1 until the daily Ta falls below 5&#176;C</td>
+    <td>1.0</td>
+  </tr>
+  <tr>
+    <td>0&#176;C &lt; Daily Ta &lt; 5&#176;C, Ta trend downward</td>
+    <td>Reduced biological activities before dormancy</td>
+    <td>0.2</td>
+  </tr>
+</tbody></table>
+
+<hr />
+<h3 id="equivalent-length-of-growing-period-lgpequv">Equivalent Length of Growing Period (LGP<sub>equv</sub>)<a class="headerlink" href="#equivalent-length-of-growing-period-lgpequv" title="Permanent link">&para;</a></h3>
+<p>Reference LGP accounts for both temperature and soil moisture conditions and do not necessarily accounts for significant differences in wetness conditions especially with Long LGPs (&gt; 225 days). For a better reflection of wetness conditions, equivalent LGP is used, which is defined based on the regression analysis of the reference LGP and the humidity index (P/ET0). as follows:</p>
+<p>A quadratic polynomial is used to express the relationship between the number of growing period days and the annual humidity index. Parameters were estimated using data of all grid cells with essentially year-round temperature growing periods, i.e., with LGP<sub>t5</sub> = 365.</p>
+<div class="arithmatex">\[
+LGP_{eq} =
+\begin{cases}
+14.0 + 293.66 \times \left(\frac{P}{ET_0}\right) - 61.25 \times \left(\frac{P}{ET_0}\right)^2, &amp; \text{when } \left(\frac{P}{ET_0}\right) \leq 2.4 \\
+366, &amp; \text{when } \left(\frac{P}{ET_0}\right) &gt; 2.4
+\end{cases}
+\]</div>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling LGP~equv~</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1">1</a></span>
+<span class="normal"><a href="#__codelineno-14-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><span class="c1"># Classification of Equivalent LGP</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2"></a><span class="n">lgp_equv</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getLGPEquivalent</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgp_equv</td>
+<td>Equivalent LGP (days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="moisture-regime-lgp-classes">Moisture Regime (LGP Classes)<a class="headerlink" href="#moisture-regime-lgp-classes" title="Permanent link">&para;</a></h3>
+<p>LGP data can also be used for the classification of land into generalized moisture regime classes. The GAEZ definitions of each moisture regime classes presented as follows:</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Moisture Regime</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span>
+<span class="normal"><a href="#__codelineno-15-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a><span class="c1"># Classification of LGP</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2"></a><span class="n">lgp_class</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getLGPClassified</span><span class="p">(</span><span class="n">lgp</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgp</td>
+<td>Length of growing period (Days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgp_class</td>
+<td>Moisture Regime</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Classification of Moisture Regimes Based on Length of Growing Period</strong></p>
+<table>
+<thead>
+<tr>
+<th>Length of Growing Periods (Days)</th>
+<th style="text-align: center;">Moisture Regime</th>
+<th style="text-align: center;">Pixel Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td style="text-align: center;">Hyper-arid</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>&lt; 60</td>
+<td style="text-align: center;">Arid</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr>
+<td>60 - 119</td>
+<td style="text-align: center;">Dry semi-arid</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr>
+<td>120 - 179</td>
+<td style="text-align: center;">Moist semi-arid</td>
+<td style="text-align: center;">4</td>
+</tr>
+<tr>
+<td>180 - 269</td>
+<td style="text-align: center;">Sub-humid</td>
+<td style="text-align: center;">5</td>
+</tr>
+<tr>
+<td>270 - 364</td>
+<td style="text-align: center;">Humid</td>
+<td style="text-align: center;">6</td>
+</tr>
+<tr>
+<td>&gt;= 365 (year-round growing period)</td>
+<td style="text-align: center;">Per-humid</td>
+<td style="text-align: center;">7</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="thermal-zones-for-fallow-requirements">Thermal Zones for Fallow Requirements<a class="headerlink" href="#thermal-zones-for-fallow-requirements" title="Permanent link">&para;</a></h3>
+<p>Fallow is an agricultural technique that consists of not sowing the arable land during one or more growing seasons. In AEZ framework, the fallow factors have been established by main crop groups and environmental conditions. The crop groups include cereals, legumes, roots, and tubers, and a miscellaneous group consisting of long-term annuals/perennials. The fallow factors are expressed as percentage of time during the fallow-croopping cycle the land must be under fallow. PyAEZ determine the fallow requirements using thermal zones. For further information on the fallow period requirements, please refer to Appendix 6-10 of the <em>GAEZ v4 Model Documentation</em> (Fischer et al., 2021).</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Revised Thermal Zones for Fallow Requirements</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">1</a></span>
+<span class="normal"><a href="#__codelineno-16-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="c1"># Tzones for fallow requirements</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2"></a><span class="n">fallow</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">TZoneFallowRequirement</span><span class="p">(</span><span class="n">tzone</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tzone</td>
+<td>Thermal Zone Classes</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fallow</td>
+<td>Thermal zones for fallow requirements</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Thermal Zone Classes Definitions Relevant to Fallow Period Requirements</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Thermal Zone Name</th>
+<th style="text-align: left;">Class Definition</th>
+<th style="text-align: center;">Pixel Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Tropics</td>
+<td style="text-align: left;">Annual mean temperature &gt; 25&#176;C</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Tropics</td>
+<td style="text-align: left;">Annual mean temperature between 20 - 25&#176;C</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Tropics</td>
+<td style="text-align: left;">Annual mean temperature between 15 - 20&#176;C</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Tropics</td>
+<td style="text-align: left;">Annual mean temperature &lt; 15&#176;C</td>
+<td style="text-align: center;">4</td>
+</tr>
+<tr>
+<td style="text-align: left;">Seasonal</td>
+<td style="text-align: left;">Mean Temperature of the warmest month &gt; 20&#176;C</td>
+<td style="text-align: center;">5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Seasonal</td>
+<td style="text-align: left;">Mean Temperature of the warmest month &lt; 20&#176;C</td>
+<td style="text-align: center;">6</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="air-frost-index-and-permafrost-evaluation">Air Frost Index and Permafrost Evaluation<a class="headerlink" href="#air-frost-index-and-permafrost-evaluation" title="Permanent link">&para;</a></h3>
+<p>Occurrence of continuous or discontinuouos permafrost conditions are used in the suitability assessment. Permafrost areas are characterized by sub-soil at or below the freezing point for tow or more years. PyAEZ utilizes the air frost index (FI) which is used to characterize climate-derived permafrost condition.</p>
+<p>Reference permafrost zones are determined based on prevailing daily mean air temperature (Ta). For the first step of calcualtion, the accumulated degree-days, above and below 0&#176;C are used to calculate two indices, the thawing index (DDT) and the freezing index (DDF).</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Air Frost Index</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-17-1">1</a></span>
+<span class="normal"><a href="#__codelineno-17-2">2</a></span>
+<span class="normal"><a href="#__codelineno-17-3">3</a></span>
+<span class="normal"><a href="#__codelineno-17-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1"></a><span class="c1"># </span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2"></a><span class="n">permafrost</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">AirFrostIndexandPermafrostEvaluation</span><span class="p">()</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3"></a><span class="n">fi</span> <span class="o">=</span> <span class="n">permafrost</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># air frost index</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4"></a><span class="n">perma_class</span> <span class="o">=</span> <span class="n">permafrost</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># permafrost classes</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>permafrost</td>
+<td>air frost index and permafrost classes</td>
+<td>python list of 2D-NumPy Arrays as (air frost index, permafrost)</td>
+</tr>
+</tbody>
+</table>
+<div class="arithmatex">\[
+DDT = \sum Ta, \quad \text{for months when } Ta &gt; 0^\circ C
+\]</div>
+<div class="arithmatex">\[
+DDF = -\sum Ta, \quad \text{when monthly } Ta \leq 0^\circ C
+\]</div>
+<div class="arithmatex">\[
+FI = \frac{DDF^{0.5}}{DDF^{0.5} + DDT^{0.5}}
+\]</div>
+<p>By GAEZ assessment, four classes are defined and their probability of permafrost by the following table.</p>
+<p><strong>Classification of Permafrost Areas Used in the GAEZ Assessment</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Permafrost Class</th>
+<th style="text-align: center;">Value of Frost Index (FI)</th>
+<th style="text-align: center;">Probability of Permafrost (%)</th>
+<th style="text-align: center;">Pixel Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Continuous permafrost</td>
+<td style="text-align: center;">&gt;0.625</td>
+<td style="text-align: center;">&gt;67</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Discontinuous permafrost</td>
+<td style="text-align: center;">0.57 - 0.625</td>
+<td style="text-align: center;">33 - 67</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Sporadic permafrost</td>
+<td style="text-align: center;">0.395 - 0.57</td>
+<td style="text-align: center;">5 - 33</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">No permafrost</td>
+<td style="text-align: center;">&lt;0.495</td>
+<td style="text-align: center;">&lt;5</td>
+<td style="text-align: center;">4</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="aez-classification">AEZ Classification<a class="headerlink" href="#aez-classification" title="Permanent link">&para;</a></h3>
+<p>The agro-ecological zones (AEZ) methodology provides a framework for establishing a spatial inventory of land resources compiled from global national environmental data sets and assembled to quantify multiple spatial characteristics required for the assessments of land productivity under location-specific agro-ecological conditions.The inventory combines spatial layers of thermal and moisture regimes with broad categories of soil/terrain qualities. It also indicates locations of areas with irrigated soils and shows land with severely limiting bio-physical constraints including very cold and very dry (desert) areas as well as areas with very steep terrain or very poor soil/terrain conditions. For further information on the classification criteria, please refer to Chapter 10 of the GAEZ v4 Model Documentation (Fischer et al., 2021).</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling AEZ Classification</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-18-1">1</a></span>
+<span class="normal"><a href="#__codelineno-18-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1"></a><span class="c1"># AEZ Classification</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2"></a><span class="n">aez_class</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">AEZClassification</span><span class="p">(</span><span class="n">tclimate</span><span class="p">,</span> <span class="n">lgp</span><span class="p">,</span> <span class="n">lgp_equv</span><span class="p">,</span> <span class="n">lgpt_5</span><span class="p">,</span> <span class="n">soil_terrain_lulc</span><span class="p">,</span> <span class="n">permafrost</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tclimate</td>
+<td>Thermal Climate</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>lgp</td>
+<td>Length of Growing Period (Days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>lgp_equv</td>
+<td>Equivalent Length of Growing Period (days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>lgpt_5</td>
+<td>Temperature Growing Period (5&#176;C threshold)</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>soil_terrain_lulc</td>
+<td>soil/terrain/special land cover classes</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>permafrost</td>
+<td>permafrost classes</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Developer's Note</p>
+<p>In GAEZ, the special soil/terrain land cover data is preprocessed from existing land cover data. However, the actual preparation steps for this specific data is sparingly documented. At the moment, users can get this layer already available in GAEZ v4 data portal (https://gaez.fao.org/pages/data-viewer) under <em>Land and Water Resources</em> Section and select the variable name "Soil/terrain and special purpose land cover classes". You can download the data with resolution of 30-arc seconds.</p>
+</div>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>aez</td>
+<td>Classified AEZ Zones</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p>The basic principles and criteia used for the compilation of AEZ class layer are listed as below:</p>
+<ul>
+<li><strong>Thermal Climate Classes (TC)</strong>: regrouping all the thermal climate classes into:</li>
+<li>TC1 : Tropics, lowland</li>
+<li>TC2 : Tropics, highland</li>
+<li>TC3 : Subtropics</li>
+<li>TC4 : Temperature climate</li>
+<li>TC5 : Boreal climate</li>
+<li>TC6 : Arctic climate</li>
+</ul>
+<p><br></p>
+<ul>
+<li><strong>Thermal Zone Classes (TZ)</strong>: regrouping all the thermal zones classes into:</li>
+<li>TZ1 Warm: monthly Ta &gt;= 10&#176;C and average annual Ta &gt;= 20&#176;C</li>
+<li>TZ2 Moderately cool: monthly Ta &gt;=5&#176;C for all months; monthly Ta &gt;= 10&#176;C for 8 or more months</li>
+<li>TZ3 Moderate: monthly Ta &gt;=10&#176;C for 5 or more months; number of days with mean temperature above 20&#176;C(LGP<sub>t20</sub>) is 75 days or more; accumulated temperature durng the period with Ta &gt;=10&#176;C exceeds 3000 degree-days</li>
+<li>TZ4 Cool: monthly Ta &gt;= 10&#176;C for 4 or more months, average annual Ta &gt;= 0&#176;C</li>
+<li>TZ5 Cold: monthly Ta &gt;= 10&#176;C for 1 to 3 months; average annual Ta &gt;= 0&#176;C</li>
+<li>TZ6 Very cold: monthly Ta &lt; 10&#176;C for all monthls and/or average annual Ta &lt; 0&#176;C</li>
+</ul>
+<p><br></p>
+<ul>
+<li><strong>Thermal Regime Classes (TRC)</strong> are delinatead to define AEZs by combining thermal climate and thermal zones in a systematic way as below:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">TRC Class</th>
+<th style="text-align: center;">TRC Class Name</th>
+<th style="text-align: center;">TC1</th>
+<th style="text-align: center;">TC2</th>
+<th style="text-align: center;">TC3</th>
+<th style="text-align: center;">TC4</th>
+<th style="text-align: center;">TC5</th>
+<th style="text-align: center;">TC6</th>
+<th style="text-align: center;">TZ1</th>
+<th style="text-align: center;">TZ2</th>
+<th style="text-align: center;">TZ3</th>
+<th style="text-align: center;">TZ4</th>
+<th style="text-align: center;">TZ5</th>
+<th style="text-align: center;">TZ6</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">TRC1</td>
+<td style="text-align: center;">Tropics, lowland</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">TRC2</td>
+<td style="text-align: center;">Tropics, highland</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">TRC3</td>
+<td style="text-align: center;">Subtropics, warm</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">TRC4</td>
+<td style="text-align: center;">Subtropics, moderately cool</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">TRC5</td>
+<td style="text-align: center;">Subtropics, cool</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">TRC6</td>
+<td style="text-align: center;">Temperate, moderate</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">TRC7</td>
+<td style="text-align: center;">Temperate, cool</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">TRC8</td>
+<td style="text-align: center;">Boreal/ Cold, no PFR</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">TRC9</td>
+<td style="text-align: center;">Boreal/ Cold, with PFR</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">TRC10</td>
+<td style="text-align: center;">Arctic/ Very cold</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p><strong>Moisture Regime Class (M)</strong> : are delineated into four classes based on results of daily reference water balance as by the following definitions:</p>
+<ul>
+<li>M1 : desert/arid areas where 0 &lt;= LGP &lt;60 days</li>
+<li>M2 : semi-arid/dry areas with 60 &lt;= LGP &lt; 180</li>
+<li>M3 : sub-humid/moist area with 180 &lt;= LGP &lt; 270</li>
+<li>M4 : humid/wet areas where LGP&gt;270</li>
+</ul>
+<p>If a location has LGP<sub>t5</sub> &gt;330 days, length of growing period (LGP) is used; if not, equvalent LGP (LGP<sub>equv</sub>) will be used to classify.</p>
+<p><br></p>
+<p><strong>Soil/Terrain Related Classes</strong> are mapped related to soil quality and terrain conditions as provided in special soil/terrain lulc land cover classes as below:</p>
+<ul>
+<li>S1 : very steep terrain, sum of percentages of slope class (30 - 45%) and (slp &gt;45) exceed a given target threshold (75%), sum of slope class (slopes &lt;= 8%) is less than a maximum threshold</li>
+<li>S2 : area with hydromorphic soils (includes all Gleysols, Histosols, all gleyic and stagnic soil types of FAO74 and FAO90 classification)</li>
+<li>S3 : grid cells with no or slight soil/terrain limitations</li>
+<li>S4 : areas with moderate soil/terrain constraints</li>
+<li>S5 : areas with severe and very severe soil/terrain limitations and so-called miscellaneous units of HWSD soil database (e.g., rock outcrops, sand dunes, glaciers, etc)</li>
+</ul>
+<p><br></p>
+<p><strong>Selected Special Purpose Land Cover Classes</strong> are related to land cover inventory using three specific properties to map.</p>
+<ul>
+<li>L1 : dominanace of inland water bodies, land cover share of water exceeds a specific threshold (&gt;75%)</li>
+<li>L2 : dominanace of artificial surface, land cover share of artificial surface meet the minimum 75% threshold.</li>
+<li>L3 : irrigated cropland. For irrigated cropland, the share must exceeds a specific minimum threshold (&gt;20%). For cropland, the shoare must exceed a minimum threshold (40%) and at least half of the cropland in a pixel is equipped for irrigation.</li>
+</ul>
+<p><br></p>
+<p>By combining all these materials, the AEZ classification is characterized by the following definitions. Each pixel value represents an AEZ zone.</p>
+<ul>
+<li>AEZ 1 to 6: combination of TRC1 (tropics, lowland) with M2-M4 and S3 -S4;</li>
+<li>AEZ 7 to 12: combination of TRC2 (tropics, highland) with M2-M4 and S3-S4;</li>
+<li>AEZ 13 to 18: combination of TRC3 (subtropics, warm) with M2-M4 and S3- S4;</li>
+<li>AEZ 19 - 24: combination of TRC4 (subtropics, moderately cool) with M2-M4 and S3-S4;</li>
+<li>AEZ 25 - 30: combination of TRC5 (subtropics, cool) with M2-M4 and S3-S4;</li>
+<li>AEZ 31 - 36: combination of TRC6 (temperate climate, moderate) with M2-M4 and S3-S4;</li>
+<li>AEZ 37 - 42: combination of TRC7 (temperate climate, cool) with M2-M4 and S3-S4;</li>
+<li>AEZ 43 - 48: combination of TRC8 (boreal/cold, no permafrost) with M2-M4 and S3-S4;</li>
+<li>AEZ 49: dominantly very steep terrain; all grid cells where soil/terrain related class S1 occurrs;</li>
+<li>AEZ 50: land with severe soil/terrain limitations; covers all areas of S5 except where set to classes AEZ-49 or AEZ-51 to AEZ-57;</li>
+<li>AEZ 51: land with ample irrigated soils; set for pixels where land equipped for irrigation exists and exceeds the specified thresholds for class L3;</li>
+<li>AEZ 52: dominantly hydromorphic soils; set for pixels where class S2 occurrs, but excluding grid cells which were previously set to classes AEZ-49 or AEZ-51;</li>
+<li>AEZ 53: desert/arid; delineates all areas in the arid moisture class M1, except for special purpose land cover classes L1, L2, L3, soil/terrain classes S1 (very steep terrain) and S2 (hydromorphic soils), or thermal regime class TRC10 (i.e., arctic/very cold).</li>
+<li>AEZ 54: boreal/cold climate with permafrost; incluldes all pixels where TRC9 occurs (except for special purpose land cover L1 and L2, or soil/terrain classes S1 and S2, or moisture class M1);</li>
+<li>AEZ 55: arctic/very cold climate; includes all pixels where TRC10 occurrs (except for special purpose land cover L1 and l2, soil/terrain classes S1 and S2);</li>
+<li>AEZ 56: dominantly built-up/artificial surface; is set in all grid cells where L2 occurrs;</li>
+<li>AEZ 57: dominantly inland water, is set in all grid cells where L1 occurrs.</li>
+</ul>
+<hr />
+<h3 id="multi-cropping-zonation">Multi-cropping Zonation<a class="headerlink" href="#multi-cropping-zonation" title="Permanent link">&para;</a></h3>
+<p>The multi-cropping zonation is another aspect of AEZ suitability analysis which evaluates the full potential of time availability of considering multiple crop types for either rainfed or irrigated conditions. It utilizes growth cycle potentials and temperature requirements available for crop growths using agro-climatic indicators. The potential growing period in rainfed conditons is represented by LGP while under irrigated conditions, the length temperature of growing period and annual accumulated temperature summations are applied.</p>
+<p>The delineation of the multi-cropping potential zones are fully applied based on the following attributes:</p>
+<ol>
+<li>LGP: length of growing period (the number of days when temperature and soil moisture permits crop growth)</li>
+<li>LGP<sub>t5</sub>: the number of days with mean daily temperatures above 5 &#176;C</li>
+<li>LGPT<sub>t10</sub>: the number of days with mean daily temperatures above 10 &#176;C</li>
+<li>TSUM<sub>0</sub>: accumulated temperature (degree-days) on days when mean daily temperatures &gt;= 0&#176;C</li>
+<li>TSUM<sub>10</sub>: accumulated temperature (degree-days) on days when mean daily temperatures &gt;= 10&#176;C</li>
+<li>TSG<sub>5</sub>: accumulated temperature on growing period days when mean daily temperature &gt;= 5&#176;</li>
+<li>TSG<sub>10</sub>: accumulated temperature on growing period days when mean daily temperature &gt;= 10&#176;C</li>
+</ol>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Multi-cropping Zonation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-19-1">1</a></span>
+<span class="normal"><a href="#__codelineno-19-2">2</a></span>
+<span class="normal"><a href="#__codelineno-19-3">3</a></span>
+<span class="normal"><a href="#__codelineno-19-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1"></a><span class="c1"># Multi-cropping zonation</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2"></a><span class="n">multi_crop</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getMultiCroppingZones</span><span class="p">(</span><span class="n">tclimate</span><span class="p">,</span> <span class="n">lgp</span><span class="p">,</span> <span class="n">lgp_t5</span><span class="p">,</span> <span class="n">lgp_t10</span><span class="p">,</span> <span class="n">tsum0</span><span class="p">,</span> <span class="n">tsum10</span><span class="p">)</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3"></a><span class="n">multi_crop_rain</span> <span class="o">=</span> <span class="n">multi_crop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># for rainfed condition</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4"></a><span class="n">multi_crop_irr</span>  <span class="o">=</span> <span class="n">multi_crop</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># for irrigated condition</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tclimate</td>
+<td>Thermal Climate</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>lgp</td>
+<td>Length of Growing Period (Days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>lgpt_5</td>
+<td>Temperature Growing Period (5&#176;C threshold)</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>lgpt_10</td>
+<td>Temperature Growing Period (10&#176;C threshold)</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>tsum0</td>
+<td>Temperature Summation (for Ta &gt;=5&#176;C threshold)</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>tsum10</td>
+<td>Temperature Summation (for Ta &gt;=10&#176;C threshold)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>multi_crop_zone</td>
+<td>A python list of multi-cropping zones as [multi-crop_rainfed, multi-crop_irrigated]</td>
+<td>A python list of two 2D NumPy Arrays</td>
+</tr>
+</tbody>
+</table>
+<p>The classification schema of multi-cropping zones for rainfed and irrigated conditions are provided as below:</p>
+<p><strong>Table: Classification Schema of Multi-cropping Zones for Rainfed in Lowland Tropics</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Zone</th>
+<th style="text-align: center;">LGP</th>
+<th style="text-align: center;">LGP<sub>t5</sub></th>
+<th style="text-align: center;">LGP<sub>t10</sub></th>
+<th style="text-align: center;">TSUM<sub>0</sub></th>
+<th style="text-align: center;">TSUM<sub>10</sub></th>
+<th style="text-align: center;">TSG<sub>5</sub></th>
+<th style="text-align: center;">TSG<sub>10</sub></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">B</td>
+<td style="text-align: center;">&gt;=45</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=90</td>
+<td style="text-align: center;">&gt;=1600</td>
+<td style="text-align: center;">&gt;=1200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">C</td>
+<td style="text-align: center;">&gt;=220</td>
+<td style="text-align: center;">&gt;=220</td>
+<td style="text-align: center;">&gt;120</td>
+<td style="text-align: center;">&gt;=5500</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=3200</td>
+<td style="text-align: center;">&gt;=2700</td>
+</tr>
+<tr>
+<td style="text-align: center;">C</td>
+<td style="text-align: center;">&gt;=200</td>
+<td style="text-align: center;">&gt;=200</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=6400</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=3200</td>
+<td style="text-align: center;">&gt;=2700</td>
+</tr>
+<tr>
+<td style="text-align: center;">C</td>
+<td style="text-align: center;">&gt;=180</td>
+<td style="text-align: center;">&gt;=200</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=3200</td>
+<td style="text-align: center;">&gt;=2700</td>
+</tr>
+<tr>
+<td style="text-align: center;">D</td>
+<td style="text-align: center;">&gt;=270</td>
+<td style="text-align: center;">&gt;=270</td>
+<td style="text-align: center;">&gt;=165</td>
+<td style="text-align: center;">&gt;=5500</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=4000</td>
+<td style="text-align: center;">&gt;=3200</td>
+</tr>
+<tr>
+<td style="text-align: center;">D</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=165</td>
+<td style="text-align: center;">&gt;=6400</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=4000</td>
+<td style="text-align: center;">&gt;=3200</td>
+</tr>
+<tr>
+<td style="text-align: center;">D</td>
+<td style="text-align: center;">&gt;=210</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=165</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=4000</td>
+<td style="text-align: center;">&gt;=3200</td>
+</tr>
+<tr>
+<td style="text-align: center;">E</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+</tr>
+<tr>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">&gt;=300</td>
+<td style="text-align: center;">&gt;=300</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=5100</td>
+<td style="text-align: center;">&gt;=4800</td>
+</tr>
+<tr>
+<td style="text-align: center;">G</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+</tr>
+<tr>
+<td style="text-align: center;">H</td>
+<td style="text-align: center;">&gt;=360</td>
+<td style="text-align: center;">&gt;=360</td>
+<td style="text-align: center;">&gt;=360</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">&gt;7000</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+</tbody>
+</table>
+<p><em>N.A: Not available</em></p>
+<p><strong>Table: Classification Schema of Multi-cropping Zones for Rainfed in All Thermal Zones</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Zone</th>
+<th style="text-align: center;">LGP</th>
+<th style="text-align: center;">LGP<sub>t5</sub></th>
+<th style="text-align: center;">LGP<sub>t10</sub></th>
+<th style="text-align: center;">TSUM<sub>0</sub></th>
+<th style="text-align: center;">TSUM<sub>10</sub></th>
+<th style="text-align: center;">TSG<sub>5</sub></th>
+<th style="text-align: center;">TSG<sub>10</sub></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">B</td>
+<td style="text-align: center;">&gt;=45</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=90</td>
+<td style="text-align: center;">&gt;=1600</td>
+<td style="text-align: center;">&gt;=1200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">C</td>
+<td style="text-align: center;">&gt;=180</td>
+<td style="text-align: center;">&gt;=200</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=3600</td>
+<td style="text-align: center;">&gt;=3000</td>
+<td style="text-align: center;">&gt;=3200</td>
+<td style="text-align: center;">&gt;=2700</td>
+</tr>
+<tr>
+<td style="text-align: center;">D</td>
+<td style="text-align: center;">&gt;=210</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=165</td>
+<td style="text-align: center;">&gt;=4500</td>
+<td style="text-align: center;">&gt;=3600</td>
+<td style="text-align: center;">&gt;=4000</td>
+<td style="text-align: center;">&gt;=3200</td>
+</tr>
+<tr>
+<td style="text-align: center;">E</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=270</td>
+<td style="text-align: center;">&gt;=180</td>
+<td style="text-align: center;">&gt;=4800</td>
+<td style="text-align: center;">&gt;=4500</td>
+<td style="text-align: center;">&gt;=4300</td>
+<td style="text-align: center;">&gt;=4000</td>
+</tr>
+<tr>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">&gt;=300</td>
+<td style="text-align: center;">&gt;=300</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=5400</td>
+<td style="text-align: center;">&gt;=5100</td>
+<td style="text-align: center;">&gt;=5100</td>
+<td style="text-align: center;">&gt;=4800</td>
+</tr>
+<tr>
+<td style="text-align: center;">G</td>
+<td style="text-align: center;">&gt;=330</td>
+<td style="text-align: center;">&gt;=330</td>
+<td style="text-align: center;">&gt;=270</td>
+<td style="text-align: center;">&gt;=5700</td>
+<td style="text-align: center;">&gt;=5500</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">H</td>
+<td style="text-align: center;">&gt;=360</td>
+<td style="text-align: center;">&gt;=360</td>
+<td style="text-align: center;">&gt;=330</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">&gt;7000</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table: Classification Schema of Multi-cropping Zones for Irrigated in Lowland Tropics</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Zone</th>
+<th style="text-align: center;">LGP<sub>t5</sub></th>
+<th style="text-align: center;">LGP<sub>t10</sub></th>
+<th style="text-align: center;">TSUM<sub>0</sub></th>
+<th style="text-align: center;">TSUM<sub>10</sub></th>
+<th style="text-align: center;">TSG<sub>5</sub></th>
+<th style="text-align: center;">TSG<sub>10</sub></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">B</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=90</td>
+<td style="text-align: center;">&gt;=1600</td>
+<td style="text-align: center;">&gt;=1200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">C</td>
+<td style="text-align: center;">&gt;=220</td>
+<td style="text-align: center;">&gt;120</td>
+<td style="text-align: center;">&gt;=5500</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=3200</td>
+<td style="text-align: center;">&gt;=2700</td>
+</tr>
+<tr>
+<td style="text-align: center;">C</td>
+<td style="text-align: center;">&gt;=200</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=6400</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=3200</td>
+<td style="text-align: center;">&gt;=2700</td>
+</tr>
+<tr>
+<td style="text-align: center;">C</td>
+<td style="text-align: center;">&gt;=200</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=3200</td>
+<td style="text-align: center;">&gt;=2700</td>
+</tr>
+<tr>
+<td style="text-align: center;">D</td>
+<td style="text-align: center;">&gt;=270</td>
+<td style="text-align: center;">&gt;=165</td>
+<td style="text-align: center;">&gt;=5500</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=4000</td>
+<td style="text-align: center;">&gt;=3200</td>
+</tr>
+<tr>
+<td style="text-align: center;">D</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=165</td>
+<td style="text-align: center;">&gt;=6400</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=4000</td>
+<td style="text-align: center;">&gt;=3200</td>
+</tr>
+<tr>
+<td style="text-align: center;">D</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=165</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=4000</td>
+<td style="text-align: center;">&gt;=3200</td>
+</tr>
+<tr>
+<td style="text-align: center;">E</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+</tr>
+<tr>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">&gt;=300</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">&gt;=5100</td>
+<td style="text-align: center;">&gt;=4800</td>
+</tr>
+<tr>
+<td style="text-align: center;">G</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+<td style="text-align: center;">N.A</td>
+</tr>
+<tr>
+<td style="text-align: center;">H</td>
+<td style="text-align: center;">&gt;=360</td>
+<td style="text-align: center;">&gt;=360</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">&gt;7000</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+</tbody>
+</table>
+<p><em>N.A: Not available</em></p>
+<p><strong>Table: Classification Schema of Multi-cropping Zones for Irrigated in All Thermal Zones</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Zone</th>
+<th style="text-align: center;">LGP<sub>t5</sub></th>
+<th style="text-align: center;">LGP<sub>t10</sub></th>
+<th style="text-align: center;">TSUM<sub>0</sub></th>
+<th style="text-align: center;">TSUM<sub>10</sub></th>
+<th style="text-align: center;">TSG<sub>5</sub></th>
+<th style="text-align: center;">TSG<sub>10</sub></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">B</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=90</td>
+<td style="text-align: center;">&gt;=1600</td>
+<td style="text-align: center;">&gt;=1200</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">C</td>
+<td style="text-align: center;">&gt;=200</td>
+<td style="text-align: center;">&gt;=120</td>
+<td style="text-align: center;">&gt;=3600</td>
+<td style="text-align: center;">&gt;=3000</td>
+<td style="text-align: center;">&gt;=3200</td>
+<td style="text-align: center;">&gt;=2700</td>
+</tr>
+<tr>
+<td style="text-align: center;">D</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=165</td>
+<td style="text-align: center;">&gt;=4500</td>
+<td style="text-align: center;">&gt;=3600</td>
+<td style="text-align: center;">&gt;=4000</td>
+<td style="text-align: center;">&gt;=3200</td>
+</tr>
+<tr>
+<td style="text-align: center;">E</td>
+<td style="text-align: center;">&gt;=270</td>
+<td style="text-align: center;">&gt;=180</td>
+<td style="text-align: center;">&gt;=4800</td>
+<td style="text-align: center;">&gt;=4500</td>
+<td style="text-align: center;">&gt;=4300</td>
+<td style="text-align: center;">&gt;=4000</td>
+</tr>
+<tr>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">&gt;=300</td>
+<td style="text-align: center;">&gt;=240</td>
+<td style="text-align: center;">&gt;=5400</td>
+<td style="text-align: center;">&gt;=5100</td>
+<td style="text-align: center;">&gt;=5100</td>
+<td style="text-align: center;">&gt;=4800</td>
+</tr>
+<tr>
+<td style="text-align: center;">G</td>
+<td style="text-align: center;">&gt;=330</td>
+<td style="text-align: center;">&gt;=270</td>
+<td style="text-align: center;">&gt;=5700</td>
+<td style="text-align: center;">&gt;=5500</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+<tr>
+<td style="text-align: center;">H</td>
+<td style="text-align: center;">&gt;=360</td>
+<td style="text-align: center;">&gt;=330</td>
+<td style="text-align: center;">&gt;=7200</td>
+<td style="text-align: center;">&gt;7000</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table: Multi-cropping zone outputs</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Multi-cropping Zone</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: center;">Pixel Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">A</td>
+<td style="text-align: left;">Zones of no cropping (too cold or too dry for rainfed crops)</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td style="text-align: center;">B</td>
+<td style="text-align: left;">Zones of single cropping</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr>
+<td style="text-align: center;">C</td>
+<td style="text-align: left;">Zones of limited double cropping (relay cropping; single wetland rice may be possible)</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr>
+<td style="text-align: center;">D</td>
+<td style="text-align: left;">Zones of double cropping (in Zone D, sequential double cropping including wetland rice is not possible)</td>
+<td style="text-align: center;">4</td>
+</tr>
+<tr>
+<td style="text-align: center;">E</td>
+<td style="text-align: left;">Zones of double cropping with rice (sequential double cropping with one wetland rice crop is possible in Zone E)</td>
+<td style="text-align: center;">5</td>
+</tr>
+<tr>
+<td style="text-align: center;">F</td>
+<td style="text-align: left;">Zone of double rice cropping or limited triple cropping (may partly involve relay cropping. A third crop is not possible in case of two wetland rice crops)</td>
+<td style="text-align: center;">6</td>
+</tr>
+<tr>
+<td style="text-align: center;">G</td>
+<td style="text-align: left;">Zone of triple cropping (sequential cropping of three short-cycle crops; two wetland rice crops are possible in Zone G)</td>
+<td style="text-align: center;">7</td>
+</tr>
+<tr>
+<td style="text-align: center;">H</td>
+<td style="text-align: left;">Zone of triple rice cropping (sequential cropping of three wetland rice crops is possible)</td>
+<td style="text-align: center;">8</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Developer's Note</p>
+<p>LGP criteria is omitted out for the zonation of multi-cropping potential for irrigated conditions due to the consideration that LGP<sub>tx</sub> is more decisive in irrigated condition while LGP is more relevant in the rainfed condition.</p>
+</div>
+<h3 id="annual-temperature-amplitude">Annual Temperature Amplitude<a class="headerlink" href="#annual-temperature-amplitude" title="Permanent link">&para;</a></h3>
+<p>The annual temperature amplitude is the AEZ criteria defined as the temperature difference from the temperature of the hottest month and the coldest month in a specified year. This is a measure of how much the temperature varies throughout the year, and to describe the continentality influence of agro-climatic condition.</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Annual Temperature Amplitude</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-20-1">1</a></span>
+<span class="normal"><a href="#__codelineno-20-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1"></a><span class="c1"># Annual Temperature Amplitude</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2"></a><span class="n">ann_temp</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getAnnualTemperatureAmplitude</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ann_temp_amp</td>
+<td>Annual Temperature Amplitude (Unit = &#176;C)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="annual-reference-evapotranspiration-et0">Annual Reference Evapotranspiration (ET0)<a class="headerlink" href="#annual-reference-evapotranspiration-et0" title="Permanent link">&para;</a></h3>
+<p>This function calculates the year-round summation of reference evapotranspiration (ET0) of an area of interest.</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Annual Reference Evapotranspiration</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-21-1">1</a></span>
+<span class="normal"><a href="#__codelineno-21-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1"></a><span class="c1"># Annual Reference Evapotranspiration</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2"></a><span class="n">eto</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getET0Daily</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>et0</td>
+<td>annual reference evapotranspiration (Unit = mm)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="annual-reference-actual-evapotranspiration-eta">Annual Reference Actual Evapotranspiration (ETa)<a class="headerlink" href="#annual-reference-actual-evapotranspiration-eta" title="Permanent link">&para;</a></h3>
+<p>This indicator calculates the year-round summation of the actual evapotranspiration (ETa) of a reference crop, obtained from reference water balance calculation.</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Annual Reference Actual Evapotranspiration</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-22-1">1</a></span>
+<span class="normal"><a href="#__codelineno-22-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1"></a><span class="c1"># Annual sum of actual evapotranspiration</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2"></a><span class="n">eta</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getETaDaily</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>eta</td>
+<td>annual reference actual evapotranspiration (Unit = mm)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="annual-moisture-availability-index-pet0">Annual Moisture Availability Index (P/ET0)<a class="headerlink" href="#annual-moisture-availability-index-pet0" title="Permanent link">&para;</a></h3>
+<p>This indicator compares with the incoming precipitation to the evaporative demand of the assumed reference crop. This calculation focuses on year-round period. Value ranges from 0 (P &lt; ET0) to 100 (P = ET0) or more than 100. Due to the possible division by zero could trigger infinity values in P/ET0 calculation, the maximum value is curtailed to 30000. Note that P/ET0 is applied by a multiplication factor of 100.</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Annual Moisture Availability Index</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-23-1">1</a></span>
+<span class="normal"><a href="#__codelineno-23-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1"></a><span class="c1"># P/ET0</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2"></a><span class="n">p_eto</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getAnnualMoistureAvailabilityIndex</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>p_et0 * 100</td>
+<td>annual moisture suitability index(Unit = Unitless)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="reference-annual-water-deficit-wde">Reference Annual Water Deficit (Wde)<a class="headerlink" href="#reference-annual-water-deficit-wde" title="Permanent link">&para;</a></h3>
+<p>Reference annual water deficit (Wde) is the difference between annual potential and actual evapotranspiration; both obtained from reference water balance calculation. This indicator provides information of discrepency between evaporative demand of a well-irrigated vegetation and the actual moisture supply under rainfed condition. This indicator does not consider the actual soil condition, due to the condition that the reference water balance calculation uses soil water holding capacity of 100mm.</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Reference Annual Water Deficit</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-24-1">1</a></span>
+<span class="normal"><a href="#__codelineno-24-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1"></a><span class="c1"># Wde calculation</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2"></a><span class="n">wde</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getReferenceAnnualWaterDeficit</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wde</td>
+<td>reference annual water deficit (Unit = mm)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="net-primary-productivity-npp">Net Primary Productivity (NPP)<a class="headerlink" href="#net-primary-productivity-npp" title="Permanent link">&para;</a></h3>
+<p>By GAEZ algorithm, the net primary productivity is estimated as a function of incoming solar radiation and soil moisture at the rhizosphere. By the logic, NPP of a natural vegetation has a close relationship with the actual crop evapotranspiration (ETa) as it is quantatively related to plant photosynthesic activity driven by radiation and water availability. NPP also serves as a climate indicator for rainfed biological activity.</p>
+<p>In this logic, ETa is obtained from the reference water balance calculation. NPP is estimated according to Zhang and Zhou (1995) as follows:</p>
+<p><span class="arithmatex">\({\displaystyle NPP = \sum ETa\times\frac{A_0}{d}}\)</span></p>
+<p>The variable A<sub>0</sub> is a proportionality constant depending on the diffusion condition of CO<sub>2</sub> and d is an expression of sensible heat. The ration A<sub>0</sub>/d can be approximated by a function of the radiative dryness index (RDI) (Uchijima and Seino, 1988).</p>
+<p><span class="arithmatex">\({\displaystyle \frac{A_0}{d} \approx f(RDI) = RDI \times \exp{-\sqrt{9.87 + 0.625 \times RDI}}}\)</span></p>
+<p><span class="arithmatex">\({\displaystyle RDI = \frac{\sum_{j=1}^{12} Rn_j}{\sum_{j=1}^{12} P}}\)</span></p>
+<!-- ${\displaystyle \sum Rn \text{ is the accumulated net radiation for the year and \\} \sum P \text{ is the precipitation of the year.}}$ -->
+
+<p><span class="arithmatex">\(\sum Rn\)</span> is the accumulated net radiation for the year and <span class="arithmatex">\(\sum P\)</span> is the precipitation of the year.</p>
+<p><br></p>
+<p>Two separated evaluation documented by GAEZv4 is implemented in PyAEZ routine: for natural (rainfed conditon) and irrigated condition as follows:</p>
+<p>For NPP under natural or rainfed conditon, RDI is calculated from the formula above and daily ETa is determined by reference water balance calculation as below:</p>
+<p><span class="arithmatex">\({\displaystyle NPP_{rf} = \sum ETa \times RDI \times \exp{-\sqrt{9.87 + 6.25\times RDI}}}\)</span></p>
+<p><br></p>
+<p>For NPP under irrigated condition, ETa = ETm is assumed and a constant RDI value of 1.375 is used which results in a maximum for the function term approximating A<sub>0</sub>/d ratio below:</p>
+<p><span class="arithmatex">\({\displaystyle NPP_{ir} = \sum ETa \times 1.375 \times \exp{-\sqrt{9.87 + 6.25\times 1.375}}}\)</span>.</p>
+<p><br></p>
+<p>All NPP results are multiplied with 1000 to have NPP unit of kilogram of carbon per hectare (kgC/ha).</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">NPP Irrigated</label><label for="__tabbed_3_2">NPP Rainfed</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># NPP for irrigated condition. Unit = kgC/ha</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="n">nppi</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getNPP</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># NPP for irrigated condition. Unit = kgC/ha</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="n">nppr</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getNPP</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>irr_or_rain</td>
+<td>I = irrigated , R = rainfed</td>
+<td>String</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>npp</td>
+<td>net primary productivity (Irrigated or Rainfed) (Unit = KgC/ha)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="longest-component-of-lgp">Longest Component of LGP<a class="headerlink" href="#longest-component-of-lgp" title="Permanent link">&para;</a></h3>
+<p>As stated by GAEZ, the total number of growing period defined by LGP within a single year can occurr two or more discontinuous growing periods. This occurrs due to insufficient ETa (ETa &lt; 0.4 ETm), causing/interrupting growing period or could also be temperature less than 5&#176;C (growing cycle broken by dormancy or cold break period). This indicator evaluates all possible LGP days cycles in a year-round period, detects all breaking period, and returned the longest growing component from total permissable window of LGP.</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling LGP Longest</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-27-1">1</a></span>
+<span class="normal"><a href="#__codelineno-27-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1"></a><span class="c1"># Longest component of LGP</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2"></a><span class="n">lgb</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getLGPLongest</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgb</td>
+<td>LGP of the longest component(Unit = Days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="beginning-date-of-the-lgp-longest">Beginning Date of the LGP Longest<a class="headerlink" href="#beginning-date-of-the-lgp-longest" title="Permanent link">&para;</a></h3>
+<p>Continued from the LGP algorithm, this indicator ass all possible LGP cycles and return the day of year which the longest component of LGP starts in a year-round period.</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling LGP Longest</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-28-1">1</a></span>
+<span class="normal"><a href="#__codelineno-28-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1"></a><span class="c1"># Longest component of LGP</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2"></a><span class="n">lgb</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getLGPLongest</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgb_d</td>
+<td>Beginning date of the LGP longest(Unit = Julian Day)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="length-of-hibernation-period">Length of Hibernation Period<a class="headerlink" href="#length-of-hibernation-period" title="Permanent link">&para;</a></h3>
+<p>This indicator, opposite to LGP determination routine, tries to find out the days when the dormancy or cold break characteristics exists. By GAEZ routine, the determination of hiberation periods comprises three critera:</p>
+<ol>
+<li>The average temperature (Ta) must be less than 5&#176;C</li>
+<li>The average temperature (Ta) must also satisfy a temperature threshold. In PyAEZ, the winter rye temperture requirements parameters from vernalization routine is used to define the cold break period.</li>
+</ol>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Length of Hibernation Period</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-29-1">1</a></span>
+<span class="normal"><a href="#__codelineno-29-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1"></a><span class="c1"># Hibernation period / cold break periods</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2"></a><span class="n">lgh</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getHibernationPeriodLength</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgh</td>
+<td>Total number of hibernation periods(Unit = Days)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="beginning-date-of-the-hibernation-period">Beginning Date of the Hibernation Period<a class="headerlink" href="#beginning-date-of-the-hibernation-period" title="Permanent link">&para;</a></h3>
+<p>Continued from total number of hibernation days, this indicator assess all days of hibernation characteristics and define the first day of hibernation of a specific pixel location is returned as beginning date of the hibernation period in a single year window.</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calling Beginning Date of Hibernation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-30-1">1</a></span>
+<span class="normal"><a href="#__codelineno-30-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1"></a><span class="c1"># Hibernation period / cold break periods starting date</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2"></a><span class="n">lgh</span> <span class="o">=</span> <span class="n">clim_reg</span><span class="o">.</span><span class="n">getHibernationPeriodLength</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgh_b</td>
+<td>Beginning date of Hibernation(Unit = Julian Day)</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../Data_Prep/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Data Preparation &amp; Requirements">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Data Preparation & Requirements
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../M2/" class="md-footer__link md-footer__link--next" aria-label="Next: Module 2 (Crop Simulation)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Module 2 (Crop Simulation)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 FAO&GIC-AIT
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/gicait/PyAEZ" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/in/swunwunna101234" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5m282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.footer", "navigation.instant", "navigation.sections", "navigation.top", "navigation.instant.progress", "content.code.copy", "content.code.select", "content.code.annotate", "toc.follow", "navigation.expand"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

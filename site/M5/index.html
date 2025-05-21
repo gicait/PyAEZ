@@ -20,7 +20,7 @@
     
     
       
-        <title>Module 5 (Terrain Constraints) - PyAEZ v2.4 Documentation</title>
+        <title>Module 5 (Terrain Constraints) - PyAEZ v2.3 Documentation</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="PyAEZ v2.4 Documentation" class="md-header__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+    <a href=".." title="PyAEZ v2.3 Documentation" class="md-header__button md-logo" aria-label="PyAEZ v2.3 Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            PyAEZ v2.4 Documentation
+            PyAEZ v2.3 Documentation
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -221,13 +221,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="PyAEZ v2.4 Documentation" class="md-nav__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+    <a href=".." title="PyAEZ v2.3 Documentation" class="md-nav__button md-logo" aria-label="PyAEZ v2.3 Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    PyAEZ v2.4 Documentation
+    PyAEZ v2.3 Documentation
   </label>
   
     <div class="md-nav__source">
@@ -582,6 +582,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#terrain-suitability-map-fc5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Terrain Suitability Map (Fc5)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fournier-index-fi" class="md-nav__link">
     <span class="md-ellipsis">
       Fournier Index (FI)
@@ -781,6 +790,15 @@
   <a href="#applying-terrain-constraints" class="md-nav__link">
     <span class="md-ellipsis">
       Applying Terrain Constraints
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terrain-suitability-map-fc5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Terrain Suitability Map (Fc5)
     </span>
   </a>
   
@@ -1047,30 +1065,57 @@
 <h2 id="major-functionalites">Major Functionalites<a class="headerlink" href="#major-functionalites" title="Permanent link">&para;</a></h2>
 <h3 id="applying-terrain-constraints">Applying Terrain Constraints<a class="headerlink" href="#applying-terrain-constraints" title="Permanent link">&para;</a></h3>
 <p>Once all the mandatory settings are done, users can run this function which executes the terrain-related yield reduction factors.</p>
-<p>```py title="Import climate and slope" linenums="s1"
-yld_out = terrain.applyTerrainConstraints(yield_in, irr_or_rain)
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>**Input**
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>|Arguments| Description|Unit|Data Type|
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>|---|---|---|---|
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>|yield_in|Yield before applying the terrain-related reduction factor. (Either irrigated or rainfed).|kg/ha|2D-NumPy Array|
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>|irr_or_rain|I for irrigated, R for rainfed|-|String|
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>**Output**
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>|Arguments| Description|Unit|Data Type|
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>|---|---|---|---|
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>|yld_out|Terrain adjusted yield map.|Same as `yield_in`|2D-NumPy Array|
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>___
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>### Terrain Suitability Map (Fc5)
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>
-</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>This function returns the terrain suitability map (fc5) after applying the terrain constraint function. Based on the setting from `applyTerrainConstraints`, the fc5 map can be representative for either rainfed or irrigated. Fc5 values ranges from 0 (Not Suitable) to 1 (Very Suitable).
-</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>
-</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>```py title=&quot;Get Fc5 map&quot; linenums=&quot;s1&quot;
-</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>fc5_map = terrain.getTerrainReductionFactor()
-</span></code></pre></div></p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Import climate and slope</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="n">yld_out</span> <span class="o">=</span> <span class="n">terrain</span><span class="o">.</span><span class="n">applyTerrainConstraints</span><span class="p">(</span><span class="n">yield_in</span><span class="p">,</span> <span class="n">irr_or_rain</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yield_in</td>
+<td>Yield before applying the terrain-related reduction factor. (Either irrigated or rainfed).</td>
+<td>kg/ha</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>irr_or_rain</td>
+<td>I for irrigated, R for rainfed</td>
+<td>-</td>
+<td>String</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yld_out</td>
+<td>Terrain adjusted yield map.</td>
+<td>Same as <code>yield_in</code></td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="terrain-suitability-map-fc5">Terrain Suitability Map (Fc5)<a class="headerlink" href="#terrain-suitability-map-fc5" title="Permanent link">&para;</a></h3>
+<p>This function returns the terrain suitability map (fc5) after applying the terrain constraint function. Based on the setting from <code>applyTerrainConstraints</code>, the fc5 map can be representative for either rainfed or irrigated. Fc5 values ranges from 0 (Not Suitable) to 1 (Very Suitable).</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Fc5 map</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="n">fc5_map</span> <span class="o">=</span> <span class="n">terrain</span><span class="o">.</span><span class="n">getTerrainReductionFactor</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
 <p><strong>Input</strong></p>
 <table>
 <thead>
@@ -1112,8 +1157,8 @@ yld_out = terrain.applyTerrainConstraints(yield_in, irr_or_rain)
 <hr />
 <h3 id="fournier-index-fi">Fournier Index (FI)<a class="headerlink" href="#fournier-index-fi" title="Permanent link">&para;</a></h3>
 <p>This function extracts the Fournier Index (FI) map after the execution of <code>calculateFI</code> function.</p>
-<p><code>py title="Get FI" linenums="s1"
-fi = terrain.getFI()</code></p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get FI</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="n">fi</span> <span class="o">=</span> <span class="n">terrain</span><span class="o">.</span><span class="n">getFI</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
 <p><strong>Input</strong></p>
 <table>
 <thead>
@@ -1145,10 +1190,10 @@ fi = terrain.getFI()</code></p>
 </thead>
 <tbody>
 <tr>
-<td>None</td>
+<td>fi</td>
+<td>Fournier Index</td>
 <td>-</td>
-<td>-</td>
-<td>-</td>
+<td>2D-NumPy Array</td>
 </tr>
 </tbody>
 </table>
@@ -1160,6 +1205,27 @@ fi = terrain.getFI()</code></p>
 
 
 
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="May 21, 2025 04:50:51">May 21, 2025 04:50:51</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
 
 
 

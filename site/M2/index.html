@@ -20,7 +20,7 @@
     
     
       
-        <title>Module 2 (Crop Simulation) - PyAEZ v2.4 Documentation</title>
+        <title>Module 2 (Crop Simulation) - PyAEZ v2.3 Documentation</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="PyAEZ v2.4 Documentation" class="md-header__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+    <a href=".." title="PyAEZ v2.3 Documentation" class="md-header__button md-logo" aria-label="PyAEZ v2.3 Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            PyAEZ v2.4 Documentation
+            PyAEZ v2.3 Documentation
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -221,13 +221,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="PyAEZ v2.4 Documentation" class="md-nav__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+    <a href=".." title="PyAEZ v2.3 Documentation" class="md-nav__button md-logo" aria-label="PyAEZ v2.3 Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    PyAEZ v2.4 Documentation
+    PyAEZ v2.3 Documentation
   </label>
   
     <div class="md-nav__source">
@@ -1537,12 +1537,28 @@
 </tbody>
 </table>
 <p><strong>Output</strong></p>
-<p>|Arguments|Description|Unit|Data Format|
-|None|---|---|---|</p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>---</td>
+<td>---</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="optional-settings">Optional Settings<a class="headerlink" href="#optional-settings" title="Permanent link">&para;</a></h2>
 <h3 id="setting-the-study-area-inputs">Setting the Study Area Inputs<a class="headerlink" href="#setting-the-study-area-inputs" title="Permanent link">&para;</a></h3>
-<p>Users can provide the study area mask of to omit unnecessary pixels calculations.</p>
+<p>Users can provide the study area mask to omit unnecessary pixels calculations.</p>
 <div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting Study Area</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span>
 <span class="normal"><a href="#__codelineno-6-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="c1"># Study Area Mask</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="n">aez</span><span class="o">.</span><span class="n">setStudyAreaMask</span><span class="p">(</span><span class="n">admin_mask</span><span class="p">,</span> <span class="n">no_data_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -1573,8 +1589,24 @@
 </tbody>
 </table>
 <p><strong>Output</strong></p>
-<p>|Arguments|Description|Unit|Data Format|
-|None|---|---|---|</p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>---</td>
+<td>---</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="thermal-screening">Thermal Screening<a class="headerlink" href="#thermal-screening" title="Permanent link">&para;</a></h2>
 <p>The functions in this sections apply thermal suitability asssessmet to indiviual grid-cells for the possible presence of indiviual LUTs. The crops' temperature requirements will be matched with the prevailing thermal conditions. A variety of thermal screening critera are available in PyAEZ for thermal sutability assessment as below:</p>
@@ -1605,8 +1637,22 @@
 </tbody>
 </table>
 <p><strong>Output</strong></p>
-<p>|Arguments|Description|Data Format|
-|None|---|---|</p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>---</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
 <h3 id="permafrost-screening">Permafrost Screening<a class="headerlink" href="#permafrost-screening" title="Permanent link">&para;</a></h3>
 <p>This screening procedure fully refers to GAEZ v4 documentation stating that areas considered as continuous or discontinouous permafrost classes are considered not suitable (Fischer et al., 2021). In PyAEZ, permafrost screening results in 'yes/no' filter for further calculations using permafrost class output from Module I.</p>
 <div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting Permafrost Screening</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="n">aez</span><span class="o">.</span><span class="n">setPermafrostScreening</span><span class="p">(</span><span class="n">permafrost_class</span><span class="p">)</span>
@@ -1629,10 +1675,24 @@
 </tbody>
 </table>
 <p><strong>Output</strong></p>
-<p>|Arguments|Description|Data Format|
-|None|---|---|</p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>---</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
 <h3 id="tsum-screening">TSUM Screening<a class="headerlink" href="#tsum-screening" title="Permanent link">&para;</a></h3>
-<p>The matching of the individual crop LUT heat unit requirements with the prevailing temperature sum is the purpose of temperature summation screening. TSUM is evaluated from base temperature of 0 ℃ for each individual cycle length duration. In version 2.1.0, the new algorithm for TSUM screening is introduced which is implemented with different inputs. </p>
+<p>The matching of the individual crop LUT heat unit requirements with the prevailing temperature sum is the purpose of temperature summation screening. TSUM is evaluated from base temperature of 0 ℃ for each individual cycle length duration. Starting from version 2.1.0, the new algorithm for TSUM screening is introduced which is implemented with different inputs. </p>
 <p>TSUM screening works to evaluate three conditions, each deciding the TSUM suitability termed as: “Optimum”, “Sub-optimum" and "Not-suitable”. Optimum condition requires no reduction factor to the calculated yield, while the rest of two conditions calculates the TSUM related reduction factor. Each condition has upper and lower boundaries (See Figure 6); defined as threshold points for the users to provide as below:</p>
 <ul>
 <li>LO : Lower boundary of optimum threshold</li>
@@ -1645,7 +1705,7 @@
 <p>Any TSUM values within the optimum threshold range (green line) are considered as inducive to plant growth; thus, no reduction factor will be applied. TSUM values between sub-optimum threshold has two components (illustrated as yellow and blue lines). Within yellow range (between LsO – LO or HO – HsO), reduction factor is calculated up to maximum 25%, obtained by linear interpolation between two end points of user-defined thresholds. Within brown range (between LnS – LsO or HsO – HnS), substantial amount of reduction factor up to maximum of 75% are obtained, from linear interpolation. Any TSUM lower than LnS threshold or beyond HnS threshold are considered as temperature too high or too low for plant growth, giving rise to 100% reduction to calculated yield.</p>
 <div class="admonition note">
 <p class="admonition-title">Additional Information</p>
-<p>TSUM setting is done in the excel sheet from <a href="../Data_Prep/#crop-parameter-preparation">data preparation</a>. TSUM screening requires providing all six thresholds to activate. If one of the thresholds is missing, TSUM screening will not be activate. If users do not want to apply TSUM screening, provide <strong>nan</strong> value to all six variables. </p>
+<p>TSUM setting is done in the excel sheet from <a href="../Data_Prep/#crop-parameter-preparation">data preparation</a>. TSUM screening requires providing all six thresholds to activate. If one of the thresholds is missing, TSUM screening will not be activated. If users do not want to apply TSUM screening, provide <strong>nan</strong> value to all six variables. </p>
 </div>
 <p><strong>Figure: Implementation of TSUM Screening</strong>
 <img alt="Alt text" src="../assets/TSUM%20Screening.png" /></p>
@@ -1791,8 +1851,22 @@
 </tbody>
 </table>
 <p><strong>Output</strong></p>
-<p>|Arguments|Description|Data Format|
-|None|---|---|</p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>---</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="crop-simulation">Crop Simulation<a class="headerlink" href="#crop-simulation" title="Permanent link">&para;</a></h2>
 <p>With all the mandatory and optional settings run, users can start off the crop simulation for the desired crop. In v2.3, the core simulations are split up into two separate functions: one for irrigated, one for rainfed conditions which handles simulation for annuals, perennials and hibernating crops.</p>
@@ -1800,7 +1874,7 @@
 <p><strong>Figure: Procedure of Calculation of Module 2 Outputs (Irrigated and Rainfed)</strong>
 <img alt="Alt text" src="../assets/M2_simulation_scheme1.png" /></p>
 <p>A newly implemented crop simulation routine for sugarcane is introduced as below:</p>
-<p><strong>Procedure of Calculation of Module 2 Outputs (Irrigated and Rainfed) for Sugarcane</strong>
+<p><strong>Figure: Procedure of Calculation of Module 2 Outputs (Irrigated and Rainfed) for Sugarcane</strong>
 <img alt="Alt text" src="../assets/M2_sugarcane.png" /></p>
 <h3 id="irrigated-crop-simulation">Irrigated Crop Simulation<a class="headerlink" href="#irrigated-crop-simulation" title="Permanent link">&para;</a></h3>
 <p>This is a specific function to initialize irrigated crop simulation.</p>
@@ -1839,8 +1913,22 @@
 </tbody>
 </table>
 <p><strong>Output</strong></p>
-<p>|Arguments|Description|Data Format|
-|None|---|---|</p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>---</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h3 id="rainfed-crop-simulation">Rainfed Crop Simulation<a class="headerlink" href="#rainfed-crop-simulation" title="Permanent link">&para;</a></h3>
 <p>This is a specific function to initialize rainfed crop simulation.</p>
@@ -1879,8 +1967,22 @@
 </tbody>
 </table>
 <p><strong>Output</strong></p>
-<p>|Arguments|Description|Data Format|
-|None|---|---|</p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>---</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h3 id="experimental-irrigated-sugarcane-simulation">(Experimental) Irrigated Sugarcane Simulation<a class="headerlink" href="#experimental-irrigated-sugarcane-simulation" title="Permanent link">&para;</a></h3>
 <p>This is an experimental function to initialize irrigated sugarcane simulation using FORTRAN workflow. <em>Note that this is in experimental stage, the outputs from this functions are not validated.</em></p>
@@ -2437,6 +2539,27 @@
 
 
 
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="May 21, 2025 04:50:51">May 21, 2025 04:50:51</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
 
 
 

@@ -1,0 +1,2568 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../M1/">
+      
+      
+        <link rel="next" href="../M3/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
+    
+    
+      
+        <title>Module 2 (Crop Simulation) - PyAEZ v2.4 Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.4af4bdda.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Merriweather:300,300i,400,400i,700,700i%7CCourier+Prime:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Merriweather";--md-code-font:"Courier Prime"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#introduction" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PyAEZ v2.4 Documentation" class="md-header__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PyAEZ v2.4 Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Module 2 (Crop Simulation)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/gicait/PyAEZ" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    gicait/PyAEZ
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PyAEZ v2.4 Documentation" class="md-nav__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PyAEZ v2.4 Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/gicait/PyAEZ" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    gicait/PyAEZ
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Acknowledgements/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Acknowledgements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Version%20Updates/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Version Updates
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../About/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Data_Prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Data Preparation & Requirements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M1/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 1 (Climate Regime)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Module 2 (Crop Simulation)
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Module 2 (Crop Simulation)
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mandatory Settings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mandatory Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initialization-of-m2-object-class-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization of M2 Object Class Creation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-geographical-and-terrain-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting up Geographical and Terrain Data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uploading-the-climatic-data-and-soil-water-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      Uploading the Climatic Data and Soil Water Information
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importing-the-crop-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Importing the Crop Parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importing-lgp-and-lgpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      Importing LGP and LGPT
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optional Settings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optional Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setting-the-study-area-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting the Study Area Inputs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thermal-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Screening
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Thermal Screening">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#thermal-climate-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Climate Screening
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permafrost-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permafrost Screening
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tsum-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      TSUM Screening
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crop-specific-rule-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Crop-Specific Rule Screening
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crop-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Crop Simulation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Crop Simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#irrigated-crop-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Irrigated Crop Simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rainfed-crop-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rainfed Crop Simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experimental-irrigated-sugarcane-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      (Experimental) Irrigated Sugarcane Simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experimental-rainfed-sugarcane-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      (Experimental) Rainfed Sugarcane Simulation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-ii-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Module II Outputs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module II Outputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estimated-irrigated-yield" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimated Irrigated Yield
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#estimated-rainfed-yield" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimated Rainfed Yield
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimum-crop-calendar-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimum Crop Calendar Irrigated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimum-crop-calendar-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimum Crop Calendar Rainfed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-suitability-factor-fc1-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Suitability Factor (fc1) Irrigated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-suitability-factor-fc1-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Suitability Factor (fc1) Rainfed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moisture-suitability-factor-fc2-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moisture Suitability Factor (fc2) Irrigated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moisture-suitability-factor-fc2-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moisture Suitability Factor (fc2) Rainfed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actual-evapotranspiration-eta-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Actual Evapotranspiration (ETA) Irrigated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actual-evapotranspiration-eta-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Actual Evapotranspiration (ETA) Rainfed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#water-deficitnet-irrigation-requirement-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Water Deficit/Net Irrigation Requirement (Irrigated)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#water-deficitnet-irrigation-requirement-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Water Deficit/Net Irrigation Requirement (Rainfed)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 3 (Climatic Constraints)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M4/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 4 (Soil Constraints)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M5/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 5 (Terrain Constraints)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M6/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 6 (Economic Suitability)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Util/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Utility Module (UtilitiesCalc)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../References/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    References
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mandatory Settings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mandatory Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initialization-of-m2-object-class-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization of M2 Object Class Creation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-geographical-and-terrain-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting up Geographical and Terrain Data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uploading-the-climatic-data-and-soil-water-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      Uploading the Climatic Data and Soil Water Information
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importing-the-crop-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Importing the Crop Parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importing-lgp-and-lgpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      Importing LGP and LGPT
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optional Settings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optional Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setting-the-study-area-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting the Study Area Inputs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thermal-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Screening
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Thermal Screening">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#thermal-climate-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Climate Screening
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permafrost-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permafrost Screening
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tsum-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      TSUM Screening
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crop-specific-rule-screening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Crop-Specific Rule Screening
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crop-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Crop Simulation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Crop Simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#irrigated-crop-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Irrigated Crop Simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rainfed-crop-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rainfed Crop Simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experimental-irrigated-sugarcane-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      (Experimental) Irrigated Sugarcane Simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experimental-rainfed-sugarcane-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      (Experimental) Rainfed Sugarcane Simulation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-ii-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Module II Outputs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module II Outputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estimated-irrigated-yield" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimated Irrigated Yield
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#estimated-rainfed-yield" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimated Rainfed Yield
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimum-crop-calendar-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimum Crop Calendar Irrigated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimum-crop-calendar-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimum Crop Calendar Rainfed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-suitability-factor-fc1-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Suitability Factor (fc1) Irrigated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thermal-suitability-factor-fc1-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermal Suitability Factor (fc1) Rainfed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moisture-suitability-factor-fc2-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moisture Suitability Factor (fc2) Irrigated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moisture-suitability-factor-fc2-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moisture Suitability Factor (fc2) Rainfed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actual-evapotranspiration-eta-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Actual Evapotranspiration (ETA) Irrigated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actual-evapotranspiration-eta-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Actual Evapotranspiration (ETA) Rainfed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#water-deficitnet-irrigation-requirement-irrigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Water Deficit/Net Irrigation Requirement (Irrigated)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#water-deficitnet-irrigation-requirement-rainfed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Water Deficit/Net Irrigation Requirement (Rainfed)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h1>
+<p>This key module simulates all the possible crop cycles to find the best crop cycle that produces maximum yield for a particular grid. During the simulation process for each grid, 365 crop cycle simulations are performed. Each simulation corresponds to cycles that start from each day of the year (starting from Julian date 0 to Julian date 365). Similarly, this process is performed by the program for each grid in the study area.</p>
+<p>The attainable yields under irrigated and rain-fed conditions, during each crop cycle, are calculated with the help of several deterministic and empirical models as follows. ? Total biomass (de Wit, 1965): This model calculates total biomass produced by photosynthesis activities of plants under radiation condition of each grid. For more detailed calculations, refer to Chapter 4 of the GAEZ v4 Model Documentation (Fischer et al., 2021).</p>
+<ul>
+<li><strong>Crop yield from total biomass</strong>: Crop yield is obtained as a portion of useful harvest from the total biomass. This portion is defined by an index call Harvest Index (HI). Harvest index is defined as the amount of useful harvest divided by the total above ground biomass. For more detailed calculations, refer to Chapter 4 of the GAEZ v4 Model Documentation (Fischer et al., 2021).</li>
+<li><strong>Effects of water limitation on the crop yield</strong>: This component is carried out for the rain-fed yield calculation only. In the case of irrigated conditions, this component is abandoned, as we are assuming that the water is not a limiting factor for crop growth. To address the water limitation on the crop yield, two major models are considered:<ul>
+<li><strong>Reference Evapotranspiration</strong> - the Penman-Monteith equation (Doorenbos and Pruitt, 1977). A description of the implementation of the Penmann-Monteith equations is provided in Appendix 3-1 of Fischer et al. (2021);</li>
+<li><strong>Water balance calculation</strong>, together with applying the yield reduction factors based on water limitation (Smith, 1992).</li>
+<li><strong>Effects of temperature</strong> during crop cycle and screening of crop cycles based on temperature requirements (termed Thermal Screening).</li>
+</ul>
+</li>
+</ul>
+<p><strong>Figure: Overview of Module II: Crop Simulation</strong>
+<img alt="Alt text" src="../assets/M2_overview.png" /></p>
+<p><strong>Figure: Overview of Crop Simulation Routine</strong>
+<img alt="Alt text" src="../assets/M2_crop_simulation.png" /></p>
+<hr />
+<h2 id="mandatory-settings">Mandatory Settings<a class="headerlink" href="#mandatory-settings" title="Permanent link">&para;</a></h2>
+<h3 id="initialization-of-m2-object-class-creation">Initialization of M2 Object Class Creation<a class="headerlink" href="#initialization-of-m2-object-class-creation" title="Permanent link">&para;</a></h3>
+<p>Similar to Module 1, we have to import and initiate the class for the crop simulation module named as 'CropSimulation'. The way to import the object class is as below:</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">M2 Object Class Creation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pyaez</span> <span class="kn">import</span> <span class="n">CropSimulation</span> 
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="n">aez</span> <span class="o">=</span> <span class="n">CropSimulation</span><span class="o">.</span><span class="n">CropSimulation</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="setting-up-geographical-and-terrain-data">Setting up Geographical and Terrain Data<a class="headerlink" href="#setting-up-geographical-and-terrain-data" title="Permanent link">&para;</a></h3>
+<p>After initial object class creation, the next step is to import the geographic extent and elevation information of the area of interest into the object class by using the following setting:</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting up latitudes and elevation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
+<span class="normal"><a href="#__codelineno-1-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="c1"># Load geographical location and elevation data into object class</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="n">clim_reg</span><span class="o">.</span><span class="n">setLocationTerrainData</span><span class="p">(</span><span class="n">lat_min</span><span class="p">,</span> <span class="n">_lat_max</span><span class="p">,</span> <span class="n">elevation</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lat_min</td>
+<td>minimum latitude extent</td>
+<td>Decimal Degrees</td>
+<td>float</td>
+</tr>
+<tr>
+<td>lat_max</td>
+<td>maximum latitude extent</td>
+<td>Decimal Degrees</td>
+<td>float</td>
+</tr>
+<tr>
+<td>elevation</td>
+<td>Elevation</td>
+<td>meters</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="uploading-the-climatic-data-and-soil-water-information">Uploading the Climatic Data and Soil Water Information<a class="headerlink" href="#uploading-the-climatic-data-and-soil-water-information" title="Permanent link">&para;</a></h3>
+<p>You will need to upload all the climatic variables and soil water information necessary for the AEZ crop simulation. Depending on the daily/monthly time dimension, users need to run either function for daily or monthly climate data. Note that AEZ crop simulation assess crop productivity using daily value; which in monthly data input scenario, the monthly values will be interpolated into daily values by the system. For daily input case, the interpolation is not necessary.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Daily Climate</label><label for="__tabbed_1_2">Monthly Climate</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># For daily input</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">aez</span><span class="o">.</span><span class="n">setDailyClimateAndWaterData</span><span class="p">(</span><span class="n">min_temp</span><span class="p">,</span> <span class="n">max_temp</span><span class="p">,</span> <span class="n">precipitation</span><span class="p">,</span> <span class="n">short_rad</span><span class="p">,</span> <span class="n">wind_speed</span><span class="p">,</span> <span class="n">rel_humidity</span><span class="p">,</span> <span class="n">Sa</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-py highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># For monthly input</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">aez</span><span class="o">.</span><span class="n">setMonthlyClimateAndWaterData</span><span class="p">(</span><span class="n">min_temp</span><span class="p">,</span> <span class="n">max_temp</span><span class="p">,</span> <span class="n">precipitation</span><span class="p">,</span> <span class="n">short_rad</span><span class="p">,</span> <span class="n">wind_speed</span><span class="p">,</span> <span class="n">rel_humidity</span><span class="p">,</span> <span class="n">Sa</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>min_temp</td>
+<td>Minimum temperature</td>
+<td>&#176;C</td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>max_temp</td>
+<td>Maximum temperature</td>
+<td>&#176;C</td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>precipitation</td>
+<td>Total precipitation</td>
+<td>mmday<sup>-1</sup></td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>short_rad</td>
+<td>Shortwave radiation</td>
+<td>Wm<sup>-2</sup></td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>wind_speed</td>
+<td>Wind speed measured at 2-meter height</td>
+<td>ms<sup>-1</sup></td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>rel_humidity</td>
+<td>Relative humidity</td>
+<td>Decimal (0-1)</td>
+<td>3D-NumPy Array</td>
+<td>Daily (365, 366)/Monthly (12)</td>
+</tr>
+<tr>
+<td>Sa</td>
+<td>Soil Water Holding Capacity</td>
+<td>mm/m</td>
+<td>Int/float/2D-NumPy Array</td>
+<td>None</td>
+</tr>
+<tr>
+<td>D</td>
+<td>Rooting Depth</td>
+<td>m</td>
+<td>Int/float</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="importing-the-crop-parameters">Importing the Crop Parameters<a class="headerlink" href="#importing-the-crop-parameters" title="Permanent link">&para;</a></h3>
+<p>Crop parameters are necessary componenets of AEZ crop simulation. These scientific parameterization will be incorporated into the system by means of excel data sheet input. The crop parameters are defined in AEZ methodology that comprises:</p>
+<ol>
+<li>Crop-specific phenological characteristics</li>
+<li>Crop-specific water requirement factors</li>
+<li>Crop-specific thermal characteristics</li>
+<li>Land utilization type characteristics</li>
+</ol>
+<p>For the excel sheet setting, see <a href="../Data_Prep/#crop-parameter-preparation">here</a>.</p>
+<p>The following functionality will be used to upload all these parameters prepared in excel sheet into M2 object class as follows:</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Crop Parameter Setting</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span>
+<span class="normal"><a href="#__codelineno-4-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="c1"># Crop parameter excel sheet setting</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="n">aez</span><span class="o">.</span><span class="n">readCropandCropCycleParameters</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">crop_name</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>file_path</td>
+<td>The full file path of the crop parameter excel sheet</td>
+<td>-</td>
+<td>String</td>
+</tr>
+<tr>
+<td>crop_name</td>
+<td>The crop name specified to identify for crop simulation. Corresponding to <strong>Crop_name</strong> column. Make sure the crop name provided in the excel sheet and the function setting the same.</td>
+<td>-</td>
+<td>String</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Additional Information</p>
+<p>If users are simulating the hibernation crops (winter wheat, winter barley, winter rye, winter rape), the <strong>crop_name</strong> setting in the excel sheet must provide the name either one from this provided list ['winter_wheat', 'winter_barley', 'winter_rye', 'winter_rape'] as python is case-sensitive, and the routine for hibernating crops requires to provide the name the exact name provided in the list.</p>
+</div>
+<hr />
+<h3 id="importing-lgp-and-lgpt">Importing LGP and LGPT<a class="headerlink" href="#importing-lgp-and-lgpt" title="Permanent link">&para;</a></h3>
+<p>This sections corresponds to the minimum cycle length checking routine. For each individual pixel, the algorithm checks whether the location has sufficient growing days to support the minimally required cycle length to sustain plant growth. The logic is done separately for rainfed and irrigated conditions, also for perennials and non-perennials. If the minimum cycle length requirement is not satisfactory, the yield simulation will not proceed and skip to next pixel.</p>
+<p>For the annuals, LGP<sub>t5</sub> is used to compared with the minimum cycle length for irrigated condition, while LGP is used for rainfed condition.</p>
+<p>For perennials, an extensive flow of checking is implemented and cycle will be adjusted based on the concept of effective crop cycle length implemented by perennial crop adjustments. After the adjustment the effective cycle length is compared with the minimum cycle length. If the condition is met, the next yield estimation will continue; otherwise, the cycle will be skipped.</p>
+<ul>
+<li><strong>Perennial crop adjustment</strong></li>
+</ul>
+<p>If a perennail crop is introduced (based on perennial flag being positive), PyAEZ will perform LAI and HI adjustment based on effective growing period. The perennial crop adjustment is uniquely activated to perennial crops by the following principles.</p>
+<ul>
+<li>
+<p><strong>Crop Cycle Length Adjustment with Temperature Growing Period (LGP<sub>t</sub>) and LGP</strong></p>
+<ul>
+<li><strong>Irrigated Condition</strong></li>
+</ul>
+<p>Perennials for irrigated crops will compare LGP<sub>t</sub> with the reference cycle length based on user-defined minimum temperature (described in crop parameter excel). For minimum temperature greater than 8&#176;C, LGP<sub>t10</sub> is used to compare while for minimum temperature less than or equal to 8&#176;C, LGP<sub>t5</sub> is applied. If selected LGP<sub>t</sub> is less than the minimum cycle length, LGP<sub>tx</sub> will be selected as effective cycle length (CYC<sub>eff</sub>) for the yield simulation. Otherwise, CYC<sub>eff</sub> will be set as user-defined reference cycle length. CYC<sub>eff</sub> cannot be more than reference cycle length.</p>
+<ul>
+<li><strong>Rainfed Condition</strong></li>
+</ul>
+<p>For rainfed perennials, the cycle length is compared with LGP. If LGP is less than minimum cycle length, LGP will be CYC<sub>eff</sub>. However, CYC<sub>eff</sub> cannot be more than reference cycle length.</p>
+</li>
+<li>
+<p>**Leaf Area Index (LAI) and Harvest Index (HI) Adjustment **</p>
+<p>The calculated CYC<sub>eff</sub> is used to adjust the LAI and HI using two threshold values  <span class="arithmatex">\(\alpha\)</span> and <span class="arithmatex">\(\beta\)</span> parameterization. The existing function of adjusted LAI and HI are calculated in GAEZ v4 documentation as follows:</p>
+<p><span class="arithmatex">\({\displaystyle fP_{HI} = \frac{CYC_{eff}- \alpha_{HI}}{\beta_{HI}}}\)</span></p>
+<p><span class="arithmatex">\({\displaystyle fP_{LAI} = \frac{CYC_{eff}- \alpha_{LAI}}{\beta_{LAI}}}\)</span></p>
+</li>
+</ul>
+<p>This is a mandatory setting to activate these algorithms by importing LGP and LGP<sub>t</sub> agro-climatic indicators as below:</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting LGP and LGPT</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span>
+<span class="normal"><a href="#__codelineno-5-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="c1"># agro-climatic indicator settings</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="n">aez</span><span class="o">.</span><span class="n">ImportLGPandLGPT</span><span class="p">(</span><span class="n">lgp</span><span class="p">,</span> <span class="n">lgpt5</span><span class="p">,</span> <span class="n">lgpt10</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lgp</td>
+<td>Length of Growing Period</td>
+<td>Days</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>lgpt5</td>
+<td>Temperature Growing Period (5&#176;C threshold)</td>
+<td>Days</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>lgpt10</td>
+<td>Temperature Growing Period (10&#176;C threshold)</td>
+<td>Days</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<p>|Arguments|Description|Unit|Data Format|
+|None|---|---|---|</p>
+<hr />
+<h2 id="optional-settings">Optional Settings<a class="headerlink" href="#optional-settings" title="Permanent link">&para;</a></h2>
+<h3 id="setting-the-study-area-inputs">Setting the Study Area Inputs<a class="headerlink" href="#setting-the-study-area-inputs" title="Permanent link">&para;</a></h3>
+<p>Users can provide the study area mask of to omit unnecessary pixels calculations.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting Study Area</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span>
+<span class="normal"><a href="#__codelineno-6-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="c1"># Study Area Mask</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="n">aez</span><span class="o">.</span><span class="n">setStudyAreaMask</span><span class="p">(</span><span class="n">admin_mask</span><span class="p">,</span> <span class="n">no_data_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>admin_mask</td>
+<td>Mask Layer/Region of Interest</td>
+<td>Binary(0,1)/Categorical(1,2,...)</td>
+<td>2D NumPy Array</td>
+</tr>
+<tr>
+<td>no_data_value</td>
+<td>Value of mask layer to skip calculation</td>
+<td>Mask value from the layer. Default to 0</td>
+<td>Integer</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<p>|Arguments|Description|Unit|Data Format|
+|None|---|---|---|</p>
+<hr />
+<h2 id="thermal-screening">Thermal Screening<a class="headerlink" href="#thermal-screening" title="Permanent link">&para;</a></h2>
+<p>The functions in this sections apply thermal suitability asssessmet to indiviual grid-cells for the possible presence of indiviual LUTs. The crops' temperature requirements will be matched with the prevailing thermal conditions. A variety of thermal screening critera are available in PyAEZ for thermal sutability assessment as below:</p>
+<h3 id="thermal-climate-screening">Thermal Climate Screening<a class="headerlink" href="#thermal-climate-screening" title="Permanent link">&para;</a></h3>
+<p>PyAEZ's screening of crop/LUT's about thermal climate results in a 'yes/no' flag for further calculation, with user-defined list of thermal climate classes considered for the specific crop as <strong>Not-suitable</strong>. The screening utilizes thermal climate output from Module I.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting Thermal Climate Screening</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="n">aez</span><span class="o">.</span><span class="n">setThermalClimateScreening</span><span class="p">(</span><span class="n">tclimate</span><span class="p">,</span> <span class="n">no_t_climate</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tclimate</td>
+<td>Thermal Climate</td>
+<td>2D NumPy Array</td>
+</tr>
+<tr>
+<td>no_t_climate</td>
+<td>python list of unsuitable thermal climate classes</td>
+<td>python list of integers</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<p>|Arguments|Description|Data Format|
+|None|---|---|</p>
+<h3 id="permafrost-screening">Permafrost Screening<a class="headerlink" href="#permafrost-screening" title="Permanent link">&para;</a></h3>
+<p>This screening procedure fully refers to GAEZ v4 documentation stating that areas considered as continuous or discontinouous permafrost classes are considered not suitable (Fischer et al., 2021). In PyAEZ, permafrost screening results in 'yes/no' filter for further calculations using permafrost class output from Module I.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting Permafrost Screening</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="n">aez</span><span class="o">.</span><span class="n">setPermafrostScreening</span><span class="p">(</span><span class="n">permafrost_class</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>permafrost_class</td>
+<td>Permafrost Class</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<p>|Arguments|Description|Data Format|
+|None|---|---|</p>
+<h3 id="tsum-screening">TSUM Screening<a class="headerlink" href="#tsum-screening" title="Permanent link">&para;</a></h3>
+<p>The matching of the individual crop LUT heat unit requirements with the prevailing temperature sum is the purpose of temperature summation screening. TSUM is evaluated from base temperature of 0 ℃ for each individual cycle length duration. In version 2.1.0, the new algorithm for TSUM screening is introduced which is implemented with different inputs. </p>
+<p>TSUM screening works to evaluate three conditions, each deciding the TSUM suitability termed as: “Optimum”, “Sub-optimum" and "Not-suitable”. Optimum condition requires no reduction factor to the calculated yield, while the rest of two conditions calculates the TSUM related reduction factor. Each condition has upper and lower boundaries (See Figure 6); defined as threshold points for the users to provide as below:</p>
+<ul>
+<li>LO : Lower boundary of optimum threshold</li>
+<li>HO : Upper boundary of optimum threshold</li>
+<li>LsO : Lower boundary of sub-optimum threshold</li>
+<li>HsO : Upper boundary of sub-optimum threshold</li>
+<li>LnS : Lower boundary of not-suitable threshold</li>
+<li>HnS : Upper boundary of not-suitable threshold</li>
+</ul>
+<p>Any TSUM values within the optimum threshold range (green line) are considered as inducive to plant growth; thus, no reduction factor will be applied. TSUM values between sub-optimum threshold has two components (illustrated as yellow and blue lines). Within yellow range (between LsO – LO or HO – HsO), reduction factor is calculated up to maximum 25%, obtained by linear interpolation between two end points of user-defined thresholds. Within brown range (between LnS – LsO or HsO – HnS), substantial amount of reduction factor up to maximum of 75% are obtained, from linear interpolation. Any TSUM lower than LnS threshold or beyond HnS threshold are considered as temperature too high or too low for plant growth, giving rise to 100% reduction to calculated yield.</p>
+<div class="admonition note">
+<p class="admonition-title">Additional Information</p>
+<p>TSUM setting is done in the excel sheet from <a href="../Data_Prep/#crop-parameter-preparation">data preparation</a>. TSUM screening requires providing all six thresholds to activate. If one of the thresholds is missing, TSUM screening will not be activate. If users do not want to apply TSUM screening, provide <strong>nan</strong> value to all six variables. </p>
+</div>
+<p><strong>Figure: Implementation of TSUM Screening</strong>
+<img alt="Alt text" src="../assets/TSUM%20Screening.png" /></p>
+<h3 id="crop-specific-rule-screening">Crop-Specific Rule Screening<a class="headerlink" href="#crop-specific-rule-screening" title="Permanent link">&para;</a></h3>
+<p>The previous temperature profile screening in version 2.1.0 is substituted with renamed routine called “Crop-Specific Rule”. This screening specifies conditions for crop cycle duration in terms of classes of daily mean temperature in 5℃ intervals (See Temperature profiles). For activation, users require providing the external excel sheet to provide with corresponding column names. Similar to TSUM screening, users need to provide thresholds for three conditions: “Optimal”, “Sub-Optimal” and “Not-Suitable”. The unique combination of several temperature profile classes is to be provided as expressions as unique rules for a particular crop type. In PyAEZ, notations for temperature profile classes are revised according to the newly introduced routine: vernalization calculation and hibernating crops. The description of the updated temperature profiles are as below:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Mean Daily Temperature (&#176;C)</th>
+<th style="text-align: center;">Increasing Temperature Trend</th>
+<th style="text-align: center;">Decreasing Temperature Trend</th>
+<th style="text-align: center;">Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">&gt;=35</td>
+<td style="text-align: center;">L0a/N0a</td>
+<td style="text-align: center;">L0b/N0b</td>
+<td style="text-align: center;">L0/N0</td>
+</tr>
+<tr>
+<td style="text-align: center;">30 - 35</td>
+<td style="text-align: center;">L1a/N1a</td>
+<td style="text-align: center;">L1b/N1b</td>
+<td style="text-align: center;">L1/N1</td>
+</tr>
+<tr>
+<td style="text-align: center;">25 - 30</td>
+<td style="text-align: center;">L2a/N2a</td>
+<td style="text-align: center;">L2b/N2b</td>
+<td style="text-align: center;">L2/N2</td>
+</tr>
+<tr>
+<td style="text-align: center;">20 - 25</td>
+<td style="text-align: center;">L3a/N3a</td>
+<td style="text-align: center;">L3b/N3b</td>
+<td style="text-align: center;">L3/N3</td>
+</tr>
+<tr>
+<td style="text-align: center;">15 - 20</td>
+<td style="text-align: center;">L4a/N4a</td>
+<td style="text-align: center;">L4b/N4b</td>
+<td style="text-align: center;">L4/N4</td>
+</tr>
+<tr>
+<td style="text-align: center;">10 - 15</td>
+<td style="text-align: center;">L5a/N5a</td>
+<td style="text-align: center;">L5b/N5b</td>
+<td style="text-align: center;">L5/N5</td>
+</tr>
+<tr>
+<td style="text-align: center;">5 - 10</td>
+<td style="text-align: center;">L6a/N6a</td>
+<td style="text-align: center;">L6b/N6b</td>
+<td style="text-align: center;">L6/N6</td>
+</tr>
+<tr>
+<td style="text-align: center;">0 - 5</td>
+<td style="text-align: center;">L7a/N7a</td>
+<td style="text-align: center;">L7b/N7b</td>
+<td style="text-align: center;">L7/N7</td>
+</tr>
+<tr>
+<td style="text-align: center;">-5 - 0</td>
+<td style="text-align: center;">L8a/N8a</td>
+<td style="text-align: center;">L8b/N8b</td>
+<td style="text-align: center;">L8/N8</td>
+</tr>
+<tr>
+<td style="text-align: center;">&lt; -5</td>
+<td style="text-align: center;">L9a/N9a</td>
+<td style="text-align: center;">L9b/N9b</td>
+<td style="text-align: center;">L9/N9</td>
+</tr>
+</tbody>
+</table>
+<p>Two notations <strong>N</strong> and <strong>L</strong> are applied based on growth cycle duration; <strong>N</strong> for year-round growth cycle (perennials for 365 days) and <strong>L</strong> for crop-specific growth cycle of annual crops. The crop-specific threshold setting is done by preparing an excel sheet with the follwing column settings described as below and provide the file path into the M2 object class. The excel sheet settings for the crop specific rule settings are as follows: </p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Abbreviation</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: center;">Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">Crop</td>
+<td style="text-align: left;">Unique crop name</td>
+<td style="text-align: center;">String</td>
+</tr>
+<tr>
+<td style="text-align: center;">Constant</td>
+<td style="text-align: left;">Expression of different temperature profile classes combination. (For instance, L6a + L4a). Users must use the mathematical symbols used in python (+, -, *<em>, </em>, /, etc.,).</td>
+<td style="text-align: center;">String</td>
+</tr>
+<tr>
+<td style="text-align: center;">Type</td>
+<td style="text-align: left;">Constraint type. Must be [≥, ≤, ==]</td>
+<td style="text-align: center;">String</td>
+</tr>
+<tr>
+<td style="text-align: center;">Optimal</td>
+<td style="text-align: left;">Threshold value point for optimal condition</td>
+<td style="text-align: center;">Numerical</td>
+</tr>
+<tr>
+<td style="text-align: center;">Sub-Optimal</td>
+<td style="text-align: left;">Threshold value point for sub-optimal condition</td>
+<td style="text-align: center;">Numerical</td>
+</tr>
+<tr>
+<td style="text-align: center;">Not-Suitable</td>
+<td style="text-align: left;">Threshold value point for not-suitable condition</td>
+<td style="text-align: center;">Numerical</td>
+</tr>
+</tbody>
+</table>
+<p>Once prepared, users must active the crop-specific rule setting as below in python environment below:</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Setting Crop-Specific Rule Screening</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="n">aez</span><span class="o">.</span><span class="n">setupCropSpecificRule</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">crop_name</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>file_path</td>
+<td>The file path where the crop-specific rules are provided</td>
+<td>String</td>
+</tr>
+<tr>
+<td>crop_name</td>
+<td>Unique ID of crop name to apply crop-specific rule</td>
+<td>String</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<p>|Arguments|Description|Data Format|
+|None|---|---|</p>
+<hr />
+<h2 id="crop-simulation">Crop Simulation<a class="headerlink" href="#crop-simulation" title="Permanent link">&para;</a></h2>
+<p>With all the mandatory and optional settings run, users can start off the crop simulation for the desired crop. In v2.3, the core simulations are split up into two separate functions: one for irrigated, one for rainfed conditions which handles simulation for annuals, perennials and hibernating crops.</p>
+<p>The general schematic of the crop simulation is implemented as shown in figure below.</p>
+<p><strong>Figure: Procedure of Calculation of Module 2 Outputs (Irrigated and Rainfed)</strong>
+<img alt="Alt text" src="../assets/M2_simulation_scheme1.png" /></p>
+<p>A newly implemented crop simulation routine for sugarcane is introduced as below:</p>
+<p><strong>Procedure of Calculation of Module 2 Outputs (Irrigated and Rainfed) for Sugarcane</strong>
+<img alt="Alt text" src="../assets/M2_sugarcane.png" /></p>
+<h3 id="irrigated-crop-simulation">Irrigated Crop Simulation<a class="headerlink" href="#irrigated-crop-simulation" title="Permanent link">&para;</a></h3>
+<p>This is a specific function to initialize irrigated crop simulation.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Starts irrigated crop simulation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><span class="n">aez</span><span class="o">.</span><span class="n">simulateIrrigatedCropCycle</span><span class="p">(</span><span class="n">start_doy</span> <span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">end_doy</span> <span class="o">=</span> <span class="mi">365</span><span class="p">,</span> <span class="n">step_doy</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">leap_year</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>start_doy</td>
+<td>A single value, corresponding to crop simulation starting Julian date. Default value is 1.</td>
+<td>Numerical</td>
+</tr>
+<tr>
+<td>end_doy</td>
+<td>A single value, corresponding to crop simulation ending Julian date. Default value is 365.</td>
+<td>Numerical</td>
+</tr>
+<tr>
+<td>step_doy</td>
+<td>A single value, corresponding to spacing (in days) between two adjacent crop simulations. Optional argument. Default value is 1.</td>
+<td>Numerical</td>
+</tr>
+<tr>
+<td>leap_year</td>
+<td>True for leap year, False for non-leap year. This setting is relevant for monthly climate data as the value is used in interpolation processes.</td>
+<td>Boolean</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<p>|Arguments|Description|Data Format|
+|None|---|---|</p>
+<hr />
+<h3 id="rainfed-crop-simulation">Rainfed Crop Simulation<a class="headerlink" href="#rainfed-crop-simulation" title="Permanent link">&para;</a></h3>
+<p>This is a specific function to initialize rainfed crop simulation.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Starts rainfed crop simulation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="n">aez</span><span class="o">.</span><span class="n">simulateRainfedCropCycle</span><span class="p">(</span><span class="n">start_doy</span> <span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">end_doy</span> <span class="o">=</span> <span class="mi">365</span><span class="p">,</span> <span class="n">step_doy</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">leap_year</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>start_doy</td>
+<td>A single value, corresponding to crop simulation starting Julian date. Default value is 1.</td>
+<td>Numerical</td>
+</tr>
+<tr>
+<td>end_doy</td>
+<td>A single value, corresponding to crop simulation ending Julian date. Default value is 365.</td>
+<td>Numerical</td>
+</tr>
+<tr>
+<td>step_doy</td>
+<td>A single value, corresponding to spacing (in days) between two adjacent crop simulations. Optional argument. Default value is 1.</td>
+<td>Numerical</td>
+</tr>
+<tr>
+<td>leap_year</td>
+<td>True for leap year, False for non-leap year. This setting is relevant for monthly climate data as the value is used in interpolation processes.</td>
+<td>Boolean</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<p>|Arguments|Description|Data Format|
+|None|---|---|</p>
+<hr />
+<h3 id="experimental-irrigated-sugarcane-simulation">(Experimental) Irrigated Sugarcane Simulation<a class="headerlink" href="#experimental-irrigated-sugarcane-simulation" title="Permanent link">&para;</a></h3>
+<p>This is an experimental function to initialize irrigated sugarcane simulation using FORTRAN workflow. <em>Note that this is in experimental stage, the outputs from this functions are not validated.</em></p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Starts irrigated sugarcane simulation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="n">aez</span><span class="o">.</span><span class="n">simulateIrrigatedSugarcane</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="experimental-rainfed-sugarcane-simulation">(Experimental) Rainfed Sugarcane Simulation<a class="headerlink" href="#experimental-rainfed-sugarcane-simulation" title="Permanent link">&para;</a></h3>
+<p>This is an experimental function to initialize rainfed sugarcane simulation using FORTRAN workflow. <em>Note that this is in experimental stage, the outputs from this functions are not validated.</em></p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Starts rainfed crop simulation</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="n">aez</span><span class="o">.</span><span class="n">simulateRainfedSugarcane</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="module-ii-outputs">Module II Outputs<a class="headerlink" href="#module-ii-outputs" title="Permanent link">&para;</a></h2>
+<p>These sets of functions can be called once the simulations are completed.</p>
+<h3 id="estimated-irrigated-yield">Estimated Irrigated Yield<a class="headerlink" href="#estimated-irrigated-yield" title="Permanent link">&para;</a></h3>
+<p>This function returns the maximum attainable yield under provided climate conditions in irrigated condition. The unit of the output is kilogram per hectare (kg/ha).</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Estimated Irrigated Yield</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><span class="n">yld_irr</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getEstimatedYieldIrrigated</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yld_irr</td>
+<td>Maximum attainable yield under provided climate conditions, under irrigated conditions.(Unit: kg/ha)</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="estimated-rainfed-yield">Estimated Rainfed Yield<a class="headerlink" href="#estimated-rainfed-yield" title="Permanent link">&para;</a></h3>
+<p>This function returns the maximum attainable yield under provided climate conditions in rainfed condition. The unit of the output is kilogram per hectare (kg/ha).</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Estimated Rainfed Yield</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a><span class="n">yld_rain</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getEstimatedYieldRainfed</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yld_rain</td>
+<td>Maximum attainable yield under provided climate conditions, under rainfed conditions.(Unit: kg/ha)</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="optimum-crop-calendar-irrigated">Optimum Crop Calendar Irrigated<a class="headerlink" href="#optimum-crop-calendar-irrigated" title="Permanent link">&para;</a></h3>
+<p>This functions generates the optimum crop calendar starting date under provided climate conditions, under irrigated condition. Unit is Julian Day.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Irrigated Crop Calendar</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="n">ccd_irr</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getOptimumCycleStartDateIrrigated</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ccd_irr</td>
+<td>Optimum crop cycle starting date within user-defined time length for simulation(Unit: Julian Day)</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="optimum-crop-calendar-rainfed">Optimum Crop Calendar Rainfed<a class="headerlink" href="#optimum-crop-calendar-rainfed" title="Permanent link">&para;</a></h3>
+<p>This functions generates the optimum crop calendar starting date under provided climate conditions, under rainfed condition. Unit is Julian Day.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Rainfed Crop Calendar</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-17-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1"></a><span class="n">ccd_rain</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getOptimumCycleStartDateRainfed</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ccd_rain</td>
+<td>Optimum crop cycle starting date within user-defined time length for simulation(Unit: Julian Day)</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="thermal-suitability-factor-fc1-irrigated">Thermal Suitability Factor (fc1) Irrigated<a class="headerlink" href="#thermal-suitability-factor-fc1-irrigated" title="Permanent link">&para;</a></h3>
+<p>This function generates the thermal suitability factor due to thermal constraints derived from thermal screening procedures under irrigated condition. Values ranges from 0 (most limiting) to 1 (very suitable).</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Fc1 Irrigated</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-18-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1"></a><span class="n">fc1_irr</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getThermalReductionFactorIrrigated</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fc1_irr</td>
+<td>Thermal suitability factor (fc1) for irrigated condition.</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="thermal-suitability-factor-fc1-rainfed">Thermal Suitability Factor (fc1) Rainfed<a class="headerlink" href="#thermal-suitability-factor-fc1-rainfed" title="Permanent link">&para;</a></h3>
+<p>This function generates the thermal suitability factor due to thermal constraints derived from thermal screening procedures under rainfed condition. Values ranges from 0 (most limiting) to 1 (very suitable).</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Fc1 Rainfed</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-19-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1"></a><span class="n">fc1_rain</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getThermalReductionFactorRainfed</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fc1_rain</td>
+<td>Thermal suitability factor (fc1) for rainfed condition.</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="moisture-suitability-factor-fc2-irrigated">Moisture Suitability Factor (fc2) Irrigated<a class="headerlink" href="#moisture-suitability-factor-fc2-irrigated" title="Permanent link">&para;</a></h3>
+<p>This function generates the yield reduction factor due to water deficit under irrigated condition. Values ranges from 0 (most limiting) to 1 (very suitable).</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Fc2 Irrigated</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-20-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1"></a><span class="n">fc2_irr</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getMoistureReductionFactorIrrigated</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fc2_irr</td>
+<td>Moisture suitability factor (fc2) for irrigated condition.</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="moisture-suitability-factor-fc2-rainfed">Moisture Suitability Factor (fc2) Rainfed<a class="headerlink" href="#moisture-suitability-factor-fc2-rainfed" title="Permanent link">&para;</a></h3>
+<p>This function generates the yield reduction factor due to water deficit under rainfed condition. Values ranges from 0 (most limiting) to 1 (very suitable).</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Fc2 Rainfed</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-21-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1"></a><span class="n">fc2_rain</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getMoistureReductionFactorRainfed</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fc2_rain</td>
+<td>Moisture suitability factor (fc2) for rainfed condition.</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="actual-evapotranspiration-eta-irrigated">Actual Evapotranspiration (ETA) Irrigated<a class="headerlink" href="#actual-evapotranspiration-eta-irrigated" title="Permanent link">&para;</a></h3>
+<p>This function generates the total actual crop evapotranspiration (ETa) from precipitation (excluding irrigation) under irrigated condition. Unit is mm.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get ETA Irrigated</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-22-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1"></a><span class="n">eta_irr</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getETAIrrigated</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>eta_irr</td>
+<td>Actual Evapotranspiration (ETa) for irrigated condition. (Unit: mm)</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="actual-evapotranspiration-eta-rainfed">Actual Evapotranspiration (ETA) Rainfed<a class="headerlink" href="#actual-evapotranspiration-eta-rainfed" title="Permanent link">&para;</a></h3>
+<p>This function generates the total actual crop evapotranspiration (ETa) from precipitation (excluding irrigation) under rainfed condition. Unit is mm.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get ETA Rainfed</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-23-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1"></a><span class="n">eta_rain</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getETARainfed</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>eta_rain</td>
+<td>Actual Evapotranspiration (ETa) for rainfed condition. (Unit: mm)</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="water-deficitnet-irrigation-requirement-irrigated">Water Deficit/Net Irrigation Requirement (Irrigated)<a class="headerlink" href="#water-deficitnet-irrigation-requirement-irrigated" title="Permanent link">&para;</a></h3>
+<p>This function generates crop-specific net irrigation requirement under irrigated condition. Unit is mm.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get WDE Irrigated</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-24-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1"></a><span class="n">wde_irr</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getWDEIrrigated</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wde_irr</td>
+<td>Net irrigation requirement for irrigated condition. (Unit: mm)</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="water-deficitnet-irrigation-requirement-rainfed">Water Deficit/Net Irrigation Requirement (Rainfed)<a class="headerlink" href="#water-deficitnet-irrigation-requirement-rainfed" title="Permanent link">&para;</a></h3>
+<p>This function generates crop-specific water deficit under rainfed condition. Unit is mm.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get WDE Rainfed</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-25-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1"></a><span class="n">wde_rain</span> <span class="o">=</span> <span class="n">aez</span><span class="o">.</span><span class="n">getWDERainfed</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wde_rain</td>
+<td>Water deficit under rainfed condition. (Unit: mm)</td>
+<td>2D NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../M1/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Module 1 (Climate Regime)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Module 1 (Climate Regime)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../M3/" class="md-footer__link md-footer__link--next" aria-label="Next: Module 3 (Climatic Constraints)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Module 3 (Climatic Constraints)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 FAO&GIC-AIT
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/gicait/PyAEZ" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/in/swunwunna101234" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5m282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.footer", "navigation.instant", "navigation.sections", "navigation.top", "navigation.instant.progress", "content.code.copy", "content.code.select", "content.code.annotate", "toc.follow", "navigation.expand"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

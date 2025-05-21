@@ -1,0 +1,1329 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../M3/">
+      
+      
+        <link rel="next" href="../M5/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
+    
+    
+      
+        <title>Module 4 (Soil Constraints) - PyAEZ v2.4 Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.4af4bdda.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Merriweather:300,300i,400,400i,700,700i%7CCourier+Prime:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Merriweather";--md-code-font:"Courier Prime"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#introduction" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PyAEZ v2.4 Documentation" class="md-header__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PyAEZ v2.4 Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Module 4 (Soil Constraints)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/gicait/PyAEZ" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    gicait/PyAEZ
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PyAEZ v2.4 Documentation" class="md-nav__button md-logo" aria-label="PyAEZ v2.4 Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PyAEZ v2.4 Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/gicait/PyAEZ" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    gicait/PyAEZ
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Acknowledgements/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Acknowledgements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Version%20Updates/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Version Updates
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../About/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Data_Prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Data Preparation & Requirements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M1/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 1 (Climate Regime)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M2/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 2 (Crop Simulation)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 3 (Climatic Constraints)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Module 4 (Soil Constraints)
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Module 4 (Soil Constraints)
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mandatory Settings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mandatory Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initialization-of-m4-object-class-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization of M4 Object Class Creation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importing-edaphic-rating-excel-sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      Importing Edaphic Rating Excel Sheet
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculation-of-soil-qualities-sq" class="md-nav__link">
+    <span class="md-ellipsis">
+      Calculation of Soil Qualities (SQ)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculation-of-soil-ratings-sr" class="md-nav__link">
+    <span class="md-ellipsis">
+      Calculation of Soil Ratings (SR)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#major-functionalities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Major Functionalities
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Major Functionalities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#applying-soil-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      Applying Soil Constraints
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soil-suitability-fc4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soil Suitability (Fc4)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soil-qualities-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soil Qualities Output
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soil-ratings-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soil Ratings Output
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M5/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 5 (Terrain Constraints)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M6/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module 6 (Economic Suitability)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Util/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Utility Module (UtilitiesCalc)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../References/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    References
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mandatory Settings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mandatory Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initialization-of-m4-object-class-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization of M4 Object Class Creation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importing-edaphic-rating-excel-sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      Importing Edaphic Rating Excel Sheet
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculation-of-soil-qualities-sq" class="md-nav__link">
+    <span class="md-ellipsis">
+      Calculation of Soil Qualities (SQ)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculation-of-soil-ratings-sr" class="md-nav__link">
+    <span class="md-ellipsis">
+      Calculation of Soil Ratings (SR)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#major-functionalities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Major Functionalities
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Major Functionalities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#applying-soil-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      Applying Soil Constraints
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soil-suitability-fc4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soil Suitability (Fc4)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soil-qualities-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soil Qualities Output
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soil-ratings-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soil Ratings Output
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h1>
+<p>After applying Module 3 constraint to the maximum attainable yield, users can now proceed with the Module 4: Soil Constraints.</p>
+<p>The soil constraint module in PyAEZ is implemented based on GAEZ v5 new soil evaluation framework. An algorithm update based on new soil evaluation and AWC calculation is now included in the new version 2.3.</p>
+<p>The combination of 7 soil qualities (SQ), which are based on the soil characteristics of each soil unit, and the input level gives us a single yield reduction factor – <em>Soil Rating</em>, which will be applied to the remaining yield. For more details on this calculation, please refer to the <em>GAEZ v4 Model Documentation</em> (Fischer et al., 2021).</p>
+<ul>
+<li>SQ1 : Nutrient Availability</li>
+<li>SQ2 : Nutrient Retention Capacity</li>
+<li>SQ3 : Rooting Conditions</li>
+<li>SQ4 : Oxygen Availability to Roots</li>
+<li>SQ5 : Salinity and Sodicity Conditions</li>
+<li>SQ6 : Calcium Carbonate and Gypsum Conditions</li>
+<li>SQ7 : Workability (constraining field management).</li>
+</ul>
+<p>As explained in <a href="../Data_Prep/#soil-data-preparation">data preparation</a>, the execution of Module 4 requires three components: <em>Soil map, Soil Characteristics Excel Sheet, and Edaphic Requirement Excel Sheet</em>. Once all preparations are completed, users can start off with Module 4. The overview of Module 4 is as shown in the figure below:</p>
+<p><strong>Figure: Overview of Module IV: Soil Constraints</strong>
+<img alt="Alt text" src="../assets/M4_overview.png" /></p>
+<hr />
+<h2 id="mandatory-settings">Mandatory Settings<a class="headerlink" href="#mandatory-settings" title="Permanent link">&para;</a></h2>
+<h3 id="initialization-of-m4-object-class-creation">Initialization of M4 Object Class Creation<a class="headerlink" href="#initialization-of-m4-object-class-creation" title="Permanent link">&para;</a></h3>
+<p>Firstly, users requires to import M4 object class named <code>SoilConstraints</code> by executing the following function:</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Initializing M4 Object</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pyaez</span> <span class="kn">import</span> <span class="n">SoilConstraints</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="n">soil_con</span> <span class="o">=</span> <span class="n">SoilConstraints</span><span class="o">.</span><span class="n">SoilConstraints</span><span class="p">(</span><span class="n">rooting_depth</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>rooting_depth</td>
+<td>Crop-specific Rooting Depth Class. Must be one of [1, 2, 3, 4, 5]</td>
+<td>Class</td>
+<td>Integer</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="importing-edaphic-rating-excel-sheet">Importing Edaphic Rating Excel Sheet<a class="headerlink" href="#importing-edaphic-rating-excel-sheet" title="Permanent link">&para;</a></h3>
+<p>After the object class declaration, the crop/LUT-specific edaphic rating excel sheets for rainfed and irrigated conditions are required to be uploaded into the object class. Both excel sheets' file formats must be in <strong>.xlsx</strong> format.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Uploading Edaphic Rating Excel Sheet</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="n">soil_con</span><span class="o">.</span><span class="n">importSoilReductionSheet</span><span class="p">(</span><span class="n">rain_sheet_path</span><span class="p">,</span> <span class="n">irr_sheet_path</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>rain_sheet_path</td>
+<td>Full file path of LUT/management specific edaphic requirement setting for rainfed condition</td>
+<td>None</td>
+<td>String (.xlsx format)</td>
+</tr>
+<tr>
+<td>irr_sheet_path</td>
+<td>Full file path of LUT/management specific edaphic requirement setting for irrigated condition</td>
+<td>None</td>
+<td>String (.xlsx format)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="calculation-of-soil-qualities-sq">Calculation of Soil Qualities (SQ)<a class="headerlink" href="#calculation-of-soil-qualities-sq" title="Permanent link">&para;</a></h3>
+<p>This function calculates seven major soil qualitites for each soil ID based on input soil characteristics.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calculating SQs</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="n">soil_con</span><span class="o">.</span><span class="n">calculateSoilQualities</span><span class="p">(</span><span class="n">irr_or_rain</span><span class="p">,</span> <span class="n">soil_characteristics_path</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>irr_or_rain</td>
+<td>'I' for irrigated, 'R' for rainfed to execute</td>
+<td>-</td>
+<td>String</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="calculation-of-soil-ratings-sr">Calculation of Soil Ratings (SR)<a class="headerlink" href="#calculation-of-soil-ratings-sr" title="Permanent link">&para;</a></h3>
+<p>This function calculates input/management-specfic soil ratings (SR) based on existing SQs. Before running this, users are required to execute <code>calculateSoilQualities</code> first.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Calculating SR</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="n">soil_con</span><span class="o">.</span><span class="n">calculateSoilRatings</span><span class="p">(</span><span class="n">input_level</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>input_level</td>
+<td>L for low-level input, I for intermediate-level input, H for high-input level</td>
+<td>-</td>
+<td>String</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="major-functionalities">Major Functionalities<a class="headerlink" href="#major-functionalities" title="Permanent link">&para;</a></h2>
+<h3 id="applying-soil-constraints">Applying Soil Constraints<a class="headerlink" href="#applying-soil-constraints" title="Permanent link">&para;</a></h3>
+<p>This function applies all soil-related yield reduction factors. The returned yield map is now soil-adjusted yield map.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Applying soil constraints</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="n">yld_out</span> <span class="o">=</span> <span class="n">soil_con</span><span class="o">.</span><span class="n">applySoilConstraints</span><span class="p">(</span><span class="n">soil_map</span><span class="p">,</span> <span class="n">yield_in</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>soil_map</td>
+<td>Soil Map containing SMUs which are IDs used to match the soil ratings with the input yield.</td>
+<td>-</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>yield_in</td>
+<td>Input yield map before applying soil reduction factors (irrigated or rainfed)</td>
+<td>kg/ha</td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>soil_adj_yld</td>
+<td>Soil adjusted yield.</td>
+<td>same as <code>yield_in</code></td>
+<td>2D-NumPy Array</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="soil-suitability-fc4">Soil Suitability (Fc4)<a class="headerlink" href="#soil-suitability-fc4" title="Permanent link">&para;</a></h3>
+<p>This function returns soil suitability map after applying the soil constraints. Soil suitability factor (fc4) ranges from 0 (Not Suitable) to 1 (Very suitable). Note that the soil suitability map reflects all the input/management settings users specified earlier in the soil ratings calculation.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Get Fc4</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="n">fc4_map</span> <span class="o">=</span> <span class="n">soil_con</span><span class="o">.</span><span class="n">getSoilSuitabilityMap</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fc4</td>
+<td>LUT/management-specific soil constraint factor (fc4)</td>
+<td>-</td>
+<td>2D-NumPy Array</td>
+</tr>
+<tr>
+<td>___</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="soil-qualities-output">Soil Qualities Output<a class="headerlink" href="#soil-qualities-output" title="Permanent link">&para;</a></h3>
+<p>If users wish to see the each SMU's calculated soil qualities, you can produce soil quality outputs as pandas dataframe by executing the following function. Before running this, users are required to execute <code>calculateSoilQualities</code> first, so that the SQs are produced based on earlier LUT/management setting.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Visualizing SQs</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">soil_con</span><span class="o">.</span><span class="n">getSoilQualities</span><span class="p">())</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>---</td>
+<td>---</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SQ</td>
+<td>LUT/mangement specific SQs for each SMU</td>
+<td>-</td>
+<td>pd.DataFrame</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="soil-ratings-output">Soil Ratings Output<a class="headerlink" href="#soil-ratings-output" title="Permanent link">&para;</a></h3>
+<p>If users wish to see the each SMU's calculated soil ratings, you can produce soil quality outputs as pandas dataframe by executing the following function. Before running this, users are required to execute <code>calculateSoilRatings</code> first, so that the SRs are produced based on earlier LUT/management setting.</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Visualizing SRs</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">soil_con</span><span class="o">.</span><span class="n">getSoilRatings</span><span class="p">())</span>
+</span></code></pre></div></td></tr></table></div>
+<p><strong>Input</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>---</td>
+<td>---</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong></p>
+<table>
+<thead>
+<tr>
+<th>Arguments</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Data Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SR</td>
+<td>LUT/mangement specific SRs for each SMU</td>
+<td>-</td>
+<td>pd.DataFrame</td>
+</tr>
+</tbody>
+</table>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../M3/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Module 3 (Climatic Constraints)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Module 3 (Climatic Constraints)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../M5/" class="md-footer__link md-footer__link--next" aria-label="Next: Module 5 (Terrain Constraints)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Module 5 (Terrain Constraints)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 FAO&GIC-AIT
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/gicait/PyAEZ" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/in/swunwunna101234" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5m282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.footer", "navigation.instant", "navigation.sections", "navigation.top", "navigation.instant.progress", "content.code.copy", "content.code.select", "content.code.annotate", "toc.follow", "navigation.expand"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

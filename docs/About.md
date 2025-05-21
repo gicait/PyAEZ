@@ -33,7 +33,7 @@ PyAEZ has been developed to be used within the tropical region, hence some of th
 
 PyAEZ package consists of six main AEZ modules and one additional utility module stated as below:
 
-* Module 1: Climate regime - calculation of agro-climatic indicators for evaluation of climatic suitability of crops.
+* **Module 1: Climate regime** - calculation of agro-climatic indicators for evaluation of climatic suitability of crops.
 
 * **Module 2: Crop simulation** - simulate an optimal crop cycle for the highest attainable yield.
 * **Module 3: Climate constraints** - application of agro-climatic constraints to the calculated yield of a particular crop.

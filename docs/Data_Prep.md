@@ -12,23 +12,23 @@ PyAEZ package requires the following additional open-source Python packages to b
 4. Pandas: allows PyAEZ to read MS Excel sheets with user-defined parameters.
 5. Numba: aware optimizing compiler used to speed up some computationally heavy routines within PyAEZ.
 
-!!! note "Additional Information"
+!!! info "Additional Information"
 
-    Numpy: https://numpy.org/install/
+    Numpy: [click-here](https://numpy.org/install/)
     
-    GDAL : https://anaconda.org/conda-forge/gdal
+    GDAL : [click-here](https://anaconda.org/conda-forge/gdal)
     
-    SciPy : https://scipy.org/install
+    SciPy : [click-here](https://scipy.org/install)
     
-    Pandas : https://pandas.pydata.org/docs/getting_started/install.html
+    Pandas : [click-here](https://pandas.pydata.org/docs/getting_started/install.html)
     
-    Numba : https://numba.readthedocs.io/en/stable/user/installing.html
+    Numba : [click-here](https://numba.readthedocs.io/en/stable/user/installing.html)
     
-    Copernicus Climate Data Stores : https://cds.climate.copernicus.eu/
+    Copernicus Climate Data Stores : [click-here](https://cds.climate.copernicus.eu/)
     
-    ECMWF : https://www.ecmwf.int/en/forecasts/datasets
+    ECMWF : [click-here](https://www.ecmwf.int/en/forecasts/datasets)
     
-    Google Earth Engine : https://developers.google.com/earth-engine/datasets
+    Google Earth Engine : [click-here](https://developers.google.com/earth-engine/datasets)
 
 ___
 
@@ -56,7 +56,13 @@ PyAEZ requires to provide all mandatory crop parameters to be prepared by users'
 3. Crop-specific thermal characteristics
 4. Land utilization type characteristics
 
-While most of the parameterizations can be referred to GAEZv4 Appendix (Source: https://s3.eu-west-1.amazonaws.com/data.gaezdev.aws.fao.org/documentation/GAEZ4_Appendices.xlsx), some requires additional references apart from GAEZ context. The crop parameters can also be user-defined, or experimental, i.e., some parameters can be estimated from laboratory experiments, as FAO scientists initiated in the early 1900's.
+While most of the parameterizations can be referred to [GAEZv4 Appendix](https://s3.eu-west-1.amazonaws.com/data.gaezdev.aws.fao.org/documentation/GAEZ4_Appendices.xlsx), some requires additional references apart from GAEZ context. The crop parameters can also be user-defined, or experimental, i.e., some parameters can be estimated from laboratory experiments, as FAO scientists initiated in the early 1900's.
+
+!!! info
+
+    Additional crop information can be referred to the following resources:
+
+    1. [ECOCROP](https://gaez.fao.org/pages/ecocrop) is a crop database designed to collect and provide information on plant characteristics and crop environmental requirements for more than 200 plant species. It provides sutability of a crop for a specified enfironment. Several information includes category, life form, growth habit, life span and environmental description (minimum and maximum temperature, annual precipitation, soil pH, etc.,).
 
 An extensive list of crop paramters to prepare as an excel sheet are provided as below:
 

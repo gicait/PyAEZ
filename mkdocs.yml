@@ -1,10 +1,15 @@
-site_name: PyAEZ v2.4 Documentation
+site_name: PyAEZ v2.3 Documentation
 site_dir: site
 use_directory_urls: true
 repo_url: https://github.com/gicait/PyAEZ
 repo_name: gicait/PyAEZ
 plugins:
   - search
+  - git-revision-date-localized:
+      type: datetime
+      fallback_to_build_date: false
+      enable_creation_date: false
+      enabled: true
 nav:
   - Home: index.md
   - Acknowledgements: Acknowledgements.md
@@ -78,6 +83,7 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
+      use_pygments: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences:
